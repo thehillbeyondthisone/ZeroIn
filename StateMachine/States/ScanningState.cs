@@ -1,6 +1,5 @@
 using AOSharp.Common.GameData;
 using AOSharp.Core;
-using AOSharp.Core.Movement;
 using System;
 using ZeroIn.Config;
 using ZeroIn.GridPattern;
@@ -63,11 +62,7 @@ namespace ZeroIn.StateMachine.States
 
             var context = _stateMachine.Context;
 
-            // Stop movement
-            if (MovementController.Instance.IsNavigating)
-            {
-                MovementController.Instance.SetMovement(MovementAction.None);
-            }
+            // Stop movement (SMovementController handles navigation internally)
 
             // Save and display results
             var characters = context.Scanner.GetDetectedCharacters();
@@ -100,7 +95,7 @@ namespace ZeroIn.StateMachine.States
             context.Scanner.Scan();
 
             // Check if we've reached current waypoint
-            if (!MovementController.Instance.IsNavigating)
+            if (!SMovementController.Instance.IsNavigating)
             {
                 // Move to next waypoint
                 context.CurrentWaypointIndex++;
@@ -145,7 +140,7 @@ namespace ZeroIn.StateMachine.States
             }
 
             // Navigate to waypoint
-            MovementController.Instance.SetMovement(MovementAction.MoveToPosition, waypoint.Position);
+            SMovementController.SetDestination(waypoint.Position);
         }
     }
 }
