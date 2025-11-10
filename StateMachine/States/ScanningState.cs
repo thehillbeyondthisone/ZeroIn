@@ -64,7 +64,10 @@ namespace ZeroIn.StateMachine.States
             var context = _stateMachine.Context;
 
             // Stop movement
-            MovementController.Instance.Stop();
+            if (MovementController.Instance.IsNavigating)
+            {
+                MovementController.Instance.SetMovement(MovementAction.None);
+            }
 
             // Save and display results
             var characters = context.Scanner.GetDetectedCharacters();
@@ -142,7 +145,7 @@ namespace ZeroIn.StateMachine.States
             }
 
             // Navigate to waypoint
-            MovementController.Instance.SetMovement(waypoint.Position);
+            MovementController.Instance.SetMovement(MovementAction.MoveToPosition, waypoint.Position);
         }
     }
 }

@@ -79,8 +79,8 @@ namespace ZeroIn.Scanner
                             Position = character.Position,
                             Profession = character.Profession,
                             Breed = character.Breed,
-                            Level = character.Level,
-                            Faction = character.Faction,
+                            Level = (int)character.Level,
+                            Faction = Side.Neutral, // SimpleChar doesn't expose faction directly
                             LastPosition = character.Position
                         };
 

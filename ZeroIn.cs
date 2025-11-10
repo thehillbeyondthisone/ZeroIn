@@ -19,6 +19,7 @@ namespace ZeroIn
         private static ScanContext _context;
         private static string _configPath;
 
+        [Obsolete]
         public override void Run(string pluginDir)
         {
             try
@@ -90,7 +91,7 @@ namespace ZeroIn
             }
         }
 
-        private static void HandleCommand(string command, string[] args)
+        private static void HandleCommand(string command, string[] args, AOSharp.Core.UI.ChatWindow chatWindow)
         {
             try
             {
