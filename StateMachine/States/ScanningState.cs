@@ -1,6 +1,6 @@
+using AOSharp.Common.GameData;
 using AOSharp.Core;
 using AOSharp.Core.Movement;
-using AOSharp.Pathfinding;
 using System;
 using ZeroIn.Config;
 using ZeroIn.GridPattern;
@@ -13,12 +13,11 @@ namespace ZeroIn.StateMachine.States
     public class ScanningState
     {
         private ScanStateMachine _stateMachine;
-        private bool _pathStarted;
+        private const float WAYPOINT_REACH_DISTANCE = 5f; // Consider waypoint reached within 5m
 
         public ScanningState(ScanStateMachine stateMachine)
         {
             _stateMachine = stateMachine;
-            _pathStarted = false;
         }
 
         public void OnEnter()
@@ -49,15 +48,13 @@ namespace ZeroIn.StateMachine.States
                 return;
             }
 
-            // Convert to SPath
-            context.CurrentPath = gridGenerator.GenerateSPath(context.Waypoints);
-
             // Estimate time
             float estimatedTime = gridGenerator.EstimateTime(context.Waypoints);
             Console.WriteLine($"[ZeroIn] Estimated scan time: {TimeSpan.FromSeconds(estimatedTime):mm\\:ss}");
 
-            // Start movement
-            _pathStarted = false;
+            // Start at first waypoint
+            context.CurrentWaypointIndex = 0;
+            MoveToNextWaypoint();
         }
 
         public void OnExit()
@@ -96,33 +93,56 @@ namespace ZeroIn.StateMachine.States
         {
             var context = _stateMachine.Context;
 
-            // Start path on first tick
-            if (!_pathStarted)
-            {
-                Console.WriteLine("[ZeroIn] Beginning grid movement...");
-                SMovementController.Set(context.CurrentPath);
-                _pathStarted = true;
-            }
-
             // Scan for characters
             context.Scanner.Scan();
 
-            // Check if we've reached the end
-            if (MovementController.Instance.IsNavigating == false)
+            // Check if we've reached current waypoint
+            if (!MovementController.Instance.IsNavigating)
             {
-                // Check if scan is complete or if we should loop
-                if (context.Config.ContinuousScanning)
+                // Move to next waypoint
+                context.CurrentWaypointIndex++;
+
+                if (context.CurrentWaypointIndex >= context.Waypoints.Count)
                 {
-                    Console.WriteLine("[ZeroIn] Restarting scan loop...");
-                    _pathStarted = false;
+                    // Finished all waypoints
+                    if (context.Config.ContinuousScanning)
+                    {
+                        Console.WriteLine("[ZeroIn] Restarting scan loop...");
+                        context.CurrentWaypointIndex = 0;
+                        MoveToNextWaypoint();
+                    }
+                    else
+                    {
+                        Console.WriteLine("[ZeroIn] Scan complete!");
+                        Console.WriteLine($"[ZeroIn] {context.Scanner.GetSummary()}");
+                        _stateMachine.TransitionTo(ScanStateMachine.State.Idle);
+                    }
                 }
                 else
                 {
-                    Console.WriteLine("[ZeroIn] Scan complete!");
-                    Console.WriteLine($"[ZeroIn] {context.Scanner.GetSummary()}");
-                    _stateMachine.TransitionTo(ScanStateMachine.State.Idle);
+                    MoveToNextWaypoint();
                 }
             }
+        }
+
+        private void MoveToNextWaypoint()
+        {
+            var context = _stateMachine.Context;
+
+            if (context.CurrentWaypointIndex >= context.Waypoints.Count)
+                return;
+
+            var waypoint = context.Waypoints[context.CurrentWaypointIndex];
+
+            // Log progress every 10 waypoints
+            if (context.CurrentWaypointIndex % 10 == 0)
+            {
+                int progress = (int)((float)context.CurrentWaypointIndex / context.Waypoints.Count * 100);
+                Console.WriteLine($"[ZeroIn] Progress: {progress}% ({context.CurrentWaypointIndex}/{context.Waypoints.Count})");
+            }
+
+            // Navigate to waypoint
+            MovementController.Instance.SetMovement(waypoint.Position);
         }
     }
 }

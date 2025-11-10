@@ -1,4 +1,3 @@
-using AOSharp.Pathfinding;
 using System.Collections.Generic;
 using ZeroIn.Config;
 using ZeroIn.GridPattern;
@@ -15,7 +14,6 @@ namespace ZeroIn.StateMachine
         public CharacterScanner Scanner { get; set; }
         public ScanMap Map { get; set; }
         public List<GridWaypoint> Waypoints { get; set; }
-        public SPath CurrentPath { get; set; }
         public int CurrentWaypointIndex { get; set; }
         public bool ScanComplete { get; set; }
         public bool IsScanning { get; set; }

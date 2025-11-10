@@ -1,5 +1,4 @@
 using AOSharp.Common.GameData;
-using AOSharp.Pathfinding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -84,23 +83,6 @@ namespace ZeroIn.GridPattern
             return waypoints;
         }
 
-        /// <summary>
-        /// Converts grid waypoints to an AOSharp SPath
-        /// </summary>
-        public SPath GenerateSPath(List<GridWaypoint> waypoints)
-        {
-            var path = new SPath();
-
-            foreach (var waypoint in waypoints)
-            {
-                path.Waypoints.Add(waypoint.Position);
-            }
-
-            path.IsLooping = false; // Don't loop by default
-            path.Lock(); // Lock the path to prevent modification
-
-            return path;
-        }
 
         /// <summary>
         /// Estimates the total distance of the pattern
