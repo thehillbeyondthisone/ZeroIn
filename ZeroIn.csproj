@@ -31,17 +31,28 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AOSharp.Common, Version=1.0.106.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\AOSharpSDK.1.0.106\lib\net48\AOSharp.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="AOSharp.Core, Version=1.0.106.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\AOSharpSDK.1.0.106\lib\net48\AOSharp.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="AOSharp.Core.UI, Version=1.0.106.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\AOSharpSDK.1.0.106\lib\net48\AOSharp.Core.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="SmokeLounge.AOtomation.Messaging, Version=1.0.106.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\AOSharpSDK.1.0.106\lib\net48\SmokeLounge.AOtomation.Messaging.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="AOSharpSDK" Version="1.0.106" />
-    <PackageReference Include="AOSharp.SharpNav" Version="1.0.43" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ZeroIn.cs" />
