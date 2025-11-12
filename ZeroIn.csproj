@@ -60,7 +60,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="AOSharp.Pathfinding, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\aosp-bots\packages\AOSharpSDK.1.0.106\lib\net48\AOSharp.Pathfinding.dll</HintPath>
+      <HintPath>$(USERPROFILE)\.nuget\packages\aosharpsdk.nav\1.0.5\lib\net48\AOSharp.Pathfinding.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
