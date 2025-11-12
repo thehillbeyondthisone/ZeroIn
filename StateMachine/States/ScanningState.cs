@@ -1,6 +1,5 @@
 using AOSharp.Common.GameData;
 using AOSharp.Core;
-using AOSharp.Pathfinding;
 using System;
 using ZeroIn.Config;
 using ZeroIn.GridPattern;
