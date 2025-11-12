@@ -96,7 +96,7 @@ namespace ZeroIn.StateMachine.States
             context.Scanner.Scan();
 
             // Check if we've reached current waypoint
-            if (!SMovementController.IsNavigating)
+            if (!SMovementController.IsNavigating())
             {
                 // Move to next waypoint
                 context.CurrentWaypointIndex++;
