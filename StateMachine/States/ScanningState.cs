@@ -1,5 +1,6 @@
 using AOSharp.Common.GameData;
 using AOSharp.Core;
+using AOSharp.Core.Movement;
 using System;
 using ZeroIn.Config;
 using ZeroIn.GridPattern;
