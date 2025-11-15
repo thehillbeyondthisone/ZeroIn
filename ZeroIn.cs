@@ -23,12 +23,39 @@ namespace ZeroIn
         {
             try
             {
-                // DIAGNOSTIC: Super simple version - just use Logger to see if this even gets called
-                Logger.Information("ZeroIn: Plugin Run() method called!");
-                Logger.Information("ZeroIn: HELLO FROM ZEROIN!");
+                Logger.Information("ZeroIn loaded!");
 
-                Chat.WriteLine("ZeroIn plugin loaded!", ChatColor.LightBlue);
-                Chat.WriteLine("Type /zeroin help for commands", ChatColor.LightBlue);
+                // Register chat commands FIRST - don't do anything complex yet
+                Chat.RegisterCommand("zeroin", HandleCommand);
+                Chat.RegisterCommand("zi", HandleCommand);
+
+                // Defer initialization to first command or game update
+                // This avoids accessing DynelManager.LocalPlayer too early
+                Game.OnUpdate += OnUpdate;
+
+                Logger.Information("ZeroIn commands registered");
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e.ToString());
+            }
+        }
+
+        private static void EnsureInitialized()
+        {
+            if (_config != null)
+                return; // Already initialized
+
+            try
+            {
+                // Now it's safe to access DynelManager.LocalPlayer
+                if (DynelManager.LocalPlayer == null)
+                {
+                    Logger.Warning("ZeroIn: LocalPlayer not available yet");
+                    return;
+                }
+
+                Logger.Information($"ZeroIn: Initializing for {DynelManager.LocalPlayer.Name}");
 
                 // Set up config path
                 _configPath = Path.Combine(
@@ -46,27 +73,18 @@ namespace ZeroIn
 
                 // Load config
                 _config = ZeroInConfig.Load(_configPath);
-                Logger.Information($"ZeroIn: Config loaded from {_configPath}");
+                Logger.Information("ZeroIn: Config loaded");
 
                 // Initialize state machine
                 _context = new ScanContext(_config);
                 _stateMachine = new ScanStateMachine(_context);
 
-                // Register game loop
-                Game.OnUpdate += OnUpdate;
-
-                // Register chat commands
-                Chat.RegisterCommand("zeroin", HandleCommand);
-                Chat.RegisterCommand("zi", HandleCommand);
-
-                Logger.Information("ZeroIn: Plugin initialization complete!");
-                Chat.WriteLine("ZeroIn loaded successfully!", ChatColor.Green);
+                Logger.Information("ZeroIn: Ready!");
+                Chat.WriteLine("ZeroIn ready! Type /zeroin help", ChatColor.Green);
             }
             catch (Exception ex)
             {
-                Logger.Error($"ZeroIn ERROR: {ex.Message}");
-                Logger.Error($"ZeroIn Stack: {ex.StackTrace}");
-                Chat.WriteLine($"ZeroIn failed to load: {ex.Message}", ChatColor.Red);
+                Logger.Error($"ZeroIn init error: {ex}");
             }
         }
 
@@ -74,6 +92,8 @@ namespace ZeroIn
         {
             try
             {
+                EnsureInitialized();
+
                 if (_stateMachine != null)
                 {
                     _stateMachine.Tick();
@@ -81,7 +101,7 @@ namespace ZeroIn
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ZeroIn] Update error: {ex.Message}");
+                Logger.Error($"[ZeroIn] Update error: {ex.Message}");
             }
         }
 
@@ -89,6 +109,14 @@ namespace ZeroIn
         {
             try
             {
+                EnsureInitialized();
+
+                if (_config == null)
+                {
+                    Chat.WriteLine("ZeroIn is still initializing, please wait...", ChatColor.Yellow);
+                    return;
+                }
+
                 if (args.Length == 0)
                 {
                     ShowHelp();
@@ -162,32 +190,28 @@ namespace ZeroIn
 
         private static void ShowHelp()
         {
-            Console.WriteLine();
-            Console.WriteLine("=".PadRight(80, '='));
-            Console.WriteLine(" ZeroIn - AFK Character Mapper - Commands");
-            Console.WriteLine("=".PadRight(80, '='));
-            Console.WriteLine();
-            Console.WriteLine("  /zeroin start              - Start scanning current area");
-            Console.WriteLine("  /zeroin stop               - Stop current scan");
-            Console.WriteLine("  /zeroin status             - Show scan status and results");
-            Console.WriteLine();
-            Console.WriteLine("  /zeroin area [name]        - Set/list areas");
-            Console.WriteLine("  /zeroin addarea <name>     - Add new area with current position");
-            Console.WriteLine("  /zeroin setcorner <1-4>    - Set corner N to current position");
-            Console.WriteLine();
-            Console.WriteLine("  /zeroin config             - Show current configuration");
-            Console.WriteLine("  /zeroin save               - Save current configuration");
-            Console.WriteLine("  /zeroin reload             - Reload configuration from file");
-            Console.WriteLine();
-            Console.WriteLine("  /zeroin help               - Show this help");
-            Console.WriteLine();
-            Console.WriteLine("Quick Start:");
-            Console.WriteLine("  1. /zeroin addarea \"My Zone\"");
-            Console.WriteLine("  2. Move to corner 1 and /zeroin setcorner 1");
-            Console.WriteLine("  3. Repeat for corners 2, 3, 4");
-            Console.WriteLine("  4. /zeroin save");
-            Console.WriteLine("  5. /zeroin start");
-            Console.WriteLine();
+            Chat.WriteLine("=".PadRight(80, '='), ChatColor.Yellow);
+            Chat.WriteLine(" ZeroIn - AFK Character Mapper - Commands", ChatColor.Yellow);
+            Chat.WriteLine("=".PadRight(80, '='), ChatColor.Yellow);
+            Chat.WriteLine("", ChatColor.White);
+            Chat.WriteLine("  /zeroin start              - Start scanning current area", ChatColor.White);
+            Chat.WriteLine("  /zeroin stop               - Stop current scan", ChatColor.White);
+            Chat.WriteLine("  /zeroin status             - Show scan status and results", ChatColor.White);
+            Chat.WriteLine("", ChatColor.White);
+            Chat.WriteLine("  /zeroin area [name]        - Set/list areas", ChatColor.White);
+            Chat.WriteLine("  /zeroin addarea <name>     - Add new area with current position", ChatColor.White);
+            Chat.WriteLine("  /zeroin setcorner <1-4>    - Set corner N to current position", ChatColor.White);
+            Chat.WriteLine("", ChatColor.White);
+            Chat.WriteLine("  /zeroin config             - Show current configuration", ChatColor.White);
+            Chat.WriteLine("  /zeroin save               - Save current configuration", ChatColor.White);
+            Chat.WriteLine("  /zeroin reload             - Reload configuration from file", ChatColor.White);
+            Chat.WriteLine("", ChatColor.White);
+            Chat.WriteLine("Quick Start:", ChatColor.LightBlue);
+            Chat.WriteLine("  1. /zeroin addarea \"My Zone\"", ChatColor.White);
+            Chat.WriteLine("  2. Move to corner 1 and /zeroin setcorner 1", ChatColor.White);
+            Chat.WriteLine("  3. Repeat for corners 2, 3, 4", ChatColor.White);
+            Chat.WriteLine("  4. /zeroin save", ChatColor.White);
+            Chat.WriteLine("  5. /zeroin start", ChatColor.White);
         }
 
         private static void StartScan()
