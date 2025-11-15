@@ -19,8 +19,7 @@ namespace ZeroIn
         private static ScanContext _context;
         private static string _configPath;
 
-        [Obsolete]
-        public override void Run(string pluginDir)
+        public override void Run()
         {
             try
             {
