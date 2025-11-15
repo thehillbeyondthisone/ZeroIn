@@ -29,6 +29,16 @@ namespace ZeroIn
                 Console.WriteLine(" Find that pesky someone.");
                 Console.WriteLine("=".PadRight(80, '='));
 
+                // Check if local player is available
+                if (DynelManager.LocalPlayer == null)
+                {
+                    Console.WriteLine("[ZeroIn] ERROR: LocalPlayer not available at initialization!");
+                    Console.WriteLine("[ZeroIn] This shouldn't happen. Please report this issue.");
+                    return;
+                }
+
+                Console.WriteLine($"[ZeroIn] Initializing for character: {DynelManager.LocalPlayer.Name}");
+
                 // Set up config path
                 _configPath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -38,28 +48,39 @@ namespace ZeroIn
                     $"{DynelManager.LocalPlayer.Name}_config.json"
                 );
 
+                Console.WriteLine($"[ZeroIn] Config path: {_configPath}");
+
                 // Ensure directory exists
                 string configDir = Path.GetDirectoryName(_configPath);
                 if (!Directory.Exists(configDir))
+                {
+                    Console.WriteLine($"[ZeroIn] Creating config directory: {configDir}");
                     Directory.CreateDirectory(configDir);
+                }
 
                 // Load config
+                Console.WriteLine("[ZeroIn] Loading config...");
                 _config = ZeroInConfig.Load(_configPath);
-                Console.WriteLine($"[ZeroIn] Config loaded from: {_configPath}");
+                Console.WriteLine($"[ZeroIn] Config loaded successfully!");
 
                 // Initialize state machine
+                Console.WriteLine("[ZeroIn] Initializing state machine...");
                 _context = new ScanContext(_config);
                 _stateMachine = new ScanStateMachine(_context);
 
                 // Register game loop
+                Console.WriteLine("[ZeroIn] Registering game update handler...");
                 Game.OnUpdate += OnUpdate;
 
                 // Register chat commands
+                Console.WriteLine("[ZeroIn] Registering chat commands...");
                 Chat.RegisterCommand("zeroin", HandleCommand);
                 Chat.RegisterCommand("zi", HandleCommand);
 
+                Console.WriteLine("=".PadRight(80, '='));
                 Console.WriteLine("[ZeroIn] Plugin loaded successfully!");
-                Console.WriteLine("[ZeroIn] Commands:");
+                Console.WriteLine("=".PadRight(80, '='));
+                Console.WriteLine("[ZeroIn] Available Commands:");
                 Console.WriteLine("  /zeroin help         - Show help");
                 Console.WriteLine("  /zeroin start        - Start scanning");
                 Console.WriteLine("  /zeroin stop         - Stop scanning");
@@ -67,12 +88,19 @@ namespace ZeroIn
                 Console.WriteLine("  /zeroin area <name>  - Set current area by name");
                 Console.WriteLine("  /zeroin config       - Show current config");
                 Console.WriteLine("  /zeroin setcorner <1-4> - Set corner to current position");
+                Console.WriteLine("=".PadRight(80, '='));
                 Console.WriteLine();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ZeroIn] Error during initialization: {ex.Message}");
-                Console.WriteLine($"[ZeroIn] Stack trace: {ex.StackTrace}");
+                Console.WriteLine("=".PadRight(80, '='));
+                Console.WriteLine("[ZeroIn] FATAL ERROR during initialization!");
+                Console.WriteLine("=".PadRight(80, '='));
+                Console.WriteLine($"[ZeroIn] Error: {ex.Message}");
+                Console.WriteLine($"[ZeroIn] Type: {ex.GetType().Name}");
+                Console.WriteLine($"[ZeroIn] Stack trace:");
+                Console.WriteLine(ex.StackTrace);
+                Console.WriteLine("=".PadRight(80, '='));
             }
         }
 

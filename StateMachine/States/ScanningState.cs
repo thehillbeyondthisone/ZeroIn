@@ -96,6 +96,9 @@ namespace ZeroIn.StateMachine.States
             // Scan for characters
             context.Scanner.Scan();
 
+            // Detect nearby players
+            ScanForNearbyPlayers(context);
+
             // Check if we've reached current waypoint by checking if we're close enough
             bool atWaypoint = false;
             try
@@ -131,6 +134,66 @@ namespace ZeroIn.StateMachine.States
                 {
                     MoveToNextWaypoint();
                 }
+            }
+        }
+
+        private void ScanForNearbyPlayers(ScanContext context)
+        {
+            try
+            {
+                var localPlayer = DynelManager.LocalPlayer;
+                if (localPlayer == null)
+                    return;
+
+                var localPos = localPlayer.Position;
+                float detectionRange = context.Config.PlayerDetectionRange;
+
+                // Get all nearby players
+                foreach (var dynel in DynelManager.Players)
+                {
+                    if (dynel == null || !dynel.IsValid)
+                        continue;
+
+                    // Skip self if configured
+                    if (context.Config.IgnoreSelf && dynel.Identity == localPlayer.Identity)
+                        continue;
+
+                    // Skip if in ignore list
+                    if (context.Config.IgnoreNames.Contains(dynel.Name))
+                        continue;
+
+                    // Calculate distance
+                    float distance = Vector3.Distance(localPos, dynel.Position);
+
+                    // Only track if within detection range
+                    if (distance <= detectionRange)
+                    {
+                        context.Scanner.OnCharacterSeen(
+                            (int)dynel.Identity.Instance,
+                            dynel.Name,
+                            dynel.Position.X,
+                            dynel.Position.Y,
+                            dynel.Position.Z,
+                            dynel.Health,
+                            distance
+                        );
+
+                        // Log to console if configured
+                        if (context.Config.LogToConsole)
+                        {
+                            var detectedChars = context.Scanner.GetDetectedCharacters();
+                            var detectedChar = detectedChars.Find(c => c.CharId == dynel.Identity.Instance);
+                            if (detectedChar != null && detectedChar.TimesSpotted == 1)
+                            {
+                                Console.WriteLine($"[ZeroIn] Detected: {dynel.Name} at ({dynel.Position.X:F1}, {dynel.Position.Y:F1}, {dynel.Position.Z:F1}) - {distance:F1}m");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ZeroIn] Error scanning for players: {ex.Message}");
             }
         }
 
