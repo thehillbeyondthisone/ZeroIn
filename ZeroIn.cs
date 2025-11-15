@@ -23,20 +23,12 @@ namespace ZeroIn
         {
             try
             {
-                Console.WriteLine("=".PadRight(80, '='));
-                Console.WriteLine(" ZeroIn - AFK Character Mapper");
-                Console.WriteLine(" Find that pesky someone.");
-                Console.WriteLine("=".PadRight(80, '='));
+                // DIAGNOSTIC: Super simple version - just use Logger to see if this even gets called
+                Logger.Information("ZeroIn: Plugin Run() method called!");
+                Logger.Information("ZeroIn: HELLO FROM ZEROIN!");
 
-                // Check if local player is available
-                if (DynelManager.LocalPlayer == null)
-                {
-                    Console.WriteLine("[ZeroIn] ERROR: LocalPlayer not available at initialization!");
-                    Console.WriteLine("[ZeroIn] This shouldn't happen. Please report this issue.");
-                    return;
-                }
-
-                Console.WriteLine($"[ZeroIn] Initializing for character: {DynelManager.LocalPlayer.Name}");
+                Chat.WriteLine("ZeroIn plugin loaded!", ChatColor.LightBlue);
+                Chat.WriteLine("Type /zeroin help for commands", ChatColor.LightBlue);
 
                 // Set up config path
                 _configPath = Path.Combine(
@@ -47,59 +39,34 @@ namespace ZeroIn
                     $"{DynelManager.LocalPlayer.Name}_config.json"
                 );
 
-                Console.WriteLine($"[ZeroIn] Config path: {_configPath}");
-
                 // Ensure directory exists
                 string configDir = Path.GetDirectoryName(_configPath);
                 if (!Directory.Exists(configDir))
-                {
-                    Console.WriteLine($"[ZeroIn] Creating config directory: {configDir}");
                     Directory.CreateDirectory(configDir);
-                }
 
                 // Load config
-                Console.WriteLine("[ZeroIn] Loading config...");
                 _config = ZeroInConfig.Load(_configPath);
-                Console.WriteLine($"[ZeroIn] Config loaded successfully!");
+                Logger.Information($"ZeroIn: Config loaded from {_configPath}");
 
                 // Initialize state machine
-                Console.WriteLine("[ZeroIn] Initializing state machine...");
                 _context = new ScanContext(_config);
                 _stateMachine = new ScanStateMachine(_context);
 
                 // Register game loop
-                Console.WriteLine("[ZeroIn] Registering game update handler...");
                 Game.OnUpdate += OnUpdate;
 
                 // Register chat commands
-                Console.WriteLine("[ZeroIn] Registering chat commands...");
                 Chat.RegisterCommand("zeroin", HandleCommand);
                 Chat.RegisterCommand("zi", HandleCommand);
 
-                Console.WriteLine("=".PadRight(80, '='));
-                Console.WriteLine("[ZeroIn] Plugin loaded successfully!");
-                Console.WriteLine("=".PadRight(80, '='));
-                Console.WriteLine("[ZeroIn] Available Commands:");
-                Console.WriteLine("  /zeroin help         - Show help");
-                Console.WriteLine("  /zeroin start        - Start scanning");
-                Console.WriteLine("  /zeroin stop         - Stop scanning");
-                Console.WriteLine("  /zeroin status       - Show scan status");
-                Console.WriteLine("  /zeroin area <name>  - Set current area by name");
-                Console.WriteLine("  /zeroin config       - Show current config");
-                Console.WriteLine("  /zeroin setcorner <1-4> - Set corner to current position");
-                Console.WriteLine("=".PadRight(80, '='));
-                Console.WriteLine();
+                Logger.Information("ZeroIn: Plugin initialization complete!");
+                Chat.WriteLine("ZeroIn loaded successfully!", ChatColor.Green);
             }
             catch (Exception ex)
             {
-                Console.WriteLine("=".PadRight(80, '='));
-                Console.WriteLine("[ZeroIn] FATAL ERROR during initialization!");
-                Console.WriteLine("=".PadRight(80, '='));
-                Console.WriteLine($"[ZeroIn] Error: {ex.Message}");
-                Console.WriteLine($"[ZeroIn] Type: {ex.GetType().Name}");
-                Console.WriteLine($"[ZeroIn] Stack trace:");
-                Console.WriteLine(ex.StackTrace);
-                Console.WriteLine("=".PadRight(80, '='));
+                Logger.Error($"ZeroIn ERROR: {ex.Message}");
+                Logger.Error($"ZeroIn Stack: {ex.StackTrace}");
+                Chat.WriteLine($"ZeroIn failed to load: {ex.Message}", ChatColor.Red);
             }
         }
 
