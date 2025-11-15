@@ -23,7 +23,7 @@ namespace ZeroIn
         {
             try
             {
-                Logger.Information("ZeroIn loaded!");
+                Chat.WriteLine("ZeroIn loaded!", ChatColor.Green);
 
                 // Register chat commands FIRST - don't do anything complex yet
                 Chat.RegisterCommand("zeroin", HandleCommand);
@@ -33,11 +33,11 @@ namespace ZeroIn
                 // This avoids accessing DynelManager.LocalPlayer too early
                 Game.OnUpdate += OnUpdate;
 
-                Logger.Information("ZeroIn commands registered");
+                Chat.WriteLine("ZeroIn commands registered - Type /zeroin help", ChatColor.Green);
             }
             catch (Exception e)
             {
-                Logger.Error(e.ToString());
+                Chat.WriteLine($"ZeroIn error: {e.Message}", ChatColor.Red);
             }
         }
 
@@ -50,12 +50,7 @@ namespace ZeroIn
             {
                 // Now it's safe to access DynelManager.LocalPlayer
                 if (DynelManager.LocalPlayer == null)
-                {
-                    Logger.Warning("ZeroIn: LocalPlayer not available yet");
-                    return;
-                }
-
-                Logger.Information($"ZeroIn: Initializing for {DynelManager.LocalPlayer.Name}");
+                    return; // Not ready yet, will retry next frame
 
                 // Set up config path
                 _configPath = Path.Combine(
@@ -73,18 +68,17 @@ namespace ZeroIn
 
                 // Load config
                 _config = ZeroInConfig.Load(_configPath);
-                Logger.Information("ZeroIn: Config loaded");
 
                 // Initialize state machine
                 _context = new ScanContext(_config);
                 _stateMachine = new ScanStateMachine(_context);
 
-                Logger.Information("ZeroIn: Ready!");
-                Chat.WriteLine("ZeroIn ready! Type /zeroin help", ChatColor.Green);
+                Chat.WriteLine($"ZeroIn ready for {DynelManager.LocalPlayer.Name}!", ChatColor.Green);
+                Chat.WriteLine("Type /zeroin help for commands", ChatColor.LightBlue);
             }
             catch (Exception ex)
             {
-                Logger.Error($"ZeroIn init error: {ex}");
+                Chat.WriteLine($"ZeroIn init error: {ex.Message}", ChatColor.Red);
             }
         }
 
@@ -101,7 +95,7 @@ namespace ZeroIn
             }
             catch (Exception ex)
             {
-                Logger.Error($"[ZeroIn] Update error: {ex.Message}");
+                Chat.WriteLine($"[ZeroIn] Update error: {ex.Message}", ChatColor.Red);
             }
         }
 
@@ -158,14 +152,14 @@ namespace ZeroIn
                         if (args.Length > 1 && int.TryParse(args[1], out int corner))
                             SetCorner(corner);
                         else
-                            Console.WriteLine("[ZeroIn] Usage: /zeroin setcorner <1-4>");
+                            Chat.WriteLine("[ZeroIn] Usage: /zeroin setcorner <1-4>", ChatColor.Yellow);
                         break;
 
                     case "addarea":
                         if (args.Length > 1)
                             AddArea(string.Join(" ", args, 1, args.Length - 1));
                         else
-                            Console.WriteLine("[ZeroIn] Usage: /zeroin addarea <name>");
+                            Chat.WriteLine("[ZeroIn] Usage: /zeroin addarea <name>", ChatColor.Yellow);
                         break;
 
                     case "save":
@@ -177,14 +171,14 @@ namespace ZeroIn
                         break;
 
                     default:
-                        Console.WriteLine($"[ZeroIn] Unknown command: {subCommand}");
-                        Console.WriteLine("[ZeroIn] Type '/zeroin help' for available commands");
+                        Chat.WriteLine($"[ZeroIn] Unknown command: {subCommand}", ChatColor.Red);
+                        Chat.WriteLine("[ZeroIn] Type '/zeroin help' for available commands", ChatColor.Yellow);
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ZeroIn] Command error: {ex.Message}");
+                Chat.WriteLine($"[ZeroIn] Command error: {ex.Message}", ChatColor.Red);
             }
         }
 
@@ -218,19 +212,19 @@ namespace ZeroIn
         {
             if (_stateMachine.CurrentState == ScanStateMachine.State.Scanning)
             {
-                Console.WriteLine("[ZeroIn] Scan already in progress!");
+                Chat.WriteLine("[ZeroIn] Scan already in progress!", ChatColor.Yellow);
                 return;
             }
 
             var area = _config.GetCurrentArea();
             if (area == null || !area.IsValid())
             {
-                Console.WriteLine("[ZeroIn] Cannot start scan: No valid area configured");
-                Console.WriteLine("[ZeroIn] Use '/zeroin addarea <name>' and '/zeroin setcorner <1-4>' to configure an area");
+                Chat.WriteLine("[ZeroIn] Cannot start scan: No valid area configured", ChatColor.Red);
+                Chat.WriteLine("[ZeroIn] Use '/zeroin addarea <name>' and '/zeroin setcorner <1-4>' to configure an area", ChatColor.Yellow);
                 return;
             }
 
-            Console.WriteLine($"[ZeroIn] Starting scan of area: {area.Name}");
+            Chat.WriteLine($"[ZeroIn] Starting scan of area: {area.Name}", ChatColor.Green);
             _stateMachine.StartScan();
         }
 
@@ -238,7 +232,7 @@ namespace ZeroIn
         {
             if (_stateMachine.CurrentState != ScanStateMachine.State.Scanning)
             {
-                Console.WriteLine("[ZeroIn] No scan in progress");
+                Chat.WriteLine("[ZeroIn] No scan in progress", ChatColor.Yellow);
                 return;
             }
 
@@ -247,15 +241,13 @@ namespace ZeroIn
 
         private static void ShowStatus()
         {
-            Console.WriteLine();
-            Console.WriteLine("=".PadRight(80, '='));
-            Console.WriteLine($" ZeroIn Status");
-            Console.WriteLine("=".PadRight(80, '='));
-            Console.WriteLine($" State: {_stateMachine.CurrentState}");
-            Console.WriteLine($" Current Area: {_config.GetCurrentArea()?.Name ?? "None"}");
-            Console.WriteLine($" {_context.Scanner.GetSummary()}");
-            Console.WriteLine("=".PadRight(80, '='));
-            Console.WriteLine();
+            Chat.WriteLine("=".PadRight(80, '='), ChatColor.Yellow);
+            Chat.WriteLine($" ZeroIn Status", ChatColor.Yellow);
+            Chat.WriteLine("=".PadRight(80, '='), ChatColor.Yellow);
+            Chat.WriteLine($" State: {_stateMachine.CurrentState}", ChatColor.White);
+            Chat.WriteLine($" Current Area: {_config.GetCurrentArea()?.Name ?? "None"}", ChatColor.White);
+            Chat.WriteLine($" {_context.Scanner.GetSummary()}", ChatColor.White);
+            Chat.WriteLine("=".PadRight(80, '='), ChatColor.Yellow);
 
             if (_context.Scanner.Count > 0)
             {
@@ -265,17 +257,15 @@ namespace ZeroIn
 
         private static void ListAreas()
         {
-            Console.WriteLine();
-            Console.WriteLine($"[ZeroIn] Configured Areas ({_config.ZoneAreas.Count}):");
+            Chat.WriteLine($"[ZeroIn] Configured Areas ({_config.ZoneAreas.Count}):", ChatColor.LightBlue);
 
             for (int i = 0; i < _config.ZoneAreas.Count; i++)
             {
                 var area = _config.ZoneAreas[i];
                 string marker = (i == _config.CurrentAreaIndex) ? "*" : " ";
-                string valid = area.IsValid() ? "✓" : "✗";
-                Console.WriteLine($"  {marker} [{i}] {area.Name} {valid}");
+                string valid = area.IsValid() ? "V" : "X";
+                Chat.WriteLine($"  {marker} [{i}] {area.Name} [{valid}]", ChatColor.White);
             }
-            Console.WriteLine();
         }
 
         private static void SetArea(string identifier)
@@ -286,7 +276,7 @@ namespace ZeroIn
                 if (index >= 0 && index < _config.ZoneAreas.Count)
                 {
                     _config.CurrentAreaIndex = index;
-                    Console.WriteLine($"[ZeroIn] Current area set to: {_config.ZoneAreas[index].Name}");
+                    Chat.WriteLine($"[ZeroIn] Current area set to: {_config.ZoneAreas[index].Name}", ChatColor.Green);
                     return;
                 }
             }
@@ -297,12 +287,12 @@ namespace ZeroIn
                 if (_config.ZoneAreas[i].Name.Equals(identifier, StringComparison.OrdinalIgnoreCase))
                 {
                     _config.CurrentAreaIndex = i;
-                    Console.WriteLine($"[ZeroIn] Current area set to: {_config.ZoneAreas[i].Name}");
+                    Chat.WriteLine($"[ZeroIn] Current area set to: {_config.ZoneAreas[i].Name}", ChatColor.Green);
                     return;
                 }
             }
 
-            Console.WriteLine($"[ZeroIn] Area not found: {identifier}");
+            Chat.WriteLine($"[ZeroIn] Area not found: {identifier}", ChatColor.Red);
         }
 
         private static void AddArea(string name)
@@ -310,22 +300,22 @@ namespace ZeroIn
             var newArea = new ZoneArea(name, Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero);
             _config.ZoneAreas.Add(newArea);
             _config.CurrentAreaIndex = _config.ZoneAreas.Count - 1;
-            Console.WriteLine($"[ZeroIn] Added new area: {name}");
-            Console.WriteLine($"[ZeroIn] Use '/zeroin setcorner <1-4>' to set corner positions");
+            Chat.WriteLine($"[ZeroIn] Added new area: {name}", ChatColor.Green);
+            Chat.WriteLine($"[ZeroIn] Use '/zeroin setcorner <1-4>' to set corner positions", ChatColor.Yellow);
         }
 
         private static void SetCorner(int cornerNum)
         {
             if (cornerNum < 1 || cornerNum > 4)
             {
-                Console.WriteLine("[ZeroIn] Corner must be 1-4");
+                Chat.WriteLine("[ZeroIn] Corner must be 1-4", ChatColor.Red);
                 return;
             }
 
             var area = _config.GetCurrentArea();
             if (area == null)
             {
-                Console.WriteLine("[ZeroIn] No area selected. Use '/zeroin addarea <name>' first");
+                Chat.WriteLine("[ZeroIn] No area selected. Use '/zeroin addarea <name>' first", ChatColor.Red);
                 return;
             }
 
@@ -339,59 +329,59 @@ namespace ZeroIn
                 case 4: area.Corner4 = pos; break;
             }
 
-            Console.WriteLine($"[ZeroIn] Corner {cornerNum} set to: ({pos.X:F1}, {pos.Y:F1}, {pos.Z:F1})");
-            Console.WriteLine($"[ZeroIn] Area '{area.Name}' is {(area.IsValid() ? "VALID" : "incomplete - set all 4 corners")}");
+            Chat.WriteLine($"[ZeroIn] Corner {cornerNum} set to: ({pos.X:F1}, {pos.Y:F1}, {pos.Z:F1})", ChatColor.Green);
+            string status = area.IsValid() ? "VALID" : "incomplete - set all 4 corners";
+            Chat.WriteLine($"[ZeroIn] Area '{area.Name}' is {status}", area.IsValid() ? ChatColor.Green : ChatColor.Yellow);
         }
 
         private static void ShowConfig()
         {
-            Console.WriteLine();
-            Console.WriteLine("=".PadRight(80, '='));
-            Console.WriteLine(" ZeroIn Configuration");
-            Console.WriteLine("=".PadRight(80, '='));
-            Console.WriteLine($" Scan Spacing: {_config.ScanSpacing}m");
-            Console.WriteLine($" Detection Range: {_config.PlayerDetectionRange}m");
-            Console.WriteLine($" Continuous Scanning: {_config.ContinuousScanning}");
-            Console.WriteLine($" Only AFK: {_config.OnlyAFK}");
-            Console.WriteLine($" AFK Check Time: {_config.AFKCheckTimeSeconds}s");
-            Console.WriteLine($" Output Folder: {_config.OutputFolder}");
-            Console.WriteLine($" Log to Console: {_config.LogToConsole}");
-            Console.WriteLine($" Save to JSON: {_config.SaveToJson}");
-            Console.WriteLine($" Save to CSV: {_config.SaveToCsv}");
-            Console.WriteLine("=".PadRight(80, '='));
-            Console.WriteLine();
+            Chat.WriteLine("=".PadRight(80, '='), ChatColor.Yellow);
+            Chat.WriteLine(" ZeroIn Configuration", ChatColor.Yellow);
+            Chat.WriteLine("=".PadRight(80, '='), ChatColor.Yellow);
+            Chat.WriteLine($" Scan Spacing: {_config.ScanSpacing}m", ChatColor.White);
+            Chat.WriteLine($" Detection Range: {_config.PlayerDetectionRange}m", ChatColor.White);
+            Chat.WriteLine($" Continuous Scanning: {_config.ContinuousScanning}", ChatColor.White);
+            Chat.WriteLine($" Only AFK: {_config.OnlyAFK}", ChatColor.White);
+            Chat.WriteLine($" AFK Check Time: {_config.AFKCheckTimeSeconds}s", ChatColor.White);
+            Chat.WriteLine($" Output Folder: {_config.OutputFolder}", ChatColor.White);
+            Chat.WriteLine($" Log to Console: {_config.LogToConsole}", ChatColor.White);
+            Chat.WriteLine($" Save to JSON: {_config.SaveToJson}", ChatColor.White);
+            Chat.WriteLine($" Save to CSV: {_config.SaveToCsv}", ChatColor.White);
+            Chat.WriteLine("=".PadRight(80, '='), ChatColor.Yellow);
 
             var area = _config.GetCurrentArea();
             if (area != null)
             {
-                Console.WriteLine($" Current Area: {area.Name}");
-                Console.WriteLine($"   Corner 1: ({area.Corner1.X:F1}, {area.Corner1.Y:F1}, {area.Corner1.Z:F1})");
-                Console.WriteLine($"   Corner 2: ({area.Corner2.X:F1}, {area.Corner2.Y:F1}, {area.Corner2.Z:F1})");
-                Console.WriteLine($"   Corner 3: ({area.Corner3.X:F1}, {area.Corner3.Y:F1}, {area.Corner3.Z:F1})");
-                Console.WriteLine($"   Corner 4: ({area.Corner4.X:F1}, {area.Corner4.Y:F1}, {area.Corner4.Z:F1})");
-                Console.WriteLine($"   Valid: {area.IsValid()}");
-                Console.WriteLine();
+                Chat.WriteLine($" Current Area: {area.Name}", ChatColor.LightBlue);
+                Chat.WriteLine($"   Corner 1: ({area.Corner1.X:F1}, {area.Corner1.Y:F1}, {area.Corner1.Z:F1})", ChatColor.White);
+                Chat.WriteLine($"   Corner 2: ({area.Corner2.X:F1}, {area.Corner2.Y:F1}, {area.Corner2.Z:F1})", ChatColor.White);
+                Chat.WriteLine($"   Corner 3: ({area.Corner3.X:F1}, {area.Corner3.Y:F1}, {area.Corner3.Z:F1})", ChatColor.White);
+                Chat.WriteLine($"   Corner 4: ({area.Corner4.X:F1}, {area.Corner4.Y:F1}, {area.Corner4.Z:F1})", ChatColor.White);
+                Chat.WriteLine($"   Valid: {area.IsValid()}", area.IsValid() ? ChatColor.Green : ChatColor.Red);
             }
         }
 
         private static void SaveConfig()
         {
             _config.Save(_configPath);
-            Console.WriteLine($"[ZeroIn] Configuration saved to: {_configPath}");
+            Chat.WriteLine($"[ZeroIn] Configuration saved", ChatColor.Green);
         }
 
         private static void ReloadConfig()
         {
             _config = ZeroInConfig.Load(_configPath);
             _context.Config = _config;
-            Console.WriteLine($"[ZeroIn] Configuration reloaded from: {_configPath}");
+            Chat.WriteLine($"[ZeroIn] Configuration reloaded", ChatColor.Green);
         }
 
         public override void Teardown()
         {
-            Game.OnUpdate -= OnUpdate;
-            SaveConfig();
-            Console.WriteLine("[ZeroIn] Plugin unloaded");
+            if (_config != null && _configPath != null)
+            {
+                Game.OnUpdate -= OnUpdate;
+                SaveConfig();
+            }
         }
     }
 }
