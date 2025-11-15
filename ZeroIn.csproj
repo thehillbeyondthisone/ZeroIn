@@ -59,6 +59,33 @@
       <HintPath>packages\AOSharpSDK.1.0.106\lib\net48\AOSharp.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="AOSharp.Recast, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\AOSharpSDK.Nav.1.0.5\lib\net48\AOSharp.Recast.dll</HintPath>
+    </Reference>
+    <Reference Include="AOSharp.SharpNav, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\AOSharpSDK.SharpNav.1.0.43\lib\net48\AOSharp.SharpNav.dll</HintPath>
+    </Reference>
+    <Reference Include="cai-nav, Version=0.4.0.0, Culture=neutral, processorArchitecture=x86">
+      <HintPath>packages\AOSharpSDK.Nav.1.0.5\lib\net48\cai-nav.dll</HintPath>
+    </Reference>
+    <Reference Include="cai-nav-rcn, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <HintPath>packages\AOSharpSDK.Nav.1.0.5\lib\net48\cai-nav-rcn.dll</HintPath>
+    </Reference>
+    <Reference Include="cai-nmbuild, Version=0.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\AOSharpSDK.Nav.1.0.5\lib\net48\cai-nmbuild.dll</HintPath>
+    </Reference>
+    <Reference Include="cai-nmgen, Version=0.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\AOSharpSDK.Nav.1.0.5\lib\net48\cai-nmgen.dll</HintPath>
+    </Reference>
+    <Reference Include="cai-nmgen-rcn, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <HintPath>packages\AOSharpSDK.Nav.1.0.5\lib\net48\cai-nmgen-rcn.dll</HintPath>
+    </Reference>
+    <Reference Include="cai-util, Version=0.5.0.0, Culture=neutral, processorArchitecture=x86">
+      <HintPath>packages\AOSharpSDK.Nav.1.0.5\lib\net48\cai-util.dll</HintPath>
+    </Reference>
+    <Reference Include="NavmeshMovementController, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\AOSharpSDK.Nav.1.0.5\lib\net48\NavmeshMovementController.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>

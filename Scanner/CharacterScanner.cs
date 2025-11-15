@@ -1,161 +1,156 @@
-using AOSharp.Common.GameData;
-using AOSharp.Core;
+// CharacterScanner.cs
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ZeroIn.Config;
+using System.Reflection;
+using System.Text;
+using ZeroIn.Config; // ensure this matches your project
 
 namespace ZeroIn.Scanner
 {
     /// <summary>
-    /// Scans for nearby characters during grid pattern movement
+    /// CharacterScanner that maintains TimesSpotted and previous position snapshots.
+    /// Remains AOSharp-free — call OnCharacterSeen from AOSharp-aware adapter.
     /// </summary>
     public class CharacterScanner
     {
-        private Dictionary<uint, DetectedCharacter> _detectedCharacters;
-        private ZeroInConfig _config;
-        private DateTime _lastScan;
+        private readonly Dictionary<uint, DetectedCharacter> _tracked = new Dictionary<uint, DetectedCharacter>();
+        private readonly ZeroInConfig _config;
+        private TimeSpan _staleAfter;
 
         public CharacterScanner(ZeroInConfig config)
         {
-            _config = config;
-            _detectedCharacters = new Dictionary<uint, DetectedCharacter>();
-            _lastScan = DateTime.MinValue;
-        }
+            _config = config ?? throw new ArgumentNullException(nameof(config));
+            int staleSeconds = 10;
 
-        /// <summary>
-        /// Gets all detected characters
-        /// </summary>
-        public List<DetectedCharacter> GetDetectedCharacters()
-        {
-            return _detectedCharacters.Values.ToList();
-        }
-
-        /// <summary>
-        /// Gets count of detected characters
-        /// </summary>
-        public int Count => _detectedCharacters.Count;
-
-        /// <summary>
-        /// Performs a scan for nearby characters
-        /// </summary>
-        public void Scan()
-        {
-            // Rate limiting
-            if ((DateTime.Now - _lastScan).TotalMilliseconds < _config.ScanDelayMs)
-                return;
-
-            _lastScan = DateTime.Now;
-
+            // reflective fallback: try to read config.ScannerStaleSeconds if it exists
             try
             {
-                // Get all nearby simple characters (players)
-                var nearbyChars = DynelManager.Characters
-                    .Where(c => c.IsValid &&
-                                c is SimpleChar &&
-                                !c.IsNpc &&
-                                Vector3.Distance(DynelManager.LocalPlayer.Position, c.Position) <= _config.PlayerDetectionRange)
-                    .Select(c => c as SimpleChar)
-                    .ToList();
-
-                foreach (var character in nearbyChars)
+                var prop = _config.GetType().GetProperty("ScannerStaleSeconds", BindingFlags.Public | BindingFlags.Instance);
+                if (prop != null)
                 {
-                    if (!ShouldDetect(character))
-                        continue;
-
-                    if (_detectedCharacters.ContainsKey(character.Identity.Instance))
-                    {
-                        // Update existing detection
-                        var detected = _detectedCharacters[character.Identity.Instance];
-                        detected.Update(character.Position);
-                    }
-                    else
-                    {
-                        // New detection
-                        var detected = new DetectedCharacter
-                        {
-                            Name = character.Name,
-                            CharId = character.Identity.Instance,
-                            Position = character.Position,
-                            Profession = character.Profession,
-                            Breed = character.Breed,
-                            Level = (int)character.Level,
-                            Faction = Side.Neutral, // SimpleChar doesn't expose faction directly
-                            LastPosition = character.Position
-                        };
-
-                        _detectedCharacters[character.Identity.Instance] = detected;
-
-                        if (_config.LogToConsole)
-                        {
-                            Console.WriteLine($"[ZeroIn] Detected: {detected}");
-                        }
-                    }
+                    var val = prop.GetValue(_config);
+                    if (val is int i && i >= 1) staleSeconds = i;
+                    else if (val is long l && l >= 1) staleSeconds = (int)l;
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"[ZeroIn] Error during scan: {ex.Message}");
+                // ignore and use default
+            }
+
+            _staleAfter = TimeSpan.FromSeconds(Math.Max(1, staleSeconds));
+        }
+
+        public void Clear() => _tracked.Clear();
+
+        public void Scan() => PurgeStale();
+
+        public List<DetectedCharacter> GetDetectedCharacters()
+        {
+            return _tracked.Values.Select(Clone).ToList();
+        }
+
+        public List<DetectedCharacter> GetAFKCharacters(TimeSpan? threshold = null)
+        {
+            var t = threshold ?? TimeSpan.FromSeconds(30);
+            var now = DateTime.UtcNow;
+            return _tracked.Values.Where(c => (now - c.LastSeen) >= t).Select(Clone).ToList();
+        }
+
+        public string GetSummary()
+        {
+            var now = DateTime.UtcNow;
+            var sb = new StringBuilder();
+            sb.AppendLine($"Tracked: {_tracked.Count}");
+            foreach (var c in _tracked.Values.OrderByDescending(x => x.LastSeen).Take(6))
+            {
+                var age = (now - c.LastSeen).TotalSeconds;
+                sb.AppendLine($"{c.Name} ({c.CharId}) lastSeen={age:0.0}s hp={c.Health} dist={c.Distance:0.0} spotted={c.TimesSpotted}");
+            }
+
+            return sb.ToString();
+        }
+
+        public int Count => _tracked.Count;
+
+        /// <summary>
+        /// Adapter call — provide primitive values from AOSharp-aware code.
+        /// This method snapshots previous position, increments TimesSpotted, and updates fields.
+        /// </summary>
+        public void OnCharacterSeen(int instanceId, string name, float posX, float posY, float posZ, int health = 0, float distance = 0f)
+        {
+            uint id = unchecked((uint)instanceId);
+
+            if (_tracked.TryGetValue(id, out var existing))
+            {
+                // record previous pos so HasMoved can work
+                existing.SnapshotPreviousPosition();
+
+                // update fields
+                existing.TimesSpotted++;
+                existing.Name = name ?? existing.Name;
+                existing.PositionX = posX;
+                existing.PositionY = posY;
+                existing.PositionZ = posZ;
+                existing.Distance = distance;
+                existing.Health = health;
+                existing.LastSeen = DateTime.UtcNow;
+
+                _tracked[id] = existing;
+            }
+            else
+            {
+                var d = new DetectedCharacter
+                {
+                    CharId = id,
+                    Name = name ?? string.Empty,
+                    PositionX = posX,
+                    PositionY = posY,
+                    PositionZ = posZ,
+                    PrevPositionX = posX,
+                    PrevPositionY = posY,
+                    PrevPositionZ = posZ,
+                    Distance = distance,
+                    Health = health,
+                    TimesSpotted = 1,
+                    FirstSeen = DateTime.UtcNow,
+                    LastSeen = DateTime.UtcNow
+                };
+
+                _tracked.Add(id, d);
             }
         }
 
-        /// <summary>
-        /// Checks if a character should be detected based on config filters
-        /// </summary>
-        private bool ShouldDetect(SimpleChar character)
+        public bool Remove(int instanceId) => _tracked.Remove(unchecked((uint)instanceId));
+
+        private void PurgeStale()
         {
-            if (character == null || !character.IsValid)
-                return false;
-
-            // Ignore self
-            if (_config.IgnoreSelf && character.Identity == DynelManager.LocalPlayer.Identity)
-                return false;
-
-            // Ignore names in ignore list
-            if (_config.IgnoreNames.Contains(character.Name))
-                return false;
-
-            return true;
+            var now = DateTime.UtcNow;
+            var stale = _tracked.Where(kvp => (now - kvp.Value.LastSeen) > _staleAfter)
+                                .Select(kvp => kvp.Key)
+                                .ToList();
+            foreach (var k in stale) _tracked.Remove(k);
         }
 
-        /// <summary>
-        /// Gets characters filtered by AFK status
-        /// </summary>
-        public List<DetectedCharacter> GetAFKCharacters()
+        private static DetectedCharacter Clone(DetectedCharacter src)
         {
-            return _detectedCharacters.Values
-                .Where(c => c.IsLikelyAFK(_config.AFKCheckTimeSeconds))
-                .ToList();
-        }
-
-        /// <summary>
-        /// Gets characters that have moved
-        /// </summary>
-        public List<DetectedCharacter> GetMovingCharacters()
-        {
-            return _detectedCharacters.Values
-                .Where(c => c.HasMoved)
-                .ToList();
-        }
-
-        /// <summary>
-        /// Clears all detected characters
-        /// </summary>
-        public void Clear()
-        {
-            _detectedCharacters.Clear();
-        }
-
-        /// <summary>
-        /// Gets a summary of scan results
-        /// </summary>
-        public string GetSummary()
-        {
-            int total = _detectedCharacters.Count;
-            int afk = GetAFKCharacters().Count;
-            int moving = GetMovingCharacters().Count;
-
-            return $"Total: {total} | AFK: {afk} | Moving: {moving}";
+            return new DetectedCharacter
+            {
+                CharId = src.CharId,
+                Name = src.Name,
+                TimesSpotted = src.TimesSpotted,
+                PositionX = src.PositionX,
+                PositionY = src.PositionY,
+                PositionZ = src.PositionZ,
+                PrevPositionX = src.PrevPositionX,
+                PrevPositionY = src.PrevPositionY,
+                PrevPositionZ = src.PrevPositionZ,
+                Distance = src.Distance,
+                Health = src.Health,
+                FirstSeen = src.FirstSeen,
+                LastSeen = src.LastSeen
+            };
         }
     }
 }

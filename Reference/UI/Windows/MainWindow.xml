@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+	<ScrollView h_alignment="LEFT" label="#Behaviour/s" v_scrollbar_mode="auto" scroll_client="behaviour_s_scroll">
+		<ScrollViewChild name="behaviour_s_scroll" min_size ="Point(150,500)" max_size="Point(150, -1)">
+			<View min_size="Point(150,-1)" view_layout="vertical" name="Root">
+				<View name="CoreViewRoot">
+					<Haxxor/>
+				</View>
+				<Button name="PathCreator" label="Path Editor"/>
+				<View name="RangeSettingsRoot">
+					<Haxxor/>
+				</View>
+				<Button name="SaveConfig" label="Save Config" layout_borders="Rect(0,0,0,8)"/>
+			</View>
+			<VLayoutSpacer/>
+		</ScrollViewChild>
+	</ScrollView>
+</root>

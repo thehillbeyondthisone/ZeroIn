@@ -114,8 +114,8 @@ namespace ZeroIn.Scanner
             sb.AppendLine("=".PadRight(80, '='));
             sb.AppendLine();
             sb.AppendLine($"Total Characters Detected: {characters.Count}");
-            sb.AppendLine($"AFK Characters: {characters.Count(c => !c.HasMoved)}");
-            sb.AppendLine($"Moving Characters: {characters.Count(c => c.HasMoved)}");
+            sb.AppendLine($"AFK Characters: {characters.Count(c => !c.HasMoved())}");
+            sb.AppendLine($"Moving Characters: {characters.Count(c => c.HasMoved())}");
             sb.AppendLine();
             sb.AppendLine("=".PadRight(80, '='));
             sb.AppendLine(" Character List");
@@ -124,7 +124,7 @@ namespace ZeroIn.Scanner
 
             foreach (var character in characters.OrderBy(c => c.Name))
             {
-                sb.AppendLine($"[{(character.HasMoved ? "MOVING" : "AFK   ")}] {character}");
+                sb.AppendLine($"[{(character.HasMoved() ? "MOVING" : "AFK   ")}] {character}");
                 sb.AppendLine($"           First Seen: {character.FirstSeen:HH:mm:ss}");
                 sb.AppendLine($"           Last Seen:  {character.LastSeen:HH:mm:ss}");
                 sb.AppendLine($"           Spotted:    {character.TimesSpotted} times");
@@ -151,8 +151,8 @@ namespace ZeroIn.Scanner
             Console.WriteLine($" Scan Complete - {characters.Count} Characters Found");
             Console.WriteLine("=".PadRight(80, '='));
 
-            var afkChars = characters.Where(c => !c.HasMoved).ToList();
-            var movingChars = characters.Where(c => c.HasMoved).ToList();
+            var afkChars = characters.Where(c => !c.HasMoved()).ToList();
+            var movingChars = characters.Where(c => c.HasMoved()).ToList();
 
             if (afkChars.Count > 0)
             {
