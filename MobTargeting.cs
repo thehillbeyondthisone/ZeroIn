@@ -97,7 +97,7 @@ namespace ZeroIn
                 var targets = sharedQuery.ToList();
                 if (targets.Count > 0)
                     Chat.WriteLine($"[ZeroIn] Found {targets.Count} possible targets: {string.Join(", ", targets.Select(t => $"{t.Name}(L{t.Level})"))}",
-                        ChatColor.Gray);
+                        ChatColor.White);
             }
 
             // Legacy support: also check RoamPath.Rules if they exist

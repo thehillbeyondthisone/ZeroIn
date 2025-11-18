@@ -73,7 +73,7 @@ namespace ZeroIn
             var localPos = localPlayer.Position;
 
             if (ZeroIn.Config.VerboseDebug)
-                Chat.WriteLine($"[ZeroIn] Scanning {DynelManager.Players.Count()} players in area...", ChatColor.Gray);
+                Chat.WriteLine($"[ZeroIn] Scanning {DynelManager.Players.Count()} players in area...", ChatColor.White);
 
             // Scan all nearby players
             int scanned = 0;
@@ -102,11 +102,11 @@ namespace ZeroIn
                 scanned++;
 
                 if (ZeroIn.Config.VerboseDebug)
-                    Chat.WriteLine($"[ZeroIn]   → {player.Name} @ {distance:F1}m", ChatColor.Gray);
+                    Chat.WriteLine($"[ZeroIn]   → {player.Name} @ {distance:F1}m", ChatColor.White);
             }
 
             if (ZeroIn.Config.VerboseDebug && scanned > 0)
-                Chat.WriteLine($"[ZeroIn] Scanned {scanned} players, total tracked: {scanner.Count}", ChatColor.Gray);
+                Chat.WriteLine($"[ZeroIn] Scanned {scanned} players, total tracked: {scanner.Count}", ChatColor.White);
         }
     }
 }
