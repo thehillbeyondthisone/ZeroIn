@@ -72,7 +72,8 @@ namespace ZeroIn.StateMachine.States
             var context = _stateMachine.Context;
 
             // Stop movement
-            SMovementController.StopFollow();
+            if (SMovementController.IsNavigating())
+                SMovementController.Halt();
 
             // Save and display results
             var characters = context.Scanner.GetDetectedCharacters();

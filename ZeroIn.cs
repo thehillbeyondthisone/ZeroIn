@@ -58,7 +58,7 @@ namespace ZeroIn
                     return; // Not ready yet, will retry next frame
 
                 // Set up config path
-                _configPath = Path.Combine(
+                _configPath = System.IO.Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "AOSharp",
                     "AOSP",
@@ -67,7 +67,7 @@ namespace ZeroIn
                 );
 
                 // Ensure directory exists
-                string configDir = Path.GetDirectoryName(_configPath);
+                string configDir = System.IO.Path.GetDirectoryName(_configPath);
                 if (!Directory.Exists(configDir))
                     Directory.CreateDirectory(configDir);
 
@@ -306,7 +306,7 @@ namespace ZeroIn
             Chat.WriteLine($" Total Waypoints: {waypoints.Count}", ChatColor.White);
             Chat.WriteLine($" Total Distance: {distance:F1}m", ChatColor.White);
             Chat.WriteLine($" Estimated Time: {time:hh\\:mm\\:ss}", ChatColor.White);
-            Chat.WriteLine($" Average Speed: 7 m/s (run speed)", ChatColor.Gray);
+            Chat.WriteLine($" Average Speed: 7 m/s (run speed)", ChatColor.White);
             Chat.WriteLine("=".PadRight(80, '='), ChatColor.Yellow);
             Chat.WriteLine("", ChatColor.White);
 
@@ -321,7 +321,7 @@ namespace ZeroIn
 
             if (waypoints.Count > 10)
             {
-                Chat.WriteLine($"  ... ({waypoints.Count - 10} more waypoints)", ChatColor.Gray);
+            Chat.WriteLine($"  ... ({waypoints.Count - 10} more waypoints)", ChatColor.White);
             }
 
             Chat.WriteLine("", ChatColor.White);
