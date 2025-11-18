@@ -100,7 +100,66 @@ namespace ZeroIn
                     Radar.Toggle();
                 });
 
-                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar", ChatColor.Green);
+                // Add diagnostic command to debug XML file loading
+                Chat.RegisterCommand("debugxml", (string command, string[] param, ChatWindow chatWindow) =>
+                {
+                    Chat.WriteLine("=== ZeroIn XML Debug ===", ChatColor.Yellow);
+                    Chat.WriteLine($"Plugin Directory: {PluginDirectory}", ChatColor.White);
+                    Chat.WriteLine($"Windows Root: {XmlPath.WindowsRootDir}", ChatColor.White);
+                    Chat.WriteLine($"Views Root: {XmlPath.ViewsRootDir}", ChatColor.White);
+
+                    string coreViewPath = $"{XmlPath.ViewsRootDir}\\BuddyCoreView.xml";
+                    Chat.WriteLine($"\nBuddyCoreView.xml path: {coreViewPath}", ChatColor.LightBlue);
+                    Chat.WriteLine($"File exists: {File.Exists(coreViewPath)}", ChatColor.White);
+
+                    if (File.Exists(coreViewPath))
+                    {
+                        try
+                        {
+                            var lines = File.ReadAllLines(coreViewPath);
+                            Chat.WriteLine($"Total lines: {lines.Length}", ChatColor.White);
+                            Chat.WriteLine("\nSearching for HLayoutGroup...", ChatColor.Yellow);
+                            for (int i = 0; i < lines.Length; i++)
+                            {
+                                if (lines[i].Contains("HLayoutGroup"))
+                                {
+                                    Chat.WriteLine($"Line {i + 1}: {lines[i].Trim()}", ChatColor.LightBlue);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Chat.WriteLine($"Error reading file: {ex.Message}", ChatColor.Red);
+                        }
+                    }
+
+                    string scanSettingsPath = $"{XmlPath.ViewsRootDir}\\ScanSettingsView.xml";
+                    Chat.WriteLine($"\nScanSettingsView.xml path: {scanSettingsPath}", ChatColor.LightBlue);
+                    Chat.WriteLine($"File exists: {File.Exists(scanSettingsPath)}", ChatColor.White);
+
+                    if (File.Exists(scanSettingsPath))
+                    {
+                        try
+                        {
+                            var lines = File.ReadAllLines(scanSettingsPath);
+                            Chat.WriteLine($"Total lines: {lines.Length}", ChatColor.White);
+                            Chat.WriteLine("\nSearching for HLayoutGroup...", ChatColor.Yellow);
+                            for (int i = 0; i < lines.Length; i++)
+                            {
+                                if (lines[i].Contains("HLayoutGroup"))
+                                {
+                                    Chat.WriteLine($"Line {i + 1}: {lines[i].Trim()}", ChatColor.LightBlue);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Chat.WriteLine($"Error reading file: {ex.Message}", ChatColor.Red);
+                        }
+                    }
+                });
+
+                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /debugxml", ChatColor.Green);
 
                 Chat.WriteLine("[ZeroIn] Initializing state machine...", ChatColor.White);
                 StateMachine = new RoamStateMachine(new MobTargeting(Config), Scanner, Map, Config.CoreConfig.OnInjectEnable);
@@ -126,6 +185,13 @@ namespace ZeroIn
         {
             try
             {
+                // Check if window already exists and is valid
+                if (MainWindow != null && MainWindow.Window != null && MainWindow.Window.IsValid)
+                {
+                    Chat.WriteLine("[ZeroIn] Window is already open!", ChatColor.Yellow);
+                    return;
+                }
+
                 Chat.WriteLine($"=== ZeroIn Window Creation Debug ===", ChatColor.Yellow);
                 Chat.WriteLine($"Plugin directory: {PluginDirectory}", ChatColor.White);
                 Chat.WriteLine($"Windows root: {XmlPath.WindowsRootDir}", ChatColor.White);

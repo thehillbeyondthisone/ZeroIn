@@ -35,6 +35,11 @@ namespace ZeroIn
         public System.Collections.Generic.List<string> IgnoreNames = new System.Collections.Generic.List<string>();
         public int ScannerStaleSeconds = 10;
 
+        // Combat settings
+        public bool EnableCombat = false;
+        public bool EnableLooting = false;
+        public bool EnableHealthCheck = false;
+
         public ZeroInConfig()
         {
             CoreConfig = new BuddyCoreConfig();

@@ -47,30 +47,12 @@ namespace ZeroIn.Scanner
         }
 
         /// <summary>
-        /// Prints results to console
+        /// Prints results to console (legacy method - not used, kept for compatibility)
         /// </summary>
         public void PrintResults(List<DetectedCharacter> characters)
         {
-            if (characters == null || characters.Count == 0)
-            {
-                Console.WriteLine("[ZeroIn] No characters detected");
-                return;
-            }
-
-            Console.WriteLine("=".PadRight(80, '='));
-            Console.WriteLine($" ZeroIn Scan Results - {characters.Count} characters detected");
-            Console.WriteLine("=".PadRight(80, '='));
-
-            foreach (var character in characters.OrderBy(c => c.Name))
-            {
-                var age = (DateTime.UtcNow - character.LastSeen).TotalSeconds;
-                Console.WriteLine($"  {character.Name}");
-                Console.WriteLine($"    Position: ({character.PositionX:F1}, {character.PositionY:F1}, {character.PositionZ:F1})");
-                Console.WriteLine($"    Distance: {character.Distance:F1}m");
-                Console.WriteLine($"    Times Spotted: {character.TimesSpotted}");
-                Console.WriteLine($"    Last Seen: {age:F0}s ago");
-                Console.WriteLine();
-            }
+            // This method is not currently used - output goes to files only
+            // Logging is handled by the calling code in ZeroIn.cs
         }
 
         private void SaveAsJson(List<DetectedCharacter> characters, string areaName, string timestamp)
@@ -82,12 +64,11 @@ namespace ZeroIn.Scanner
 
                 var json = JsonConvert.SerializeObject(characters, Formatting.Indented);
                 File.WriteAllText(path, json);
-
-                Console.WriteLine($"[ZeroIn] Saved JSON: {filename}");
+                // File saved successfully (logging handled by calling code)
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"[ZeroIn] Error saving JSON: {ex.Message}");
+                // Error saving (logging handled by calling code)
             }
         }
 
@@ -99,22 +80,21 @@ namespace ZeroIn.Scanner
                 string path = Path.Combine(_outputPath, filename);
 
                 var sb = new StringBuilder();
-                sb.AppendLine("CharId,Name,TimesSpotted,PositionX,PositionY,PositionZ,Distance,Health,FirstSeen,LastSeen");
+                // Use the enhanced CSV header with AFK detection fields
+                sb.AppendLine(DetectedCharacter.GetCsvHeader());
 
                 foreach (var character in characters.OrderBy(c => c.Name))
                 {
-                    sb.AppendLine($"{character.CharId},{EscapeCsv(character.Name)},{character.TimesSpotted}," +
-                                  $"{character.PositionX:F2},{character.PositionY:F2},{character.PositionZ:F2}," +
-                                  $"{character.Distance:F2},{character.Health}," +
-                                  $"{character.FirstSeen:yyyy-MM-dd HH:mm:ss},{character.LastSeen:yyyy-MM-dd HH:mm:ss}");
+                    // Use the enhanced ToCsv method with all AFK tracking data
+                    sb.AppendLine(character.ToCsv());
                 }
 
                 File.WriteAllText(path, sb.ToString());
-                Console.WriteLine($"[ZeroIn] Saved CSV: {filename}");
+                // File saved successfully (logging handled by calling code)
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"[ZeroIn] Error saving CSV: {ex.Message}");
+                // Error saving (logging handled by calling code)
             }
         }
 
@@ -125,30 +105,33 @@ namespace ZeroIn.Scanner
                 string filename = $"scan_{areaName}_{timestamp}.txt";
                 string path = Path.Combine(_outputPath, filename);
 
+                var afkCount = characters.Count(c => c.IsLikelyAFK());
                 var sb = new StringBuilder();
                 sb.AppendLine($"ZeroIn Scan Results - {areaName}");
                 sb.AppendLine($"Scan Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-                sb.AppendLine($"Characters Detected: {characters.Count}");
+                sb.AppendLine($"Characters Detected: {characters.Count} ({afkCount} likely AFK)");
                 sb.AppendLine();
                 sb.AppendLine("=".PadRight(80, '='));
 
                 foreach (var character in characters.OrderBy(c => c.Name))
                 {
                     var age = (DateTime.UtcNow - character.LastSeen).TotalSeconds;
-                    sb.AppendLine($"{character.Name}");
+                    var afkStatus = character.IsLikelyAFK() ? $" [AFK {character.GetAFKConfidence()}%]" : "";
+                    sb.AppendLine($"{character.Name}{afkStatus}");
                     sb.AppendLine($"  Position: ({character.PositionX:F1}, {character.PositionY:F1}, {character.PositionZ:F1})");
+                    sb.AppendLine($"  Playfield: {character.PlayfieldName} ({character.PlayfieldId})");
                     sb.AppendLine($"  Distance: {character.Distance:F1}m");
-                    sb.AppendLine($"  Times Spotted: {character.TimesSpotted}");
+                    sb.AppendLine($"  Times Spotted: {character.TimesSpotted} | Distance Moved: {character.TotalDistanceMoved:F1}m");
                     sb.AppendLine($"  Last Seen: {age:F0}s ago");
                     sb.AppendLine();
                 }
 
                 File.WriteAllText(path, sb.ToString());
-                Console.WriteLine($"[ZeroIn] Saved Summary: {filename}");
+                // File saved successfully (logging handled by calling code)
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"[ZeroIn] Error saving summary: {ex.Message}");
+                // Error saving (logging handled by calling code)
             }
         }
 

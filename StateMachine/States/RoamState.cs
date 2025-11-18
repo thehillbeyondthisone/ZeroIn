@@ -22,28 +22,39 @@ namespace ZeroIn
             // Scan for nearby players (ZeroIn functionality)
             ScanForPlayers();
 
-            if (StateMachine.Context.HealthOrNanoTooLow() && !StateMachine.Context.IsInCombat())
+            // Optional combat behavior - enabled via UI settings
+            if (ZeroIn.Config.EnableHealthCheck)
             {
-                StateMachine.Fire(Trigger.TooLowOnStats);
-                return;
+                if (StateMachine.Context.HealthOrNanoTooLow() && !StateMachine.Context.IsInCombat())
+                {
+                    StateMachine.Fire(Trigger.TooLowOnStats);
+                    return;
+                }
             }
 
-            if (StateMachine.Context.MobTargeting.TryGetNextCorpse(out Corpse corpse))
+            if (ZeroIn.Config.EnableLooting)
             {
-                SMovementController.SetDestination(corpse.Position);
-                StateMachine.Fire(Trigger.LootTargetFound);
-                return;
+                if (StateMachine.Context.MobTargeting.TryGetNextCorpse(out Corpse corpse))
+                {
+                    SMovementController.SetDestination(corpse.Position);
+                    StateMachine.Fire(Trigger.LootTargetFound);
+                    return;
+                }
             }
 
-            if (StateMachine.Context.MobTargeting.TryGetNextTarget(out SimpleChar target, out _, out _))
+            if (ZeroIn.Config.EnableCombat)
             {
-                StateMachine.Context.NextTarget = target;
-                StateMachine.Fire(Trigger.AliveTargetFound);
-                return;
+                if (StateMachine.Context.MobTargeting.TryGetNextTarget(out SimpleChar target, out _, out _))
+                {
+                    StateMachine.Context.NextTarget = target;
+                    StateMachine.Fire(Trigger.AliveTargetFound);
+                    return;
+                }
             }
 
             StateMachine.Context.NextTarget = null;
 
+            // Follow the path and scan
             ZeroIn.SetPath(ZeroIn.RoamPath.SPath);
         }
 
@@ -78,7 +89,9 @@ namespace ZeroIn
                     player.Position.Y,
                     player.Position.Z,
                     player.Health,
-                    distance
+                    distance,
+                    Playfield.ModelIdentity.Instance,
+                    Playfield.Name
                 );
             }
         }

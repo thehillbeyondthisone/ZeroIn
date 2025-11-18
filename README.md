@@ -1,178 +1,258 @@
 # ZeroIn
-Find that pesky someone.
+Find AFK players across Anarchy Online zones.
 
-An AOSharp plugin that systematically scans play areas using grid search patterns to detect and map AFK characters in Anarchy Online.
+An AOSharp plugin that scans for nearby players while following a roamba path, with robust AFK detection and map overlay export capabilities.
 
 ## Features
 
-- **Grid Search Pattern**: Efficient lawnmower-pattern scanning with configurable spacing
-- **4-Corner Area Definition**: Define irregular zone shapes using corner coordinates
-- **Character Detection**: Automatically detects nearby players within 50m range
-- **AFK Detection**: Tracks character movement to identify truly AFK players
-- **Multiple Output Formats**: Saves results as JSON, CSV, and summary text files
-- **Continuous Scanning**: Optional loop mode for ongoing surveillance
-- **Configurable Filters**: Filter by AFK status, ignore specific names
+- **Path-Based Scanning**: Follows your configured roamba path while scanning for players
+- **Robust AFK Detection**: Multi-factor confidence scoring (0-100%) based on movement tracking
+- **Visual Radar Overlay**: In-game visualization showing detection radius and player markers
+- **Playfield Tracking**: Records zone information for cross-zone map overlay
+- **Movement History**: Tracks total distance moved, stationary periods, and last movement time
+- **Multiple Output Formats**: JSON, CSV, and summary text with full AFK analytics
+- **Real-Time Display**: Live counts of detected vs AFK players in UI
 
 ## Installation
 
 1. Build the project or download the compiled DLL
 2. Place `ZeroIn.dll` in your AOSharp plugins folder
-3. Load the plugin in-game with `/plugin load ZeroIn`
+3. **IMPORTANT**: Do a CLEAN BUILD to ensure XML UI files are copied correctly
+   - In Visual Studio: Build → Clean Solution, then Build → Rebuild Solution
+4. Load the plugin in-game with `/plugin load ZeroIn`
 
-## Quick Start
+## UI Guide - Every Button Explained
 
-1. **Add a new scan area:**
-   ```
-   /zeroin addarea "Perpetual Wastelands"
-   ```
+When you open the ZeroIn window in-game, you'll see these sections:
 
-2. **Set the four corner coordinates:**
-   - Move to the first corner of your scan area
-   - `/zeroin setcorner 1`
-   - Repeat for corners 2, 3, and 4
+### Settings Section
+- **Channel Id**: Text field for IPC (inter-process communication) channel number
+  - Use same channel ID on multiple clients to coordinate scanning
+  - Default: 1
+- **Enable on inject**: Checkbox - auto-start scanning when plugin loads
+- **Start/Stop**: Button - toggles the scanner on/off
+  - Will show error if no scan path is configured
 
-3. **Save your configuration:**
-   ```
-   /zeroin save
-   ```
+### Scan Path Section
+- **Edit Scan Path**: Button - opens the roamba path editor
+  - Click this FIRST to create your scanning route
+  - Add waypoints by clicking on the map
+  - The scanner will follow this path while detecting players
 
-4. **Start scanning:**
-   ```
-   /zeroin start
-   ```
+### Scanner Settings Section
+- **Scan Spacing (m)**: Distance between scan waypoints (default: 40m)
+- **Detection (m)**: Maximum range to detect players (default: 50m)
+- **Only AFK Players**: Checkbox - filter output to only save AFK players
+- **AFK Time (sec)**: Minimum stationary time to consider AFK (default: 30s)
+- **Save to JSON**: Checkbox - export results as JSON file
+- **Save to CSV**: Checkbox - export results as CSV file (includes AFK confidence %)
+- **Log to Console**: Checkbox - print detections to chat window
+- **Continuous Scanning**: Checkbox - loop the path indefinitely
 
-5. **View results:**
-   ```
-   /zeroin status
-   ```
+### Scan Results Section
+- **Detected: X**: Real-time count of all players detected
+- **AFK: X**: Real-time count of likely AFK players
+- **View Details**: Button - opens detailed results window with full player list
+- **Save Config**: Button - saves all settings to config file
 
 ## Commands
 
-### Scan Control
-- `/zeroin start` - Start scanning the current area
-- `/zeroin stop` - Stop the current scan
-- `/zeroin status` - Show scan status and detected characters
-
-### Area Management
-- `/zeroin area` - List all configured areas
-- `/zeroin area <name|index>` - Switch to a different area
-- `/zeroin addarea <name>` - Create a new scan area
-- `/zeroin setcorner <1-4>` - Set corner N to your current position
-
-### Configuration
-- `/zeroin config` - Display current settings
-- `/zeroin save` - Save configuration to file
-- `/zeroin reload` - Reload configuration from file
-
-### Help
-- `/zeroin help` - Show all commands
+- `/zeroin` - Opens the ZeroIn window
+- `/radar` - Toggles visual radar overlay on/off
 - `/zi` - Short alias for `/zeroin`
+
+## How to Use
+
+### Step-by-Step First Scan
+
+1. **Create a Scan Path**:
+   - Open ZeroIn window
+   - Click "Edit Scan Path"
+   - Add waypoints covering the area you want to scan
+   - Close the path editor
+
+2. **Configure Settings**:
+   - Set "Detection (m)" to your preferred range (50m recommended)
+   - Check "Save to CSV" for map overlay data
+   - Optional: Enable "Continuous Scanning" to loop
+
+3. **Start Scanning**:
+   - Click the "Start" button
+   - Your character will follow the path
+   - Players are detected automatically within range
+
+4. **Monitor Progress**:
+   - Watch "Detected" and "AFK" counters update in real-time
+   - Use `/radar` to see visual overlay of detection radius and player markers
+
+5. **View Results**:
+   - Click "View Details" to see full list with AFK confidence %
+   - CSV files saved to: `%LocalAppData%\AOSharp\AOSP\ZeroIn\ScanResults\`
+
+## AFK Detection - How It Works
+
+ZeroIn uses **4 criteria** to determine AFK status with 0-100% confidence:
+
+1. **Stationary Count** (30 points max)
+   - Number of times detected without movement
+   - 10+ stationary detections = full points
+
+2. **Time Without Movement** (30 points max)
+   - Seconds since last observed movement
+   - 120+ seconds stationary = full points
+
+3. **Low Distance Per Second** (20 points max)
+   - Total distance moved / time observed
+   - <0.1m per second = full points
+
+4. **Multiple Sightings** (20 points max)
+   - Total number of times spotted
+   - 5+ sightings = full points
+
+**Examples**:
+- Player standing still for 2 minutes: 85-100% AFK confidence
+- Player walking slowly but continuously: 0-20% AFK confidence
+- Player that teleported away: Removed from tracked list
+
+## CSV Output Format
+
+The enhanced CSV export includes these columns for map overlay integration:
+
+```
+CharId, InstanceId, Name, PlayfieldId, PlayfieldName, TimesSpotted,
+FirstSeen, LastSeen, PosX, PosY, PosZ, Distance, Health,
+TotalDistanceMoved, StationaryCount, LastMovementTime, IsAFK, AFKConfidence
+```
+
+**Key Columns**:
+- `PlayfieldId` / `PlayfieldName`: Zone identification for cross-zone mapping
+- `TotalDistanceMoved`: Total meters moved during observation
+- `StationaryCount`: Times detected without moving
+- `IsAFK`: Boolean true/false
+- `AFKConfidence`: 0-100% confidence score
+
+## Visual Radar
+
+Enable with `/radar` command.
+
+**What You'll See**:
+- **Green Circle**: Your detection radius (size = Detection setting)
+- **Small Markers**: Detected players
+  - **Larger markers (3m)**: Likely AFK players
+  - **Smaller markers (2m)**: Active players
+- Marker names include AFK status for debugging
+
+The radar updates every 500ms to prevent spam.
 
 ## Configuration File
 
-The plugin creates a configuration file at:
-```
-%LocalAppData%\AOSharp\AOSP\ZeroIn\<CharacterName>_config.json
-```
+Located at: `%LocalAppData%\AOSharp\AOSP\ZeroIn\<CharacterName>_config.json`
 
 ### Key Settings
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `ScanSpacing` | 40m | Distance between scan lines (40m with 50m detection = 10m overlap) |
-| `PlayerDetectionRange` | 50m | Maximum range to detect players |
-| `ContinuousScanning` | false | Loop the scan continuously |
-| `OnlyAFK` | false | Only save characters that haven't moved |
-| `AFKCheckTimeSeconds` | 30 | Seconds to observe before marking as AFK |
-| `LogToConsole` | true | Print detections to console |
-| `SaveToJson` | true | Save results as JSON |
-| `SaveToCsv` | true | Save results as CSV |
+| `ScanSpacing` | 40m | Waypoint spacing in scan path |
+| `PlayerDetectionRange` | 50m | Maximum detection range |
+| `ContinuousScanning` | false | Loop path continuously |
+| `OnlyAFK` | false | Only save AFK players to output |
+| `AFKCheckTimeSeconds` | 30 | Min seconds for AFK detection |
+| `LogToConsole` | true | Print detections to chat |
+| `SaveToJson` | true | Export JSON files |
+| `SaveToCsv` | true | Export CSV files |
 
 ## Output Files
 
-Scan results are saved to:
-```
-%LocalAppData%\AOSharp\AOSP\ZeroIn\ScanResults\
-```
+All results saved to: `%LocalAppData%\AOSharp\AOSP\ZeroIn\ScanResults\`
 
-### File Formats
-
-**JSON** - Complete detection data with full character information:
-```json
-[
-  {
-    "Name": "PlayerName",
-    "Position": { "X": 1234.5, "Y": 6789.0, "Z": 10.0 },
-    "Level": 220,
-    "Profession": "Engineer",
-    "HasMoved": false
-  }
-]
+### File Naming
+```
+scan_<PlayfieldName>_<Timestamp>.json
+scan_<PlayfieldName>_<Timestamp>.csv
+scan_<PlayfieldName>_<Timestamp>.txt
 ```
 
-**CSV** - Spreadsheet-compatible format:
+### JSON Format
+Complete detection data with all properties (playfield, movement tracking, AFK status).
+
+### CSV Format
+Optimized for spreadsheet analysis and map overlay tools. Includes:
+- Exact coordinates (X, Y, Z)
+- Playfield identification
+- Movement statistics
+- AFK confidence percentage
+
+### TXT Summary
+Human-readable report:
 ```
-Name,CharId,Level,Profession,Breed,Faction,X,Y,Z,FirstSeen,LastSeen,HasMoved,TimesSpotted
+ZeroIn Scan Results - Perpetual Wastelands
+Scan Time: 2025-11-18 12:30:45
+Characters Detected: 15 (8 likely AFK)
+
+PlayerName1 [AFK 95%]
+  Position: (1234.5, 6789.0, 10.0)
+  Playfield: Perpetual Wastelands (587)
+  Distance: 42.3m
+  Times Spotted: 12 | Distance Moved: 0.5m
+  Last Seen: 5s ago
 ```
-
-**Summary Text** - Human-readable report with statistics and character list
-
-## How It Works
-
-1. **Grid Generation**: Creates a lawnmower pattern covering the defined 4-corner area
-2. **Movement**: Navigates through waypoints using AOSharp's pathfinding
-3. **Scanning**: Continuously checks for nearby players (every 100ms)
-4. **Tracking**: Records each character's position and monitors movement
-5. **Output**: Saves results when scan completes or is stopped
-
-### Search Pattern
-
-The grid uses a lawnmower pattern with alternating row directions for efficiency:
-
-```
-1 → → → → 2
-          ↓
-4 ← ← ← ← 3
-↓
-5 → → → → 6
-```
-
-With 40m spacing and 50m detection range, there's a 10m overlap ensuring no character is missed.
-
-## Tips
-
-- **Corner Order**: Corners can be in any order, the plugin calculates bounding box automatically
-- **Irregular Zones**: Works with non-rectangular zones by using min/max bounds
-- **Multiple Areas**: Configure multiple zones and switch between them
-- **AFK Detection**: Characters must be observed for at least `AFKCheckTimeSeconds` to be marked as AFK
-- **Z-Axis**: Plugin uses average Z height, handles different elevations
-
-## Example Use Cases
-
-- **Finding AFK farmers** in popular grinding zones
-- **Mapping player distribution** across playfields
-- **Monitoring enemy positions** in PvP areas
-- **Locating quest NPCs** when coordinates are unknown
-- **Player census** for zone population data
 
 ## Troubleshooting
 
-**"No valid area configured"**
-- Make sure all 4 corners are set (use `/zeroin setcorner 1-4`)
-- Check area validity with `/zeroin config`
+### "no LDBintern (700:9187774)" appearing on buttons
 
-**"Scan not detecting anyone"**
-- Verify `PlayerDetectionRange` is 50m or higher
-- Check that players are within the scan area bounds
-- Ensure `IgnoreSelf` isn't filtering everyone
+**Solution**: Your build didn't copy the updated XML files!
 
-**"Character not saving to output"**
-- If `OnlyAFK` is true, only stationary characters are saved
-- Check `AFKCheckTimeSeconds` - may need longer observation time
+1. Close the game completely
+2. In Visual Studio: Build → Clean Solution
+3. **DELETE** your bin/Debug or bin/Release folder manually
+4. Build → Rebuild Solution
+5. Restart game and inject plugin
+
+### "No scan path loaded" error on Start
+
+**Solution**:
+1. Click "Edit Scan Path" button
+2. Create waypoints covering your scan area
+3. Close path editor
+4. Now click Start
+
+### Scanner not detecting anyone
+
+**Checklist**:
+- Are there actually players nearby within Detection range?
+- Is "Detection (m)" set to 50 or higher?
+- Did you click Start to begin scanning?
+
+### AFK count always shows 0
+
+**Likely Cause**: Players are actually moving!
+- AFK detection requires multiple observations without movement
+- Try increasing "AFK Time (sec)" to 60+
+- Check "View Details" to see individual confidence scores
+
+### Visual radar not showing
+
+**Solutions**:
+- Type `/radar` to toggle it on
+- Check that you have players detected (Detected count > 0)
+- Radar only shows when scanner is actively running
+
+## End Goal - Map Overlay
+
+This plugin is designed to export data for creating map overlay interfaces showing chronically AFK players across all zones in Rubika/Shadowlands.
+
+The CSV export provides:
+- Exact coordinates per playfield
+- Zone identification (PlayfieldId + PlayfieldName)
+- AFK confidence scoring
+- Movement history statistics
+
+Import the CSV into your map visualization tool to display persistent AFK farmer locations.
 
 ## Credits
 
-Based on the roamba movement pattern from the PetPersonas plugin.
+Built from Automaton.Roamba framework. Enhanced with robust AFK detection and map overlay capabilities.
 
 ## License
 
