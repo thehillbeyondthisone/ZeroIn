@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using AOSharp.Core;
+using AOSharp.Common.GameData;
 
 namespace ZeroIn.Scanner
 {
@@ -53,26 +55,26 @@ namespace ZeroIn.Scanner
         {
             if (characters == null || characters.Count == 0)
             {
-                Console.WriteLine("[ZeroIn] No characters detected");
+                Chat.WriteLine("[ZeroIn] No characters detected");
                 return;
             }
 
             var afkCount = characters.Count(c => c.IsLikelyAFK());
-            Console.WriteLine("=".PadRight(80, '='));
-            Console.WriteLine($" ZeroIn Scan Results - {characters.Count} characters detected ({afkCount} likely AFK)");
-            Console.WriteLine("=".PadRight(80, '='));
+            Chat.WriteLine("=".PadRight(80, '='));
+            Chat.WriteLine($" ZeroIn Scan Results - {characters.Count} characters detected ({afkCount} likely AFK)");
+            Chat.WriteLine("=".PadRight(80, '='));
 
             foreach (var character in characters.OrderBy(c => c.Name))
             {
                 var age = (DateTime.UtcNow - character.LastSeen).TotalSeconds;
                 var afkStatus = character.IsLikelyAFK() ? $" [AFK {character.GetAFKConfidence()}%]" : "";
-                Console.WriteLine($"  {character.Name}{afkStatus}");
-                Console.WriteLine($"    Position: ({character.PositionX:F1}, {character.PositionY:F1}, {character.PositionZ:F1})");
-                Console.WriteLine($"    Playfield: {character.PlayfieldName} ({character.PlayfieldId})");
-                Console.WriteLine($"    Distance: {character.Distance:F1}m");
-                Console.WriteLine($"    Times Spotted: {character.TimesSpotted} | Distance Moved: {character.TotalDistanceMoved:F1}m");
-                Console.WriteLine($"    Last Seen: {age:F0}s ago");
-                Console.WriteLine();
+                Chat.WriteLine($"  {character.Name}{afkStatus}");
+                Chat.WriteLine($"    Position: ({character.PositionX:F1}, {character.PositionY:F1}, {character.PositionZ:F1})");
+                Chat.WriteLine($"    Playfield: {character.PlayfieldName} ({character.PlayfieldId})");
+                Chat.WriteLine($"    Distance: {character.Distance:F1}m");
+                Chat.WriteLine($"    Times Spotted: {character.TimesSpotted} | Distance Moved: {character.TotalDistanceMoved:F1}m");
+                Chat.WriteLine($"    Last Seen: {age:F0}s ago");
+                Chat.WriteLine();
             }
         }
 
@@ -86,11 +88,11 @@ namespace ZeroIn.Scanner
                 var json = JsonConvert.SerializeObject(characters, Formatting.Indented);
                 File.WriteAllText(path, json);
 
-                Console.WriteLine($"[ZeroIn] Saved JSON: {filename}");
+                Chat.WriteLine($"[ZeroIn] Saved JSON: {filename}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ZeroIn] Error saving JSON: {ex.Message}");
+                Chat.WriteLine($"[ZeroIn] Error saving JSON: {ex.Message}");
             }
         }
 
@@ -112,11 +114,11 @@ namespace ZeroIn.Scanner
                 }
 
                 File.WriteAllText(path, sb.ToString());
-                Console.WriteLine($"[ZeroIn] Saved CSV: {filename}");
+                Chat.WriteLine($"[ZeroIn] Saved CSV: {filename}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ZeroIn] Error saving CSV: {ex.Message}");
+                Chat.WriteLine($"[ZeroIn] Error saving CSV: {ex.Message}");
             }
         }
 
@@ -149,11 +151,11 @@ namespace ZeroIn.Scanner
                 }
 
                 File.WriteAllText(path, sb.ToString());
-                Console.WriteLine($"[ZeroIn] Saved Summary: {filename}");
+                Chat.WriteLine($"[ZeroIn] Saved Summary: {filename}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ZeroIn] Error saving summary: {ex.Message}");
+                Chat.WriteLine($"[ZeroIn] Error saving summary: {ex.Message}");
             }
         }
 

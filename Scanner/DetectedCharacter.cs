@@ -98,34 +98,43 @@ namespace ZeroIn.Scanner
         }
 
         /// <summary>
-        /// Determines if player is likely AFK based on robust criteria.
-        /// A player is considered AFK if:
-        /// - They haven't moved for several detections (StationaryCount >= minStationaryCount)
-        /// - OR they haven't moved in a long time (based on LastMovementTime)
-        /// - AND total distance moved is very small
+        /// Determines if player is likely AFK based on STRICT criteria.
+        /// RULE: If player moves AT ALL, they are immediately NOT AFK.
+        /// A player is considered AFK ONLY if:
+        /// - They have been observed multiple times (prevents false positives)
+        /// - AND they haven't moved for the configured time threshold
         /// </summary>
         public bool IsLikelyAFK(int minStationaryCount = 5, double maxSecondsWithoutMovement = 60)
         {
-            // If we haven't seen them move at all and they've been spotted multiple times
-            if (LastMovementTime == DateTime.MinValue && TimesSpotted >= minStationaryCount)
+            // STRICT RULE: If player moved recently, they're NOT AFK
+            if (LastMovementTime != DateTime.MinValue)
+            {
+                var secondsSinceMovement = (DateTime.UtcNow - LastMovementTime).TotalSeconds;
+                // If they moved within the threshold, definitely not AFK
+                if (secondsSinceMovement < maxSecondsWithoutMovement)
+                    return false;
+            }
+
+            // Must be observed multiple times to be considered AFK
+            // This prevents marking someone AFK from a single sighting
+            if (TimesSpotted < minStationaryCount)
+                return false;
+
+            // Criteria 1: Never observed any movement across multiple detections
+            if (LastMovementTime == DateTime.MinValue)
                 return true;
 
-            // If they've been stationary for multiple observations
+            // Criteria 2: Stationary for many consecutive observations
             if (StationaryCount >= minStationaryCount)
                 return true;
 
-            // If they haven't moved in a long time
+            // Criteria 3: Haven't moved for the configured time threshold
             if (LastMovementTime != DateTime.MinValue)
             {
                 var secondsSinceMovement = (DateTime.UtcNow - LastMovementTime).TotalSeconds;
                 if (secondsSinceMovement >= maxSecondsWithoutMovement)
                     return true;
             }
-
-            // If total distance moved is very small relative to how long we've been watching
-            var observationDuration = (LastSeen - FirstSeen).TotalSeconds;
-            if (observationDuration > 30 && TotalDistanceMoved < 5f) // Less than 5 meters in 30+ seconds
-                return true;
 
             return false;
         }
