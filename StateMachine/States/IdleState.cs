@@ -1,31 +1,38 @@
+﻿using AOSharp.Core;
 using System;
+using AOSharp.Core.Inventory;
+using AOSharp.Pathfinding;
+using AOSharp.Common.GameData;
 
-namespace ZeroIn.StateMachine.States
+namespace ZeroIn
 {
-    /// <summary>
-    /// Idle state - waiting for scan to start
-    /// </summary>
-    public class IdleState
+    public class IdleState : FSMProvider<State, Trigger, RoamContext>, IState
     {
-        private ScanStateMachine _stateMachine;
-
-        public IdleState(ScanStateMachine stateMachine)
+        public IdleState(FSM<State, Trigger, RoamContext> stateMachine) : base(stateMachine)
         {
-            _stateMachine = stateMachine;
         }
 
-        public void OnEnter()
+        public void OnStateEnter()
         {
-            _stateMachine.Context.IsScanning = false;
+            if (SMovementController.IsNavigating())
+                SMovementController.Halt();
+
+            if (DynelManager.LocalPlayer.MovementState != MovementState.Sit)
+                SMovementController.SetMovement(MovementAction.SwitchToSit);
         }
 
-        public void OnExit()
+        public void OnStateExit()
         {
+            if (DynelManager.LocalPlayer.MovementState == MovementState.Sit)
+                SMovementController.SetMovement(MovementAction.LeaveSit);
         }
 
         public void Tick()
         {
-            // Idle state does nothing - waits for user to start scan
+            if (StateMachine.Context.IsInCombat() || !StateMachine.Context.HealthOrNanoTooLow())
+            {
+                StateMachine.Fire(Trigger.Recovered);
+            }
         }
     }
 }
