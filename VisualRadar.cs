@@ -61,11 +61,32 @@ namespace ZeroIn
                 if (localPlayer == null || !localPlayer.IsValid)
                     return;
 
-                // Draw detection radius circle around player
-                DrawDetectionRadius(localPlayer);
+                // Draw detection radius circle around player (if enabled)
+                if (_config.ShowDetectionRadius)
+                {
+                    DrawDetectionRadius(localPlayer);
+                }
+                else if (_detectionRadiusPath != null)
+                {
+                    // Hide detection radius if toggled off
+                    _detectionRadiusPath.Delete();
+                    _detectionRadiusPath = null;
+                }
 
-                // Draw detected players
-                DrawDetectedPlayers(localPlayer);
+                // Draw detected players (if enabled)
+                if (_config.ShowPlayerMarkers)
+                {
+                    DrawDetectedPlayers(localPlayer);
+                }
+                else
+                {
+                    // Clean up player markers if toggled off
+                    foreach (var marker in _playerMarkers.Values)
+                    {
+                        marker.Delete();
+                    }
+                    _playerMarkers.Clear();
+                }
 
                 _pathsCreated = true;
             }
@@ -173,6 +194,13 @@ namespace ZeroIn
         /// </summary>
         private void AddMarkerShape(SPath path, Vector3 center, float size, string shape, bool isAfk)
         {
+            // Tag-only mode: just a single point (shows only the path name as a tag)
+            if (_config.TagOnlyMode)
+            {
+                path.Waypoints.Add(center);
+                return;
+            }
+
             // AFK players get diamond markers, active players get the configured shape
             string actualShape = isAfk ? "diamond" : shape;
 

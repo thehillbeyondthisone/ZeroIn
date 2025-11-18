@@ -96,8 +96,49 @@ namespace ZeroIn
                 // Add command to toggle visual radar
                 Chat.RegisterCommand("radar", (string command, string[] param, ChatWindow chatWindow) =>
                 {
-                    Chat.WriteLine("[ZeroIn] Command received: /radar", ChatColor.Green);
-                    Radar.Toggle();
+                    if (param.Length == 0)
+                    {
+                        // No parameters - toggle entire radar
+                        Radar.Toggle();
+                        return;
+                    }
+
+                    string subCommand = param[0].ToLower();
+                    switch (subCommand)
+                    {
+                        case "radius":
+                            Config.ShowDetectionRadius = !Config.ShowDetectionRadius;
+                            Chat.WriteLine($"[ZeroIn] Detection radius: {(Config.ShowDetectionRadius ? "ON" : "OFF")}",
+                                Config.ShowDetectionRadius ? ChatColor.Green : ChatColor.Red);
+                            break;
+
+                        case "players":
+                        case "markers":
+                            Config.ShowPlayerMarkers = !Config.ShowPlayerMarkers;
+                            Chat.WriteLine($"[ZeroIn] Player markers: {(Config.ShowPlayerMarkers ? "ON" : "OFF")}",
+                                Config.ShowPlayerMarkers ? ChatColor.Green : ChatColor.Red);
+                            break;
+
+                        case "tags":
+                        case "tagonly":
+                            Config.TagOnlyMode = !Config.TagOnlyMode;
+                            Chat.WriteLine($"[ZeroIn] Tag-only mode: {(Config.TagOnlyMode ? "ON (names only)" : "OFF (shapes visible)")}",
+                                Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
+                            break;
+
+                        case "help":
+                            Chat.WriteLine("=== ZeroIn Radar Commands ===", ChatColor.Yellow);
+                            Chat.WriteLine("/radar - Toggle all radar visuals", ChatColor.White);
+                            Chat.WriteLine("/radar radius - Toggle detection radius circle", ChatColor.White);
+                            Chat.WriteLine("/radar players - Toggle player markers", ChatColor.White);
+                            Chat.WriteLine("/radar tags - Toggle tag-only mode (names only, no shapes)", ChatColor.White);
+                            break;
+
+                        default:
+                            Chat.WriteLine($"[ZeroIn] Unknown radar option: {subCommand}", ChatColor.Red);
+                            Chat.WriteLine("[ZeroIn] Use /radar help for available options", ChatColor.Yellow);
+                            break;
+                    }
                 });
 
                 // Add diagnostic command to debug XML file loading
@@ -278,8 +319,9 @@ namespace ZeroIn
                 // Draw visual radar overlay
                 Radar?.Draw();
 
-                // Continuous scanning (works even when not following a path)
-                if (Config.ContinuousScanning && Scanner != null)
+                // Continuous scanning (ONLY when state machine is NOT running)
+                // If state machine is running, RoamState.Tick() handles scanning
+                if (Config.ContinuousScanning && Scanner != null && StateMachine != null && !StateMachine.IsEnabled)
                 {
                     Scanner.Scan(); // Purge stale entries
 

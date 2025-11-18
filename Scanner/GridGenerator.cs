@@ -32,6 +32,8 @@ namespace ZeroIn.Scanner
             float avgY = boundary.Average(p => p.Y);
 
             var waypoints = new List<Vector3>();
+            int totalTestPoints = 0;
+            int insidePoints = 0;
 
             // Generate horizontal scan lines
             bool leftToRight = true;
@@ -40,11 +42,13 @@ namespace ZeroIn.Scanner
                 if (leftToRight)
                 {
                     // Scan from left to right
-                    for (float x = minX; x <= maxX; x += spacing / 2) // Half spacing for smoother coverage
+                    for (float x = minX; x <= maxX; x += spacing)
                     {
+                        totalTestPoints++;
                         var point = new Vector3(x, avgY, z);
                         if (IsPointInPolygon(point, boundary))
                         {
+                            insidePoints++;
                             waypoints.Add(point);
                         }
                     }
@@ -52,11 +56,13 @@ namespace ZeroIn.Scanner
                 else
                 {
                     // Scan from right to left
-                    for (float x = maxX; x >= minX; x -= spacing / 2)
+                    for (float x = maxX; x >= minX; x -= spacing)
                     {
+                        totalTestPoints++;
                         var point = new Vector3(x, avgY, z);
                         if (IsPointInPolygon(point, boundary))
                         {
+                            insidePoints++;
                             waypoints.Add(point);
                         }
                     }
@@ -64,6 +70,10 @@ namespace ZeroIn.Scanner
 
                 leftToRight = !leftToRight;
             }
+
+            // Debug info
+            AOSharp.Core.Chat.WriteLine($"[GridGen] Bounding box: X({minX:F1} to {maxX:F1}), Z({minZ:F1} to {maxZ:F1})", AOSharp.Core.UI.ChatColor.White);
+            AOSharp.Core.Chat.WriteLine($"[GridGen] Tested {totalTestPoints} points, {insidePoints} inside polygon", AOSharp.Core.UI.ChatColor.White);
 
             return waypoints;
         }

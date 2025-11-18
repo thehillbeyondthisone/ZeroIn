@@ -44,6 +44,9 @@ namespace ZeroIn
         public float AFKMarkerSize = 5f; // AFK players get larger markers
         public float ActiveMarkerSize = 2f; // Active players get smaller markers
         public string PlayerMarkerShape = "cross"; // cross, circle, square, diamond
+        public bool ShowDetectionRadius = true; // Show circular detection radius
+        public bool ShowPlayerMarkers = true; // Show player position markers
+        public bool TagOnlyMode = false; // If true, only show player name tags, no marker shapes
 
         public ZeroInConfig()
         {
