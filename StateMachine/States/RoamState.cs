@@ -22,31 +22,39 @@ namespace ZeroIn
             // Scan for nearby players (ZeroIn functionality)
             ScanForPlayers();
 
-            // DISABLED: Combat and looting behavior
-            // ZeroIn is a scanner, not a combat bot
-            // if (StateMachine.Context.HealthOrNanoTooLow() && !StateMachine.Context.IsInCombat())
-            // {
-            //     StateMachine.Fire(Trigger.TooLowOnStats);
-            //     return;
-            // }
+            // Optional combat behavior - enabled via UI settings
+            if (ZeroIn.Config.EnableHealthCheck)
+            {
+                if (StateMachine.Context.HealthOrNanoTooLow() && !StateMachine.Context.IsInCombat())
+                {
+                    StateMachine.Fire(Trigger.TooLowOnStats);
+                    return;
+                }
+            }
 
-            // if (StateMachine.Context.MobTargeting.TryGetNextCorpse(out Corpse corpse))
-            // {
-            //     SMovementController.SetDestination(corpse.Position);
-            //     StateMachine.Fire(Trigger.LootTargetFound);
-            //     return;
-            // }
+            if (ZeroIn.Config.EnableLooting)
+            {
+                if (StateMachine.Context.MobTargeting.TryGetNextCorpse(out Corpse corpse))
+                {
+                    SMovementController.SetDestination(corpse.Position);
+                    StateMachine.Fire(Trigger.LootTargetFound);
+                    return;
+                }
+            }
 
-            // if (StateMachine.Context.MobTargeting.TryGetNextTarget(out SimpleChar target, out _, out _))
-            // {
-            //     StateMachine.Context.NextTarget = target;
-            //     StateMachine.Fire(Trigger.AliveTargetFound);
-            //     return;
-            // }
+            if (ZeroIn.Config.EnableCombat)
+            {
+                if (StateMachine.Context.MobTargeting.TryGetNextTarget(out SimpleChar target, out _, out _))
+                {
+                    StateMachine.Context.NextTarget = target;
+                    StateMachine.Fire(Trigger.AliveTargetFound);
+                    return;
+                }
+            }
 
             StateMachine.Context.NextTarget = null;
 
-            // Just follow the path and scan - no combat!
+            // Follow the path and scan
             ZeroIn.SetPath(ZeroIn.RoamPath.SPath);
         }
 

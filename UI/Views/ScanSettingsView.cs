@@ -15,6 +15,9 @@ namespace ZeroIn
         private Checkbox _saveToCsv;
         private Checkbox _logToConsole;
         private Checkbox _continuousScanning;
+        private Checkbox _enableCombat;
+        private Checkbox _enableLooting;
+        private Checkbox _enableHealthCheck;
 
         // Public properties for access from other classes
         public float ScanSpacing
@@ -41,6 +44,9 @@ namespace ZeroIn
                     Root.FindChild("SaveToCsv", out _saveToCsv);
                     Root.FindChild("LogToConsole", out _logToConsole);
                     Root.FindChild("ContinuousScanning", out _continuousScanning);
+                    Root.FindChild("EnableCombat", out _enableCombat);
+                    Root.FindChild("EnableLooting", out _enableLooting);
+                    Root.FindChild("EnableHealthCheck", out _enableHealthCheck);
                 }
             }
             catch (System.Exception ex)
@@ -78,6 +84,15 @@ namespace ZeroIn
 
                 if (_continuousScanning != null)
                     _continuousScanning.SetValue(config.ContinuousScanning);
+
+                if (_enableCombat != null)
+                    _enableCombat.SetValue(config.EnableCombat);
+
+                if (_enableLooting != null)
+                    _enableLooting.SetValue(config.EnableLooting);
+
+                if (_enableHealthCheck != null)
+                    _enableHealthCheck.SetValue(config.EnableHealthCheck);
             }
             catch (System.Exception ex)
             {
@@ -114,6 +129,15 @@ namespace ZeroIn
 
                 if (_continuousScanning != null)
                     config.ContinuousScanning = _continuousScanning.IsChecked;
+
+                if (_enableCombat != null)
+                    config.EnableCombat = _enableCombat.IsChecked;
+
+                if (_enableLooting != null)
+                    config.EnableLooting = _enableLooting.IsChecked;
+
+                if (_enableHealthCheck != null)
+                    config.EnableHealthCheck = _enableHealthCheck.IsChecked;
             }
             catch (System.Exception ex)
             {
