@@ -4,13 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using ZeroIn.Config; // ensure this matches your project
 
 namespace ZeroIn.Scanner
 {
     /// <summary>
     /// CharacterScanner that maintains TimesSpotted and previous position snapshots.
-    /// Remains AOSharp-free — call OnCharacterSeen from AOSharp-aware adapter.
+    /// Remains AOSharp-free ï¿½ call OnCharacterSeen from AOSharp-aware adapter.
     /// </summary>
     public class CharacterScanner
     {
@@ -75,7 +74,7 @@ namespace ZeroIn.Scanner
         public int Count => _tracked.Count;
 
         /// <summary>
-        /// Adapter call — provide primitive values from AOSharp-aware code.
+        /// Adapter call ï¿½ provide primitive values from AOSharp-aware code.
         /// This method snapshots previous position, increments TimesSpotted, and updates fields.
         /// </summary>
         public void OnCharacterSeen(int instanceId, string name, float posX, float posY, float posZ, int health = 0, float distance = 0f)
