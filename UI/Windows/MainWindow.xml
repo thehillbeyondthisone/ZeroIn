@@ -8,10 +8,9 @@
 					<Haxxor/>
 				</View>
 
-				<!-- Scan Area Setup -->
-				<TextView h_alignment="LEFT" label="#Scan Area" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
-				<Button name="AreaSetup" label="Setup Scan Area" layout_borders="Rect(0,0,0,4)"/>
-				<Button name="GenerateGrid" label="Generate Grid Pattern" layout_borders="Rect(0,0,0,8)"/>
+				<!-- Scan Path Setup -->
+				<TextView h_alignment="LEFT" label="#Scan Path" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
+				<Button name="AreaSetup" label="Edit Scan Path" layout_borders="Rect(0,0,0,8)"/>
 
 				<!-- Scan Settings -->
 				<View name="ScanSettingsRoot">

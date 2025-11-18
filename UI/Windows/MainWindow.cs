@@ -18,29 +18,28 @@ namespace ZeroIn
 
         //Per plugin adjustable
         public override string InfoText => "ZeroIn - AFK Player Scanner\n\n" +
-            "Setup Scan Area:\n" +
-            "1. Click 'Setup Scan Area'\n" +
-            "2. Move to 4 corners of the zone\n" +
-            "3. Click 'Set Corner' at each location\n" +
-            "4. Click 'Generate Grid Pattern'\n\n" +
-            "Scan Settings:\n" +
-            " - Scan Spacing: Distance between grid lines (default 40m)\n" +
-            " - Detection Range: How far to detect players (default 50m)\n" +
-            " - Only AFK: Only save players who don't move\n" +
-            " - AFK Time: Seconds to observe before marking AFK\n\n" +
+            "How to Use:\n" +
+            "1. Click 'Edit Scan Path' to create your route\n" +
+            "2. Configure scanner settings below\n" +
+            "3. Press 'Start' to begin scanning\n" +
+            "4. Bot follows path and logs all detected players\n" +
+            "5. Press 'Start' again to stop\n\n" +
+            "Scanner Settings:\n" +
+            " - Detection Range: How far to detect players (50m default)\n" +
+            " - Only AFK: Only save players who haven't moved\n" +
+            " - AFK Time: Seconds to observe before marking AFK\n" +
+            " - Continuous Scanning: Loop the path indefinitely\n\n" +
             "Output Formats:\n" +
-            " - JSON: Full character data\n" +
-            " - CSV: Spreadsheet format\n" +
-            " - Console: Print detections to chat\n\n" +
-            "Start Scanning:\n" +
-            "1. Press 'Start' to begin the scan\n" +
-            "2. The bot will follow the grid pattern\n" +
-            "3. All detected players are automatically logged\n" +
-            "4. Press 'Start' again to stop\n\n" +
+            " - JSON: Full character data export\n" +
+            " - CSV: Spreadsheet-compatible format\n" +
+            " - Console: Print detections to chat window\n\n" +
             "View Results:\n" +
-            " - Click 'View Details' to see scan results\n" +
-            " - Check output folder for saved files\n" +
-            " - Use /scan command for quick status";
+            " - Live counts shown on main window\n" +
+            " - Click 'View Details' for recent detections\n" +
+            " - Use /scan command anytime for quick status\n" +
+            " - Files saved to plugin data folder\n\n" +
+            "The scanner runs automatically while following\n" +
+            "your path, detecting players within range.";
 
 
         public ScanSettingsView ScanSettingsView;
@@ -114,21 +113,11 @@ namespace ZeroIn
                 if (Window.FindView("AreaSetup", out Button areaSetup))
                 {
                     areaSetup.Clicked += OnAreaSetupClick;
-                    Chat.WriteLine($"[MainWindow] AreaSetup button event handler attached", ChatColor.White);
+                    Chat.WriteLine($"[MainWindow] AreaSetup (Edit Scan Path) button event handler attached", ChatColor.White);
                 }
                 else
                 {
                     Chat.WriteLine($"[MainWindow] WARNING: AreaSetup button not found", ChatColor.Yellow);
-                }
-
-                if (Window.FindView("GenerateGrid", out Button generateGrid))
-                {
-                    generateGrid.Clicked += OnGenerateGridClick;
-                    Chat.WriteLine($"[MainWindow] GenerateGrid button event handler attached", ChatColor.White);
-                }
-                else
-                {
-                    Chat.WriteLine($"[MainWindow] WARNING: GenerateGrid button not found", ChatColor.Yellow);
                 }
 
                 if (Window.FindView("ViewResults", out Button viewResults))
@@ -282,25 +271,8 @@ namespace ZeroIn
             if (_roamPathWindow != null && _roamPathWindow.Window.IsValid)
                 return;
 
-            _roamPathWindow = new RoamPathWindow("ZeroIn Scan Area Setup", _roamWindowPath, _roamInitViewPath, _roamMainViewPath);
+            _roamPathWindow = new RoamPathWindow("ZeroIn Scan Path Editor", _roamWindowPath, _roamInitViewPath, _roamMainViewPath);
             _roamPathWindow.Show();
-        }
-
-        private void OnGenerateGridClick(object sender, ButtonBase e)
-        {
-            try
-            {
-                SaveConfig(false);
-
-                // TODO: Implement grid pattern generation
-                // This will create a lawnmower pattern based on scan area corners and spacing
-                Chat.WriteLine("[ZeroIn] Grid generation coming soon!", ChatColor.Yellow);
-                Chat.WriteLine("[ZeroIn] For now, use 'Setup Scan Area' to create a path manually", ChatColor.White);
-            }
-            catch (Exception ex)
-            {
-                Chat.WriteLine($"[ZeroIn] Error generating grid: {ex.Message}", ChatColor.Red);
-            }
         }
 
         private void OnViewResultsClick(object sender, ButtonBase e)
