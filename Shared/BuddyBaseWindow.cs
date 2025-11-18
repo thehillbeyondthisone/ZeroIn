@@ -5,6 +5,30 @@ using System;
 namespace Buddy.Shared.UI
 {
     /// <summary>
+    /// Base custom view class
+    /// </summary>
+    public class CustomView
+    {
+        public View Root { get; protected set; }
+
+        public CustomView(string xmlPath)
+        {
+            try
+            {
+                Root = View.CreateFromXml(xmlPath);
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning($"Error creating custom view: {ex.Message}");
+            }
+        }
+
+        protected CustomView()
+        {
+        }
+    }
+
+    /// <summary>
     /// Base window class for ZeroIn UI
     /// Simplified version without the full Buddy framework
     /// </summary>
