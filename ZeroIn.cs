@@ -277,10 +277,47 @@ namespace ZeroIn
             {
                 // Draw visual radar overlay
                 Radar?.Draw();
+
+                // Continuous scanning (works even when not following a path)
+                if (Config.ContinuousScanning && Scanner != null)
+                {
+                    Scanner.Scan(); // Purge stale entries
+
+                    var localPlayer = DynelManager.LocalPlayer;
+                    if (localPlayer != null && localPlayer.IsValid)
+                    {
+                        var localPos = localPlayer.Position;
+
+                        // Scan all nearby players within detection range
+                        foreach (var player in DynelManager.Players)
+                        {
+                            if (player == null || !player.IsValid) continue;
+                            if (player.Identity == localPlayer.Identity) continue; // Skip self
+
+                            float distance = AOSharp.Common.GameData.Vector3.Distance(localPos, player.Position);
+
+                            // Only scan players within detection range
+                            if (distance <= Config.PlayerDetectionRange)
+                            {
+                                Scanner.OnCharacterSeen(
+                                    (int)player.Identity.Instance,
+                                    player.Name,
+                                    player.Position.X,
+                                    player.Position.Y,
+                                    player.Position.Z,
+                                    player.Health,
+                                    distance,
+                                    Playfield.ModelIdentity.Instance,
+                                    Playfield.Name
+                                );
+                            }
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
-                // Silently catch to avoid spam - radar is non-critical
+                // Silently catch to avoid spam
                 Log?.Warning($"OnUpdate error: {ex.Message}");
             }
         }

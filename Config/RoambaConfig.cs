@@ -40,6 +40,11 @@ namespace ZeroIn
         public bool EnableLooting = false;
         public bool EnableHealthCheck = false;
 
+        // Visual radar settings
+        public float AFKMarkerSize = 5f; // AFK players get larger markers
+        public float ActiveMarkerSize = 2f; // Active players get smaller markers
+        public string PlayerMarkerShape = "cross"; // cross, circle, square, diamond
+
         public ZeroInConfig()
         {
             CoreConfig = new BuddyCoreConfig();

@@ -34,6 +34,6 @@
 		<TextView h_alignment="LEFT" label="Combat Settings" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
 		<Checkbox h_alignment="LEFT" label="Enable Combat (Mob Targeting)" name="EnableCombat" layout_borders="Rect(0,0,0,2)"/>
 		<Checkbox h_alignment="LEFT" label="Enable Looting" name="EnableLooting" layout_borders="Rect(0,0,0,2)"/>
-		<Checkbox h_alignment="LEFT" label="Enable Health Check" name="EnableHealthCheck" layout_borders="Rect(0,0,0,4)"/>
+		<Checkbox h_alignment="LEFT" label="Auto-Retreat (Low Health/Nano)" name="EnableHealthCheck" layout_borders="Rect(0,0,0,4)"/>
 	</View>
 </root>
