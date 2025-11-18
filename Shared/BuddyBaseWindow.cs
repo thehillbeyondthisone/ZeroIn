@@ -76,7 +76,7 @@ namespace Buddy.Shared.UI
     {
         public bool IsButtonEnabled { get; set; }
         public Button EnabledButton { get; set; }
-        private TextField _channelId;
+        private TextInputView _channelId;
         private Checkbox _onInjectEnable;
 
         public BuddyCoreView(string xmlPath) : base(xmlPath)
@@ -88,7 +88,7 @@ namespace Buddy.Shared.UI
                     if (Root.FindChild("EnabledButton", out Button enabledButton))
                         EnabledButton = enabledButton;
 
-                    if (Root.FindChild("ChannelIdValue", out TextField channelId))
+                    if (Root.FindChild("ChannelIdValue", out TextInputView channelId))
                         _channelId = channelId;
 
                     if (Root.FindChild("OnInjectEnable", out Checkbox onInjectEnable))
