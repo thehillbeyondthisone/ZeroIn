@@ -70,7 +70,9 @@ namespace ZeroIn
             // Create a circular path around the player for detection radius visualization
             if (_detectionRadiusPath == null)
             {
-                _detectionRadiusPath = new SPath();
+                _detectionRadiusPath = SPath.Create();
+                _detectionRadiusPath.Name = "ZeroIn_DetectionRadius";
+                _detectionRadiusPath.PlayfieldId = Playfield.ModelIdentity.Instance;
 
                 // Create a circle with 36 points (10 degree increments)
                 int numPoints = 36;
@@ -83,8 +85,7 @@ namespace ZeroIn
                     _detectionRadiusPath.Waypoints.Add(new Vector3(x, position.Y, z));
                 }
 
-                _detectionRadiusPath.Type = PathType.Circular;
-                _detectionRadiusPath.Display(0.5f); // Light blue-ish color
+                _detectionRadiusPath.IsLooping = true; // Make it a closed circle
             }
             else
             {
@@ -119,20 +120,18 @@ namespace ZeroIn
                 // Create or update marker for this player
                 if (!_playerMarkers.ContainsKey(player.CharId))
                 {
-                    var markerPath = new SPath();
+                    var markerPath = SPath.Create();
+                    markerPath.Name = $"ZeroIn_Player_{player.CharId}";
+                    markerPath.PlayfieldId = Playfield.ModelIdentity.Instance;
+
                     float markerSize = player.HasMoved() ? 2f : 3f;
 
-                    // Create a small cross or star marker
+                    // Create a small cross marker
                     markerPath.Waypoints.Add(new Vector3(playerPos.X - markerSize, playerPos.Y, playerPos.Z));
                     markerPath.Waypoints.Add(new Vector3(playerPos.X + markerSize, playerPos.Y, playerPos.Z));
+                    markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z));
                     markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z - markerSize));
                     markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z + markerSize));
-
-                    markerPath.Type = PathType.Linear;
-
-                    // Color coding: AFK = red (1.0), Active = green (0.3)
-                    float color = player.HasMoved() ? 0.3f : 1.0f;
-                    markerPath.Display(color);
 
                     _playerMarkers[player.CharId] = markerPath;
                 }
@@ -145,6 +144,7 @@ namespace ZeroIn
                     markerPath.Waypoints.Clear();
                     markerPath.Waypoints.Add(new Vector3(playerPos.X - markerSize, playerPos.Y, playerPos.Z));
                     markerPath.Waypoints.Add(new Vector3(playerPos.X + markerSize, playerPos.Y, playerPos.Z));
+                    markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z));
                     markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z - markerSize));
                     markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z + markerSize));
                 }
