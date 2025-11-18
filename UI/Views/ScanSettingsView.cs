@@ -1,4 +1,4 @@
-using AOSharp.Common.GameData.UI;
+using AOSharp.Core.UI;
 using AOSharp.Core;
 using Buddy.Shared.UI;
 
