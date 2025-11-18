@@ -79,6 +79,7 @@
     <Compile Include="VisualRadar.cs" />
     <Compile Include="Scanner\CharacterScanner.cs" />
     <Compile Include="Scanner\DetectedCharacter.cs" />
+    <Compile Include="Scanner\GridGenerator.cs" />
     <Compile Include="Scanner\ScanMap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Config\RoambaConfig.cs" />
