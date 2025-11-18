@@ -1,4 +1,5 @@
 ﻿using AOSharp.Core;
+using AOSharp.Core.UI;
 using System.Linq;
 using AOSharp.Common.GameData;
 using System.Collections.Generic;
@@ -88,7 +89,7 @@ namespace ZeroIn
 
             // 3. Hostile only filter (if enabled, only attack mobs that are aggressive or already attacking)
             if (_config.HostileMobsOnly)
-                sharedQuery = sharedQuery.Where(x => x.FightingTarget != null || x.IsAgressive);
+                sharedQuery = sharedQuery.Where(x => x.FightingTarget != null || x.IsAggressive);
 
             // Debug output
             if (_config.VerboseDebug)
