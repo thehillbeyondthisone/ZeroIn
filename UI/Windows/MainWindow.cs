@@ -6,6 +6,7 @@ using ZeroIn.IPCMessages;
 using AOSharp.Pathfinding;
 using AOSharp.Common.GameData;
 using System;
+using System.Linq;
 using Buddy.Shared.UI;
 
 namespace ZeroIn
@@ -75,33 +76,108 @@ namespace ZeroIn
 
         protected override void OnWindowCreating()
         {
-            //Make sure to call the base first in order to init all the core views
-            base.OnWindowCreating();
+            try
+            {
+                Chat.WriteLine($"[MainWindow] OnWindowCreating starting...", ChatColor.White);
 
-            Window.FindView("RangeSettingsRoot", out View rangeSettingsRoot);
-            PathSettingsView = new PathSettingsView(_pathSettingsViewPath);
-            rangeSettingsRoot.AddChild(PathSettingsView.Root, true);
+                //Make sure to call the base first in order to init all the core views
+                Chat.WriteLine($"[MainWindow] Calling base.OnWindowCreating()...", ChatColor.White);
+                base.OnWindowCreating();
+                Chat.WriteLine($"[MainWindow] Base OnWindowCreating completed", ChatColor.Green);
 
-            //Populate UI with config file data
+                Chat.WriteLine($"[MainWindow] Finding RangeSettingsRoot view...", ChatColor.White);
+                if (!Window.FindView("RangeSettingsRoot", out View rangeSettingsRoot))
+                {
+                    Chat.WriteLine($"[MainWindow] ERROR: Could not find RangeSettingsRoot view!", ChatColor.Red);
+                    return;
+                }
+                Chat.WriteLine($"[MainWindow] Found RangeSettingsRoot", ChatColor.Green);
 
-            PathSettingsView.SetData(ZeroIn.Config.PathingConfig);
-            CoreSettingsView.SetData(ZeroIn.Config.CoreConfig);
+                Chat.WriteLine($"[MainWindow] Creating PathSettingsView from {_pathSettingsViewPath}...", ChatColor.White);
+                PathSettingsView = new PathSettingsView(_pathSettingsViewPath);
 
-            if (Window.FindView("PathCreator", out Button pathCreator))
-                pathCreator.Clicked += PathCreatorClick;
+                if (PathSettingsView == null || PathSettingsView.Root == null)
+                {
+                    Chat.WriteLine($"[MainWindow] ERROR: PathSettingsView or its Root is null!", ChatColor.Red);
+                    return;
+                }
+                Chat.WriteLine($"[MainWindow] PathSettingsView created successfully", ChatColor.Green);
 
-            if (Window.FindView("SaveConfig", out _saveConfig))
-                _saveConfig.Clicked = OnSaveConfigClick;
+                Chat.WriteLine($"[MainWindow] Adding PathSettingsView to RangeSettingsRoot...", ChatColor.White);
+                rangeSettingsRoot.AddChild(PathSettingsView.Root, true);
+                Chat.WriteLine($"[MainWindow] PathSettingsView added successfully", ChatColor.Green);
 
-            var screenSize = Window.GetScreenSize();
+                //Populate UI with config file data
+                Chat.WriteLine($"[MainWindow] Setting PathSettingsView data...", ChatColor.White);
+                PathSettingsView.SetData(ZeroIn.Config.PathingConfig);
 
-            if (ZeroIn.Config.WindowCoords.X > screenSize.X || ZeroIn.Config.WindowCoords.Y > screenSize.Y)
-                Window.MoveToCenter();
-            else if (ZeroIn.Config.WindowCoords.X != 0 && ZeroIn.Config.WindowCoords.Y != 0)
-                Window.MoveTo(ZeroIn.Config.WindowCoords.X, ZeroIn.Config.WindowCoords.Y);
+                Chat.WriteLine($"[MainWindow] Setting CoreSettingsView data...", ChatColor.White);
+                if (CoreSettingsView == null)
+                {
+                    Chat.WriteLine($"[MainWindow] ERROR: CoreSettingsView is null!", ChatColor.Red);
+                    return;
+                }
+                CoreSettingsView.SetData(ZeroIn.Config.CoreConfig);
+                Chat.WriteLine($"[MainWindow] Data set successfully", ChatColor.Green);
 
-            CoreSettingsView.EnabledButton.Clicked += OnEnable;
-            Game.OnUpdate += MainWindowUpdate;
+                Chat.WriteLine($"[MainWindow] Setting up button event handlers...", ChatColor.White);
+                if (Window.FindView("PathCreator", out Button pathCreator))
+                {
+                    pathCreator.Clicked += PathCreatorClick;
+                    Chat.WriteLine($"[MainWindow] PathCreator button event handler attached", ChatColor.White);
+                }
+                else
+                {
+                    Chat.WriteLine($"[MainWindow] WARNING: PathCreator button not found", ChatColor.Yellow);
+                }
+
+                if (Window.FindView("SaveConfig", out _saveConfig))
+                {
+                    _saveConfig.Clicked = OnSaveConfigClick;
+                    Chat.WriteLine($"[MainWindow] SaveConfig button event handler attached", ChatColor.White);
+                }
+                else
+                {
+                    Chat.WriteLine($"[MainWindow] WARNING: SaveConfig button not found", ChatColor.Yellow);
+                }
+
+                Chat.WriteLine($"[MainWindow] Setting window position...", ChatColor.White);
+                var screenSize = Window.GetScreenSize();
+
+                if (ZeroIn.Config.WindowCoords.X > screenSize.X || ZeroIn.Config.WindowCoords.Y > screenSize.Y)
+                    Window.MoveToCenter();
+                else if (ZeroIn.Config.WindowCoords.X != 0 && ZeroIn.Config.WindowCoords.Y != 0)
+                    Window.MoveTo(ZeroIn.Config.WindowCoords.X, ZeroIn.Config.WindowCoords.Y);
+
+                Chat.WriteLine($"[MainWindow] Attaching EnabledButton click handler...", ChatColor.White);
+                if (CoreSettingsView.EnabledButton == null)
+                {
+                    Chat.WriteLine($"[MainWindow] ERROR: CoreSettingsView.EnabledButton is null!", ChatColor.Red);
+                    return;
+                }
+                CoreSettingsView.EnabledButton.Clicked += OnEnable;
+
+                Chat.WriteLine($"[MainWindow] Registering Game.OnUpdate handler...", ChatColor.White);
+                Game.OnUpdate += MainWindowUpdate;
+
+                Chat.WriteLine($"[MainWindow] OnWindowCreating completed successfully!", ChatColor.Green);
+            }
+            catch (Exception ex)
+            {
+                Chat.WriteLine($"[MainWindow] EXCEPTION in OnWindowCreating!", ChatColor.Red);
+                Chat.WriteLine($"[MainWindow] Error: {ex.Message}", ChatColor.Red);
+                Chat.WriteLine($"[MainWindow] Type: {ex.GetType().Name}", ChatColor.Red);
+                Chat.WriteLine($"[MainWindow] Stack trace:", ChatColor.Red);
+                string[] lines = ex.StackTrace?.Split('\n') ?? new string[0];
+                foreach (var line in lines.Take(10))
+                {
+                    Chat.WriteLine($"  {line.Trim()}", ChatColor.Red);
+                }
+                if (ex.InnerException != null)
+                {
+                    Chat.WriteLine($"[MainWindow] Inner exception: {ex.InnerException.Message}", ChatColor.Red);
+                }
+            }
         }
 
         private void OnEnable(object sender, ButtonBase e)
