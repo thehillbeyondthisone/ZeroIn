@@ -16,6 +16,17 @@ namespace ZeroIn
         private Checkbox _logToConsole;
         private Checkbox _continuousScanning;
 
+        // Public properties for access from other classes
+        public float ScanSpacing
+        {
+            get
+            {
+                if (_scanSpacing != null && float.TryParse(_scanSpacing.Text, out float value))
+                    return value;
+                return 40f; // Default
+            }
+        }
+
         public ScanSettingsView(string xmlPath) : base(xmlPath)
         {
             try

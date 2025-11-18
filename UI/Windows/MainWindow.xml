@@ -10,7 +10,8 @@
 
 				<!-- Scan Path Setup -->
 				<TextView h_alignment="LEFT" label="Scan Path" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
-				<Button name="AreaSetup" label="Edit Scan Path" layout_borders="Rect(0,0,0,8)"/>
+				<Button name="AreaSetup" label="Edit Scan Path" layout_borders="Rect(0,0,0,4)"/>
+				<Button name="GenerateGrid" label="Auto-Generate Grid" layout_borders="Rect(0,0,0,8)"/>
 
 				<!-- Scan Settings -->
 				<View name="ScanSettingsRoot">

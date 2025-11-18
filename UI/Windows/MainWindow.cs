@@ -120,6 +120,16 @@ namespace ZeroIn
                     Chat.WriteLine($"[MainWindow] WARNING: AreaSetup button not found", ChatColor.Yellow);
                 }
 
+                if (Window.FindView("GenerateGrid", out Button generateGrid))
+                {
+                    generateGrid.Clicked += OnGenerateGridClick;
+                    Chat.WriteLine($"[MainWindow] GenerateGrid button event handler attached", ChatColor.White);
+                }
+                else
+                {
+                    Chat.WriteLine($"[MainWindow] WARNING: GenerateGrid button not found", ChatColor.Yellow);
+                }
+
                 if (Window.FindView("ViewResults", out Button viewResults))
                 {
                     viewResults.Clicked += OnViewResultsClick;
@@ -301,6 +311,63 @@ namespace ZeroIn
 
             _roamPathWindow = new RoamPathWindow("ZeroIn Scan Path Editor", _roamWindowPath, _roamInitViewPath, _roamMainViewPath);
             _roamPathWindow.Show();
+        }
+
+        private void OnGenerateGridClick(object sender, ButtonBase e)
+        {
+            try
+            {
+                if (ZeroIn.RoamPath == null || ZeroIn.RoamPath.SPath == null || ZeroIn.RoamPath.SPath.Waypoints.Count < 3)
+                {
+                    Chat.WriteLine("[ZeroIn] You must create a path first! Click 'Edit Scan Path' to create a boundary.", ChatColor.Red);
+                    return;
+                }
+
+                var waypoints = ZeroIn.RoamPath.SPath.Waypoints.ToList();
+
+                // Check if path forms a closed loop
+                if (!Scanner.GridGenerator.IsClosedLoop(waypoints))
+                {
+                    Chat.WriteLine("[ZeroIn] Path must be a closed loop! First and last points should be near each other.", ChatColor.Red);
+                    Chat.WriteLine($"[ZeroIn] Distance between first/last: {AOSharp.Common.GameData.Vector3.Distance(waypoints[0], waypoints[waypoints.Count - 1]):F1}m", ChatColor.Yellow);
+                    Chat.WriteLine("[ZeroIn] Tip: Use 'Toggle Loop' in the path editor, or manually add a point near the start.", ChatColor.Yellow);
+                    return;
+                }
+
+                Chat.WriteLine("[ZeroIn] Generating lawnmower search pattern...", ChatColor.Yellow);
+
+                // Get spacing from config
+                float spacing = ScanSettingsView != null ? ScanSettingsView.ScanSpacing : 40f;
+                Chat.WriteLine($"[ZeroIn] Using scan spacing: {spacing}m", ChatColor.White);
+
+                // Generate grid pattern
+                var gridPoints = Scanner.GridGenerator.GenerateLawnmowerPattern(waypoints, spacing);
+
+                if (gridPoints.Count == 0)
+                {
+                    Chat.WriteLine("[ZeroIn] ERROR: No grid points generated! Check your boundary path.", ChatColor.Red);
+                    return;
+                }
+
+                Chat.WriteLine($"[ZeroIn] Generated {gridPoints.Count} waypoints", ChatColor.Green);
+
+                // Replace the path with the generated grid
+                ZeroIn.RoamPath.SPath.Waypoints.Clear();
+                foreach (var point in gridPoints)
+                {
+                    ZeroIn.RoamPath.SPath.Waypoints.Add(point);
+                }
+
+                // Save the generated path
+                ZeroIn.RoamPath.Save();
+
+                Chat.WriteLine("[ZeroIn] Grid pattern generated and saved!", ChatColor.Green);
+                Chat.WriteLine("[ZeroIn] Click 'Start' to begin scanning the generated pattern.", ChatColor.Yellow);
+            }
+            catch (Exception ex)
+            {
+                Chat.WriteLine($"[ZeroIn] ERROR generating grid: {ex.Message}", ChatColor.Red);
+            }
         }
 
         private void OnViewResultsClick(object sender, ButtonBase e)
