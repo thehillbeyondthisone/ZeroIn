@@ -60,7 +60,10 @@ namespace ZeroIn
 
         private void ExitState()
         {
-            _executingState.OnStateExit();
+            if (_executingState != null)
+            {
+                _executingState.OnStateExit();
+            }
         }
 
         public void SetDefaultState(TState state)

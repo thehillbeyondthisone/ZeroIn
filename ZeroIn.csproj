@@ -76,6 +76,7 @@
     <Compile Include="MobTargeting.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="ZeroIn.cs" />
+    <Compile Include="VisualRadar.cs" />
     <Compile Include="Scanner\CharacterScanner.cs" />
     <Compile Include="Scanner\DetectedCharacter.cs" />
     <Compile Include="Scanner\ScanMap.cs" />
