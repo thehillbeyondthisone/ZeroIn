@@ -2,7 +2,7 @@
 <root>
 	<View view_layout="vertical" name="Root">
 		<TextView h_alignment="LEFT" label="#Settings" text_style="Bold" layout_borders="Rect(0,0,0,8)"/>
-		<HLayoutGroup text_alignment="LEFT" label="Channel Id" name="ChannelId" layout_borders="Rect(0,0,0,8)">
+		<HLayoutGroup text_alignment="LEFT" name="ChannelId" layout_borders="Rect(0,0,0,8)">
 			<TextView text_style="Bold" min_size="Point(100,-1)" label="#Channel Id" view_layout="vertical"/>
 			<Text_Field name="ChannelIdValue" text_alignment="LEFT" caption="" value="1" text_style="normal" max_length="2" min_size="Point(40,-1)"/>
 		</HLayoutGroup>
