@@ -87,9 +87,9 @@ namespace ZeroIn
             if (_config.MobBlacklist.Count > 0)
                 sharedQuery = sharedQuery.Where(x => !_config.MobBlacklist.Contains(x.Name));
 
-            // 3. Hostile only filter (if enabled, only attack mobs that are aggressive or already attacking)
+            // 3. Hostile only filter (if enabled, only attack mobs that are already attacking us)
             if (_config.HostileMobsOnly)
-                sharedQuery = sharedQuery.Where(x => x.FightingTarget != null || x.IsAggressive);
+                sharedQuery = sharedQuery.Where(x => x.FightingTarget != null);
 
             // Debug output
             if (_config.VerboseDebug)
@@ -97,7 +97,7 @@ namespace ZeroIn
                 var targets = sharedQuery.ToList();
                 if (targets.Count > 0)
                     Chat.WriteLine($"[ZeroIn] Found {targets.Count} possible targets: {string.Join(", ", targets.Select(t => $"{t.Name}(L{t.Level})"))}",
-                        AOSharp.Core.UI.ChatColor.Gray);
+                        ChatColor.Gray);
             }
 
             // Legacy support: also check RoamPath.Rules if they exist
