@@ -1,7 +1,7 @@
 using AOSharp.Common.GameData;
 using AOSharp.Core;
+using AOSharp.Pathfinding;
 using System;
-using System.Reflection;
 using ZeroIn.Config;
 using ZeroIn.GridPattern;
 
@@ -14,6 +14,7 @@ namespace ZeroIn.StateMachine.States
     {
         private ScanStateMachine _stateMachine;
         private const float WAYPOINT_REACH_DISTANCE = 5f; // Consider waypoint reached within 5m
+        private SPath _currentPath; // The path the character is following
 
         public ScanningState(ScanStateMachine stateMachine)
         {
@@ -52,9 +53,16 @@ namespace ZeroIn.StateMachine.States
             float estimatedTime = gridGenerator.EstimateTime(context.Waypoints);
             Console.WriteLine($"[ZeroIn] Estimated scan time: {TimeSpan.FromSeconds(estimatedTime):mm\\:ss}");
 
+            // Create SPath with all waypoints
+            _currentPath = SPath.Create();
+            foreach (var waypoint in context.Waypoints)
+            {
+                _currentPath.Waypoints.Add(waypoint.Position);
+            }
+
             // Start at first waypoint
             context.CurrentWaypointIndex = 0;
-            MoveToNextWaypoint();
+            StartMovingAlongPath();
         }
 
         public void OnExit()
@@ -63,8 +71,8 @@ namespace ZeroIn.StateMachine.States
 
             var context = _stateMachine.Context;
 
-            // Try to stop movement via reflection (supports multiple AOSharp versions)
-            TryStopMovement();
+            // Stop movement
+            SMovementController.StopFollow();
 
             // Save and display results
             var characters = context.Scanner.GetDetectedCharacters();
@@ -121,7 +129,7 @@ namespace ZeroIn.StateMachine.States
                     {
                         Console.WriteLine("[ZeroIn] Restarting scan loop...");
                         context.CurrentWaypointIndex = 0;
-                        MoveToNextWaypoint();
+                        StartMovingAlongPath();
                     }
                     else
                     {
@@ -129,10 +137,6 @@ namespace ZeroIn.StateMachine.States
                         Console.WriteLine($"[ZeroIn] {context.Scanner.GetSummary()}");
                         _stateMachine.TransitionTo(ScanStateMachine.State.Idle);
                     }
-                }
-                else
-                {
-                    MoveToNextWaypoint();
                 }
             }
         }
@@ -197,148 +201,29 @@ namespace ZeroIn.StateMachine.States
             }
         }
 
-        private void MoveToNextWaypoint()
+        /// <summary>
+        /// Starts the character moving along the planned path
+        /// </summary>
+        private void StartMovingAlongPath()
         {
             var context = _stateMachine.Context;
 
-            if (context.CurrentWaypointIndex >= context.Waypoints.Count)
+            if (_currentPath == null || _currentPath.Waypoints.Count == 0)
+            {
+                Console.WriteLine("[ZeroIn] Error: No path to follow!");
+                _stateMachine.TransitionTo(ScanStateMachine.State.Idle);
                 return;
-
-            var waypoint = context.Waypoints[context.CurrentWaypointIndex];
-
-            // Log progress every 10 waypoints
-            if (context.CurrentWaypointIndex % 10 == 0)
-            {
-                int progress = (int)((float)context.CurrentWaypointIndex / context.Waypoints.Count * 100);
-                Console.WriteLine($"[ZeroIn] Progress: {progress}% ({context.CurrentWaypointIndex}/{context.Waypoints.Count})");
             }
 
-            // Navigate to waypoint using reflection so code compiles against multiple SDK versions
-            try
-            {
-                var mcType = Type.GetType("AOSharp.Core.Movement.MovementController, AOSharp.Core");
-                if (mcType != null)
-                {
-                    // get static Instance property if present
-                    var instProp = mcType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
-                    var instance = instProp?.GetValue(null);
+            // Log progress
+            int progress = (int)((float)context.CurrentWaypointIndex / context.Waypoints.Count * 100);
+            Console.WriteLine($"[ZeroIn] Progress: {progress}% ({context.CurrentWaypointIndex}/{context.Waypoints.Count})");
 
-                    if (instance != null)
-                    {
-                        // Try common method names
-                        var navMethod = mcType.GetMethod("NavigateTo", new Type[] { typeof(Vector3) });
-                        if (navMethod != null)
-                        {
-                            navMethod.Invoke(instance, new object[] { waypoint.Position });
-                            return;
-                        }
+            // Use SMovementController to follow the path (like Roamba does)
+            // The second parameter 'true' means loop the path
+            SMovementController.SetPath(_currentPath, false);
 
-                        var setMethod = mcType.GetMethod("SetMovement");
-                        if (setMethod != null)
-                        {
-                            var parms = setMethod.GetParameters();
-                            if (parms.Length == 1)
-                            {
-                                var pType = parms[0].ParameterType;
-
-                                // If it accepts Vector3, pass it directly
-                                if (pType == typeof(Vector3))
-                                {
-                                    setMethod.Invoke(instance, new object[] { waypoint.Position });
-                                    return;
-                                }
-
-                                // If it expects a MovementAction, try to construct one
-                                var maType = Type.GetType("AOSharp.Common.GameData.MovementAction, AOSharp.Common");
-                                if (maType != null && pType.IsAssignableFrom(maType))
-                                {
-                                    var ma = Activator.CreateInstance(maType);
-                                    // attempt to set fields/properties named X/Y/Z or Parameter1.. if present
-                                    var fx = maType.GetField("X") ?? maType.GetField("Parameter1");
-                                    var fy = maType.GetField("Y") ?? maType.GetField("Parameter2");
-                                    var fz = maType.GetField("Z") ?? maType.GetField("Parameter3");
-                                    try { fx?.SetValue(ma, waypoint.Position.X); } catch { }
-                                    try { fy?.SetValue(ma, waypoint.Position.Y); } catch { }
-                                    try { fz?.SetValue(ma, waypoint.Position.Z); } catch { }
-
-                                    setMethod.Invoke(instance, new object[] { ma });
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Fallback: try AOSharpSDK.Nav NavmeshMovementController
-                var navType = Type.GetType("NavmeshMovementController, NavmeshMovementController");
-                if (navType != null)
-                {
-                    var instProp = navType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
-                    var instance = instProp?.GetValue(null);
-                    var nav = navType.GetMethod("NavigateTo", new Type[] { typeof(Vector3) }) ?? navType.GetMethod("NavigateTo");
-                    nav?.Invoke(instance, new object[] { waypoint.Position });
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ZeroIn] Navigation error: {ex.Message}");
-            }
-        }
-
-        private void TryStopMovement()
-        {
-            try
-            {
-                var mcType = Type.GetType("AOSharp.Core.Movement.MovementController, AOSharp.Core");
-                if (mcType != null)
-                {
-                    var instProp = mcType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
-                    var instance = instProp?.GetValue(null);
-                    if (instance != null)
-                    {
-                        var stop = mcType.GetMethod("Stop") ?? mcType.GetMethod("StopNavigation") ?? mcType.GetMethod("ClearMovement");
-                        if (stop != null && stop.GetParameters().Length == 0)
-                        {
-                            stop.Invoke(instance, null);
-                            return;
-                        }
-
-                        var setMethod = mcType.GetMethod("SetMovement");
-                        if (setMethod != null && setMethod.GetParameters().Length == 1)
-                        {
-                            var p = setMethod.GetParameters()[0].ParameterType;
-                            if (p == typeof(Vector3))
-                            {
-                                // set to current position to stop
-                                var pos = DynelManager.LocalPlayer.Position;
-                                setMethod.Invoke(instance, new object[] { pos });
-                                return;
-                            }
-                            else
-                            {
-                                var maType = Type.GetType("AOSharp.Common.GameData.MovementAction, AOSharp.Common");
-                                if (maType != null && p.IsAssignableFrom(maType))
-                                {
-                                    var ma = Activator.CreateInstance(maType);
-                                    setMethod.Invoke(instance, new object[] { ma });
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Try NavmeshMovementController stop variants
-                var navType = Type.GetType("NavmeshMovementController, NavmeshMovementController");
-                if (navType != null)
-                {
-                    var instProp = navType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
-                    var instance = instProp?.GetValue(null);
-                    var stop = navType.GetMethod("Stop") ?? navType.GetMethod("StopNavigation");
-                    stop?.Invoke(instance, null);
-                }
-            }
-            catch { }
+            Console.WriteLine("[ZeroIn] Character now following roomba path!");
         }
     }
 }

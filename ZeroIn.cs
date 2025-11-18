@@ -1,9 +1,11 @@
 using AOSharp.Common.GameData;
 using AOSharp.Core;
 using AOSharp.Core.UI;
+using AOSharp.Pathfinding;
 using System;
 using System.IO;
 using ZeroIn.Config;
+using ZeroIn.GridPattern;
 using ZeroIn.StateMachine;
 
 namespace ZeroIn
@@ -24,6 +26,9 @@ namespace ZeroIn
             try
             {
                 Chat.WriteLine("ZeroIn loaded!", ChatColor.Green);
+
+                // Initialize movement controller (required for pathfinding)
+                SMovementController.Set();
 
                 // Register chat commands FIRST - don't do anything complex yet
                 Chat.RegisterCommand("zeroin", HandleCommand);
@@ -137,6 +142,11 @@ namespace ZeroIn
                         ShowStatus();
                         break;
 
+                    case "preview":
+                    case "showroute":
+                        PreviewRoute();
+                        break;
+
                     case "area":
                         if (args.Length > 1)
                             SetArea(string.Join(" ", args, 1, args.Length - 1));
@@ -191,6 +201,7 @@ namespace ZeroIn
             Chat.WriteLine("  /zeroin start              - Start scanning current area", ChatColor.White);
             Chat.WriteLine("  /zeroin stop               - Stop current scan", ChatColor.White);
             Chat.WriteLine("  /zeroin status             - Show scan status and results", ChatColor.White);
+            Chat.WriteLine("  /zeroin preview            - Preview planned route (roomba pattern)", ChatColor.White);
             Chat.WriteLine("", ChatColor.White);
             Chat.WriteLine("  /zeroin area [name]        - Set/list areas", ChatColor.White);
             Chat.WriteLine("  /zeroin addarea <name>     - Add new area with current position", ChatColor.White);
@@ -205,7 +216,8 @@ namespace ZeroIn
             Chat.WriteLine("  2. Move to corner 1 and /zeroin setcorner 1", ChatColor.White);
             Chat.WriteLine("  3. Repeat for corners 2, 3, 4", ChatColor.White);
             Chat.WriteLine("  4. /zeroin save", ChatColor.White);
-            Chat.WriteLine("  5. /zeroin start", ChatColor.White);
+            Chat.WriteLine("  5. /zeroin preview  (to see the planned route)", ChatColor.White);
+            Chat.WriteLine("  6. /zeroin start", ChatColor.White);
         }
 
         private static void StartScan()
@@ -252,6 +264,82 @@ namespace ZeroIn
             if (_context.Scanner.Count > 0)
             {
                 _context.Map.PrintResults(_context.Scanner.GetDetectedCharacters());
+            }
+        }
+
+        private static void PreviewRoute()
+        {
+            var area = _config.GetCurrentArea();
+            if (area == null || !area.IsValid())
+            {
+                Chat.WriteLine("[ZeroIn] Cannot preview route: No valid area configured", ChatColor.Red);
+                Chat.WriteLine("[ZeroIn] Use '/zeroin addarea <name>' and '/zeroin setcorner <1-4>' to configure an area", ChatColor.Yellow);
+                return;
+            }
+
+            // Generate grid pattern
+            var gridGenerator = new GridGenerator(area, _config.ScanSpacing);
+            var waypoints = gridGenerator.GeneratePattern();
+
+            if (waypoints.Count == 0)
+            {
+                Chat.WriteLine("[ZeroIn] Error: Failed to generate grid pattern", ChatColor.Red);
+                return;
+            }
+
+            // Calculate route statistics
+            float distance = gridGenerator.EstimateDistance(waypoints);
+            float timeSeconds = gridGenerator.EstimateTime(waypoints);
+            TimeSpan time = TimeSpan.FromSeconds(timeSeconds);
+
+            var bounds = area.GetBounds();
+            float width = bounds.max.X - bounds.min.X;
+            float height = bounds.max.Y - bounds.min.Y;
+
+            // Display preview
+            Chat.WriteLine("=".PadRight(80, '='), ChatColor.Yellow);
+            Chat.WriteLine(" ZeroIn Route Preview - Roomba Pattern", ChatColor.Yellow);
+            Chat.WriteLine("=".PadRight(80, '='), ChatColor.Yellow);
+            Chat.WriteLine($" Area: {area.Name}", ChatColor.LightBlue);
+            Chat.WriteLine($" Dimensions: {width:F1}m x {height:F1}m", ChatColor.White);
+            Chat.WriteLine($" Scan Spacing: {_config.ScanSpacing}m", ChatColor.White);
+            Chat.WriteLine($" Total Waypoints: {waypoints.Count}", ChatColor.White);
+            Chat.WriteLine($" Total Distance: {distance:F1}m", ChatColor.White);
+            Chat.WriteLine($" Estimated Time: {time:hh\\:mm\\:ss}", ChatColor.White);
+            Chat.WriteLine($" Average Speed: 7 m/s (run speed)", ChatColor.Gray);
+            Chat.WriteLine("=".PadRight(80, '='), ChatColor.Yellow);
+            Chat.WriteLine("", ChatColor.White);
+
+            // Show first few waypoints as example
+            Chat.WriteLine(" Route Pattern (first 10 waypoints):", ChatColor.LightBlue);
+            for (int i = 0; i < Math.Min(10, waypoints.Count); i++)
+            {
+                var wp = waypoints[i];
+                string direction = i > 0 ? GetDirection(waypoints[i - 1].Position, wp.Position) : "START";
+                Chat.WriteLine($"  {i + 1,3}. ({wp.Position.X:F1}, {wp.Position.Y:F1}) {direction}", ChatColor.White);
+            }
+
+            if (waypoints.Count > 10)
+            {
+                Chat.WriteLine($"  ... ({waypoints.Count - 10} more waypoints)", ChatColor.Gray);
+            }
+
+            Chat.WriteLine("", ChatColor.White);
+            Chat.WriteLine(" Ready to start? Use '/zeroin start'", ChatColor.Green);
+        }
+
+        private static string GetDirection(Vector3 from, Vector3 to)
+        {
+            float dx = to.X - from.X;
+            float dy = to.Y - from.Y;
+
+            if (Math.Abs(dx) > Math.Abs(dy))
+            {
+                return dx > 0 ? "→ East" : "← West";
+            }
+            else
+            {
+                return dy > 0 ? "↑ North" : "↓ South";
             }
         }
 
