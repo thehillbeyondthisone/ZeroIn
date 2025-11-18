@@ -67,7 +67,7 @@ namespace ZeroIn
                 });
 
                 StateMachine = new RoamStateMachine(new MobTargeting(Config), Scanner, Map, Config.CoreConfig.OnInjectEnable);
-                Ipc = new IPC(Config.CoreConfig.ChannelId);
+                Ipc = new IPC((byte)Config.CoreConfig.ChannelId);
             }
             catch (Exception e)
             {

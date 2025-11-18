@@ -174,7 +174,7 @@ namespace ZeroIn
             ZeroIn.Config.Save();
 
             if (ZeroIn.Ipc.ChannelId != ZeroIn.Config.CoreConfig.ChannelId)
-                ZeroIn.Ipc.SetChannelId(ZeroIn.Config.CoreConfig.ChannelId);
+                ZeroIn.Ipc.SetChannelId((byte)ZeroIn.Config.CoreConfig.ChannelId);
 
             if (displayMsg)
                 ZeroIn.Log.Information("Config saved! (use the Path Editor to save / export your path)", ChatColor.Green);

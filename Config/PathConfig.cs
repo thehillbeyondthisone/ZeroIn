@@ -23,6 +23,7 @@ namespace ZeroIn
         public bool DisableIfAttacked { get; set; }
         public int HealthPercent { get; set; }
         public int NanoPercent { get; set; }
+        public bool SyncSettings { get; set; }
 
         public PathConfig()
         {
@@ -45,6 +46,7 @@ namespace ZeroIn
             DisableIfAttacked = false;
             HealthPercent = 50;
             NanoPercent = 30;
+            SyncSettings = false;
         }
     }
 }

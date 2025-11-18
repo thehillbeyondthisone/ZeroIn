@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using AOSharp.Core;
 using Newtonsoft.Json;
+using AOSharp.Core;
 
 namespace Shared
 {
