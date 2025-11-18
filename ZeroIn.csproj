@@ -63,6 +63,8 @@
     <Compile Include="UI\Views\RoamPathView.cs" />
     <Compile Include="UI\Windows\MainWindow.cs" />
     <Compile Include="UI\Windows\RoamPathWindow.cs" />
+    <Compile Include="Shared\BuddyBaseConfig.cs" />
+    <Compile Include="Shared\BuddyBaseWindow.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -87,47 +89,46 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AOSharp.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\AOSharpSDK.1.0.106\lib\net48\AOSharp.Common.dll</HintPath>
+      <HintPath>packages\AOSharpSDK.1.0.106\lib\net48\AOSharp.Common.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="AOSharp.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\AOSharpSDK.1.0.106\lib\net48\AOSharp.Core.dll</HintPath>
+      <HintPath>packages\AOSharpSDK.1.0.106\lib\net48\AOSharp.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="AOSharp.SharpNav, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\AOSharpSDK.SharpNav.1.0.43\lib\net48\AOSharp.SharpNav.dll</HintPath>
+      <HintPath>packages\AOSharpSDK.SharpNav.1.0.43\lib\net48\AOSharp.SharpNav.dll</HintPath>
+    </Reference>
+    <Reference Include="SmokeLounge.AOtomation.Messaging">
+      <HintPath>packages\SmokeLounge.AOtomation.Messaging.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Serilog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Serilog.3.1.1\lib\net471\Serilog.dll</HintPath>
+      <HintPath>packages\Serilog.3.1.1\lib\net471\Serilog.dll</HintPath>
     </Reference>
     <Reference Include="Stateless, Version=4.0.0.0, Culture=neutral, PublicKeyToken=93038f0927583c9a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Stateless.5.16.0\lib\net462\Stateless.dll</HintPath>
+      <HintPath>packages\Stateless.5.16.0\lib\net462\Stateless.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+      <HintPath>packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
     </Reference>
     <Reference Include="System.Diagnostics.DiagnosticSource, Version=7.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\System.Diagnostics.DiagnosticSource.7.0.2\lib\net462\System.Diagnostics.DiagnosticSource.dll</HintPath>
+      <HintPath>packages\System.Diagnostics.DiagnosticSource.7.0.2\lib\net462\System.Diagnostics.DiagnosticSource.dll</HintPath>
     </Reference>
     <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
+      <HintPath>packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
     </Reference>
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+      <HintPath>packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <HintPath>packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Shared\Shared.csproj">
-      <Project>{9368d47e-1f6f-4904-95d6-b18579c59d5e}</Project>
-      <Name>Shared</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
