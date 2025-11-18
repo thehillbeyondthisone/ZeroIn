@@ -326,7 +326,7 @@ namespace ZeroIn
                 var waypoints = ZeroIn.RoamPath.SPath.Waypoints.ToList();
 
                 // Check if path forms a closed loop
-                if (!Scanner.GridGenerator.IsClosedLoop(waypoints))
+                if (!ZeroIn.Scanner.GridGenerator.IsClosedLoop(waypoints))
                 {
                     Chat.WriteLine("[ZeroIn] Path must be a closed loop! First and last points should be near each other.", ChatColor.Red);
                     Chat.WriteLine($"[ZeroIn] Distance between first/last: {AOSharp.Common.GameData.Vector3.Distance(waypoints[0], waypoints[waypoints.Count - 1]):F1}m", ChatColor.Yellow);
@@ -341,7 +341,7 @@ namespace ZeroIn
                 Chat.WriteLine($"[ZeroIn] Using scan spacing: {spacing}m", ChatColor.White);
 
                 // Generate grid pattern
-                var gridPoints = Scanner.GridGenerator.GenerateLawnmowerPattern(waypoints, spacing);
+                var gridPoints = ZeroIn.Scanner.GridGenerator.GenerateLawnmowerPattern(waypoints, spacing);
 
                 if (gridPoints.Count == 0)
                 {
@@ -359,7 +359,7 @@ namespace ZeroIn
                 }
 
                 // Save the generated path
-                ZeroIn.RoamPath.Save();
+                ZeroIn.RoamPath.Save(ZeroIn.Config.RoamPath);
 
                 Chat.WriteLine("[ZeroIn] Grid pattern generated and saved!", ChatColor.Green);
                 Chat.WriteLine("[ZeroIn] Click 'Start' to begin scanning the generated pattern.", ChatColor.Yellow);
