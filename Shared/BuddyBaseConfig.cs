@@ -25,9 +25,9 @@ namespace Shared
                     return JsonConvert.DeserializeObject<T>(json);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Logger.Warning($"Failed to load config: {ex.Message}");
+                // Failed to load, return defaults
             }
 
             return new T().LoadDefaults;
@@ -50,9 +50,9 @@ namespace Shared
                 string json = JsonConvert.SerializeObject(this, Formatting.Indented);
                 File.WriteAllText(fullPath, json);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Logger.Warning($"Failed to save config: {ex.Message}");
+                // Failed to save, silently ignore
             }
         }
     }

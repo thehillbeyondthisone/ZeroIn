@@ -18,9 +18,9 @@ namespace Buddy.Shared.UI
             {
                 Root = View.CreateFromXml(xmlPath);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Logger.Warning($"Error creating custom view: {ex.Message}");
+                // Failed to create view
             }
         }
 
@@ -55,9 +55,9 @@ namespace Buddy.Shared.UI
                     CoreSettingsView = new BuddyCoreView();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Logger.Warning($"Error creating window: {ex.Message}");
+                // Failed to create window
             }
         }
     }
