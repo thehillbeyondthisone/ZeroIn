@@ -70,6 +70,7 @@
     <Compile Include="StateMachine\RoamStateMachine.cs" />
     <Compile Include="StateMachine\FSM.cs" />
     <Compile Include="UI\Views\PathSettingsView.cs" />
+    <Compile Include="UI\Views\ScanSettingsView.cs" />
     <Compile Include="IPCMessages\IPCOpcode.cs" />
     <Compile Include="IPCMessages\EnabledIPCMessage.cs" />
     <Compile Include="MobTargeting.cs" />
@@ -100,6 +101,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="UI\Views\PathSettingsView.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="UI\Views\ScanSettingsView.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="UI\Windows\MainWindow.xml">

@@ -120,7 +120,7 @@ namespace ZeroIn
                 string infoWindowPath = $"{XmlPath.WindowsRootDir}\\InfoWindow.xml";
                 string roamWindowPath = $"{XmlPath.WindowsRootDir}\\RoamPathWindow.xml";
                 string coreViewPath = $"{XmlPath.ViewsRootDir}\\BuddyCoreView.xml";
-                string pathSettingsPath = $"{XmlPath.ViewsRootDir}\\PathSettingsView.xml";
+                string scanSettingsPath = $"{XmlPath.ViewsRootDir}\\ScanSettingsView.xml";
                 string initViewPath = $"{XmlPath.ViewsRootDir}\\RoamPathInitView.xml";
                 string mainViewPath = $"{XmlPath.ViewsRootDir}\\RoamPathMainView.xml";
 
@@ -129,7 +129,7 @@ namespace ZeroIn
                 Chat.WriteLine($"  InfoWindow: {(File.Exists(infoWindowPath) ? "FOUND" : "MISSING")} - {infoWindowPath}", ChatColor.White);
                 Chat.WriteLine($"  RoamPathWindow: {(File.Exists(roamWindowPath) ? "FOUND" : "MISSING")} - {roamWindowPath}", ChatColor.White);
                 Chat.WriteLine($"  BuddyCoreView: {(File.Exists(coreViewPath) ? "FOUND" : "MISSING")} - {coreViewPath}", ChatColor.White);
-                Chat.WriteLine($"  PathSettings: {(File.Exists(pathSettingsPath) ? "FOUND" : "MISSING")} - {pathSettingsPath}", ChatColor.White);
+                Chat.WriteLine($"  ScanSettings: {(File.Exists(scanSettingsPath) ? "FOUND" : "MISSING")} - {scanSettingsPath}", ChatColor.White);
                 Chat.WriteLine($"  InitView: {(File.Exists(initViewPath) ? "FOUND" : "MISSING")} - {initViewPath}", ChatColor.White);
                 Chat.WriteLine($"  MainView: {(File.Exists(mainViewPath) ? "FOUND" : "MISSING")} - {mainViewPath}", ChatColor.White);
 
@@ -139,7 +139,7 @@ namespace ZeroIn
                     infoWindowPath,
                     roamWindowPath,
                     coreViewPath,
-                    pathSettingsPath,
+                    scanSettingsPath,
                     initViewPath,
                     mainViewPath);
 

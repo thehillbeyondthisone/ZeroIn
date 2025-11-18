@@ -1,0 +1,33 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+	<View view_layout="vertical" name="Root">
+		<TextView h_alignment="LEFT" label="#Scanner Settings" text_style="Bold" layout_borders="Rect(0,0,0,8)"/>
+
+		<!-- Grid Settings -->
+		<HLayoutGroup text_alignment="LEFT" label="Scan Spacing" name="ScanSpacing" layout_borders="Rect(0,0,0,4)">
+			<TextView text_style="Bold" min_size="Point(120,-1)" label="#Scan Spacing (m)" view_layout="vertical"/>
+			<Text_Field name="ScanSpacingValue" text_alignment="LEFT" caption="" value="40" text_style="normal" max_length="3" min_size="Point(40,-1)"/>
+		</HLayoutGroup>
+
+		<HLayoutGroup text_alignment="LEFT" label="Detection Range" name="DetectionRange" layout_borders="Rect(0,0,0,8)">
+			<TextView text_style="Bold" min_size="Point(120,-1)" label="#Detection (m)" view_layout="vertical"/>
+			<Text_Field name="DetectionRangeValue" text_alignment="LEFT" caption="" value="50" text_style="normal" max_length="3" min_size="Point(40,-1)"/>
+		</HLayoutGroup>
+
+		<!-- Filter Settings -->
+		<Checkbox h_alignment="LEFT" label="#Only AFK Players" name="OnlyAFK" layout_borders="Rect(0,0,0,4)"/>
+		<HLayoutGroup text_alignment="LEFT" label="AFK Check Time" name="AFKCheckTime" layout_borders="Rect(0,0,0,8)">
+			<TextView text_style="Bold" min_size="Point(120,-1)" label="#AFK Time (sec)" view_layout="vertical"/>
+			<Text_Field name="AFKCheckTimeValue" text_alignment="LEFT" caption="" value="30" text_style="normal" max_length="3" min_size="Point(40,-1)"/>
+		</HLayoutGroup>
+
+		<!-- Output Settings -->
+		<TextView h_alignment="LEFT" label="#Output Formats" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
+		<Checkbox h_alignment="LEFT" label="#Save to JSON" name="SaveToJson" layout_borders="Rect(0,0,0,2)"/>
+		<Checkbox h_alignment="LEFT" label="#Save to CSV" name="SaveToCsv" layout_borders="Rect(0,0,0,2)"/>
+		<Checkbox h_alignment="LEFT" label="#Log to Console" name="LogToConsole" layout_borders="Rect(0,0,0,8)"/>
+
+		<!-- Continuous Scan -->
+		<Checkbox h_alignment="LEFT" label="#Continuous Scanning" name="ContinuousScanning" layout_borders="Rect(0,0,0,4)"/>
+	</View>
+</root>
