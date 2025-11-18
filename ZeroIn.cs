@@ -20,6 +20,7 @@ namespace ZeroIn
         public static MainWindow MainWindow;
         public static CharacterScanner Scanner;
         public static ScanMap Map;
+        public static VisualRadar Radar;
 
         public override void Run()
         {
@@ -55,6 +56,12 @@ namespace ZeroIn
                 Map = new ScanMap(CommonParameters.PluginDataPath);
                 Chat.WriteLine("[ZeroIn] Scanner initialized successfully", ChatColor.Green);
 
+                // Initialize Visual Radar
+                Chat.WriteLine("[ZeroIn] Initializing visual radar...", ChatColor.White);
+                Radar = new VisualRadar(Scanner, Config);
+                Game.OnUpdate += OnUpdate;
+                Chat.WriteLine("[ZeroIn] Visual radar initialized successfully", ChatColor.Green);
+
                 Chat.WriteLine("[ZeroIn] Opening main window on startup...", ChatColor.White);
                 OpenMainWindow();
 
@@ -85,7 +92,15 @@ namespace ZeroIn
                         Chat.WriteLine($"  {player.Name} - {player.Distance:F1}m away, seen {age:F0}s ago (spotted {player.TimesSpotted}x)", ChatColor.White);
                     }
                 });
-                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan", ChatColor.Green);
+
+                // Add command to toggle visual radar
+                Chat.RegisterCommand("radar", (string command, string[] param, ChatWindow chatWindow) =>
+                {
+                    Chat.WriteLine("[ZeroIn] Command received: /radar", ChatColor.Green);
+                    Radar.Toggle();
+                });
+
+                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar", ChatColor.Green);
 
                 Chat.WriteLine("[ZeroIn] Initializing state machine...", ChatColor.White);
                 StateMachine = new RoamStateMachine(new MobTargeting(Config), Scanner, Map, Config.CoreConfig.OnInjectEnable);
@@ -187,6 +202,20 @@ namespace ZeroIn
                     SMovementController.SetPath(path, true);
                 else if (path.Waypoints.Count > 1)
                     SMovementController.SetPath(path, true);
+            }
+        }
+
+        private static void OnUpdate(object sender, float deltaTime)
+        {
+            try
+            {
+                // Draw visual radar overlay
+                Radar?.Draw();
+            }
+            catch (Exception ex)
+            {
+                // Silently catch to avoid spam - radar is non-critical
+                Log?.Warning($"OnUpdate error: {ex.Message}");
             }
         }
     }
