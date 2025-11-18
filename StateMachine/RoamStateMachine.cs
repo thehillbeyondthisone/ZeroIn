@@ -76,6 +76,8 @@ namespace ZeroIn
         public const int UpdateRate = 10;
         private bool _enabled = false;
 
+        public bool IsEnabled => _enabled;
+
         public RoamStateMachine(MobTargeting mobTargeting, CharacterScanner scanner, ScanMap map, bool enabled = false) : base(State.Roam, new RoamContext(mobTargeting, scanner, map))
         {
             _enabled = enabled;

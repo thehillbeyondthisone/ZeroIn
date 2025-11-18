@@ -78,10 +78,37 @@ namespace ZeroIn
             var sharedQuery = DynelManager.NPCs
                 .Where(x => !x.IsPet && !x.IsPlayer && x.IsAlive && x.IsInLineOfSight && !_ignoredIdentities.Contains(x.Identity));
 
-            if (_config.PathingConfig.AttackPriorityOnly)
-                return sharedQuery.Where(x => ZeroIn.RoamPath.Rules.PriorityNames.Contains(x.Name));
-            else 
-                return sharedQuery.Where(x=> !ZeroIn.RoamPath.Rules.IgnoredNames.Contains(x.Name));
+            // ZeroIn simplified targeting:
+            // 1. Level range filter
+            sharedQuery = sharedQuery.Where(x => x.Level >= _config.MinMobLevel && x.Level <= _config.MaxMobLevel);
+
+            // 2. Blacklist filter
+            if (_config.MobBlacklist.Count > 0)
+                sharedQuery = sharedQuery.Where(x => !_config.MobBlacklist.Contains(x.Name));
+
+            // 3. Hostile only filter (if enabled, only attack mobs that are aggressive or already attacking)
+            if (_config.HostileMobsOnly)
+                sharedQuery = sharedQuery.Where(x => x.FightingTarget != null || x.IsAgressive);
+
+            // Debug output
+            if (_config.VerboseDebug)
+            {
+                var targets = sharedQuery.ToList();
+                if (targets.Count > 0)
+                    Chat.WriteLine($"[ZeroIn] Found {targets.Count} possible targets: {string.Join(", ", targets.Select(t => $"{t.Name}(L{t.Level})"))}",
+                        AOSharp.Core.UI.ChatColor.Gray);
+            }
+
+            // Legacy support: also check RoamPath.Rules if they exist
+            if (ZeroIn.RoamPath?.Rules != null)
+            {
+                if (_config.PathingConfig.AttackPriorityOnly)
+                    return sharedQuery.Where(x => ZeroIn.RoamPath.Rules.PriorityNames.Contains(x.Name));
+                else if (ZeroIn.RoamPath.Rules.IgnoredNames.Count > 0)
+                    return sharedQuery.Where(x => !ZeroIn.RoamPath.Rules.IgnoredNames.Contains(x.Name));
+            }
+
+            return sharedQuery;
         }
 
         private List<SimpleChar> FilterTargets(IEnumerable<SimpleChar> possibleTargets, Item tauntItem)

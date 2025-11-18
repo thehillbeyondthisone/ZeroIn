@@ -70,7 +70,11 @@ namespace ZeroIn
 
             var localPos = localPlayer.Position;
 
+            if (ZeroIn.Config.VerboseDebug)
+                Chat.WriteLine($"[ZeroIn] Scanning {DynelManager.Players.Count()} players in area...", AOSharp.Core.UI.ChatColor.Gray);
+
             // Scan all nearby players
+            int scanned = 0;
             foreach (var player in DynelManager.Players)
             {
                 if (player == null || !player.IsValid) continue;
@@ -93,7 +97,14 @@ namespace ZeroIn
                     Playfield.ModelIdentity.Instance,
                     Playfield.Name
                 );
+                scanned++;
+
+                if (ZeroIn.Config.VerboseDebug)
+                    Chat.WriteLine($"[ZeroIn]   → {player.Name} @ {distance:F1}m", AOSharp.Core.UI.ChatColor.Gray);
             }
+
+            if (ZeroIn.Config.VerboseDebug && scanned > 0)
+                Chat.WriteLine($"[ZeroIn] Scanned {scanned} players, total tracked: {scanner.Count}", AOSharp.Core.UI.ChatColor.Gray);
         }
     }
 }

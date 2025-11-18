@@ -200,7 +200,16 @@ namespace ZeroIn
                     }
                 });
 
-                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /debugxml", ChatColor.Green);
+                // Add command to toggle verbose debug
+                Chat.RegisterCommand("debug", (string command, string[] param, ChatWindow chatWindow) =>
+                {
+                    Config.VerboseDebug = !Config.VerboseDebug;
+                    Chat.WriteLine($"[ZeroIn] Verbose debug: {(Config.VerboseDebug ? "ENABLED" : "DISABLED")}",
+                        Config.VerboseDebug ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine("[ZeroIn] This enables detailed logging for scanning, targeting, and grid generation.", ChatColor.White);
+                });
+
+                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /debug, /debugxml", ChatColor.Green);
 
                 Chat.WriteLine("[ZeroIn] Initializing state machine...", ChatColor.White);
                 StateMachine = new RoamStateMachine(new MobTargeting(Config), Scanner, Map, Config.CoreConfig.OnInjectEnable);

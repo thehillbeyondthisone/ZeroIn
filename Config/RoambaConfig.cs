@@ -48,6 +48,15 @@ namespace ZeroIn
         public bool ShowPlayerMarkers = true; // Show player position markers
         public bool TagOnlyMode = false; // If true, only show player name tags, no marker shapes
 
+        // Debug settings
+        public bool VerboseDebug = false; // Enable verbose debug output to console
+
+        // Combat targeting settings (simple version for ZeroIn)
+        public bool HostileMobsOnly = true; // Only target hostile/aggressive mobs
+        public int MinMobLevel = 1;
+        public int MaxMobLevel = 220;
+        public System.Collections.Generic.List<string> MobBlacklist = new System.Collections.Generic.List<string>(); // Mob names to never attack
+
         public ZeroInConfig()
         {
             CoreConfig = new BuddyCoreConfig();

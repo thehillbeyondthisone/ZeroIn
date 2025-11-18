@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using AOSharp.Common.GameData;
 using AOSharp.Pathfinding;
+using AOSharp.Core;
+using AOSharp.Core.UI;
 
 namespace ZeroIn.Scanner
 {
@@ -72,8 +74,9 @@ namespace ZeroIn.Scanner
             }
 
             // Debug info
-            AOSharp.Core.Chat.WriteLine($"[GridGen] Bounding box: X({minX:F1} to {maxX:F1}), Z({minZ:F1} to {maxZ:F1})", AOSharp.Core.UI.ChatColor.White);
-            AOSharp.Core.Chat.WriteLine($"[GridGen] Tested {totalTestPoints} points, {insidePoints} inside polygon", AOSharp.Core.UI.ChatColor.White);
+            Chat.WriteLine($"[GridGen] Bounding box: X({minX:F1} to {maxX:F1}), Z({minZ:F1} to {maxZ:F1})", ChatColor.White);
+            Chat.WriteLine($"[GridGen] Tested {totalTestPoints} points, {insidePoints} inside polygon", ChatColor.White);
+            Chat.WriteLine($"[GridGen] Boundary points: {boundary.Count}", ChatColor.White);
 
             return waypoints;
         }
