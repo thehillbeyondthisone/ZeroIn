@@ -1,6 +1,7 @@
 using AOSharp.Core;
 using AOSharp.Core.UI;
 using AOSharp.Common.GameData;
+using AOSharp.Pathfinding;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -16,6 +17,8 @@ namespace ZeroIn
         private bool _enabled = true;
         private CharacterScanner _scanner;
         private ZeroInConfig _config;
+        private SPath _detectionRadiusPath;
+        private Dictionary<uint, SPath> _playerMarkers = new Dictionary<uint, SPath>();
 
         public bool Enabled
         {
@@ -35,7 +38,10 @@ namespace ZeroIn
         public void Draw()
         {
             if (!_enabled)
+            {
+                CleanupPaths();
                 return;
+            }
 
             try
             {
@@ -61,16 +67,44 @@ namespace ZeroIn
             float radius = _config.PlayerDetectionRange;
             var position = localPlayer.Position;
 
-            // Draw a circle using NavMesh visualization
-            // NavMesh.Display draws ground-level circles
-            // Color: Light blue for detection radius
-            NavMesh.Display(position, radius, DecoType.Sphere, 0.1f);
+            // Create a circular path around the player for detection radius visualization
+            if (_detectionRadiusPath == null)
+            {
+                _detectionRadiusPath = new SPath();
+
+                // Create a circle with 36 points (10 degree increments)
+                int numPoints = 36;
+                for (int i = 0; i < numPoints; i++)
+                {
+                    float angle = (float)(i * Math.PI * 2 / numPoints);
+                    float x = position.X + radius * (float)Math.Cos(angle);
+                    float z = position.Z + radius * (float)Math.Sin(angle);
+
+                    _detectionRadiusPath.Waypoints.Add(new Vector3(x, position.Y, z));
+                }
+
+                _detectionRadiusPath.Type = PathType.Circular;
+                _detectionRadiusPath.Display(0.5f); // Light blue-ish color
+            }
+            else
+            {
+                // Update circle position to follow player
+                for (int i = 0; i < _detectionRadiusPath.Waypoints.Count; i++)
+                {
+                    float angle = (float)(i * Math.PI * 2 / _detectionRadiusPath.Waypoints.Count);
+                    float x = position.X + radius * (float)Math.Cos(angle);
+                    float z = position.Z + radius * (float)Math.Sin(angle);
+
+                    _detectionRadiusPath.Waypoints[i] = new Vector3(x, position.Y, z);
+                }
+            }
         }
 
         private void DrawDetectedPlayers(SimpleChar localPlayer)
         {
             var detected = _scanner.GetDetectedCharacters();
             var now = DateTime.UtcNow;
+            var activePlayerIds = new HashSet<uint>();
 
             foreach (var player in detected)
             {
@@ -78,57 +112,77 @@ namespace ZeroIn
                 if ((now - player.LastSeen).TotalSeconds > 30)
                     continue;
 
+                activePlayerIds.Add(player.CharId);
+
                 var playerPos = new Vector3(player.PositionX, player.PositionY, player.PositionZ);
 
-                // Determine color based on AFK status
-                // AFK (not moved) = Red, Active (moved) = Green
-                DecoType markerType = player.HasMoved() ? DecoType.Dot : DecoType.Dot;
-                float size = player.HasMoved() ? 2f : 3f; // AFK players get bigger markers
-
-                // Draw marker at player position
-                if (!player.HasMoved())
+                // Create or update marker for this player
+                if (!_playerMarkers.ContainsKey(player.CharId))
                 {
-                    // AFK - draw RED
-                    NavMesh.Display(playerPos, size, DecoType.Dot, 0.1f);
+                    var markerPath = new SPath();
+                    float markerSize = player.HasMoved() ? 2f : 3f;
+
+                    // Create a small cross or star marker
+                    markerPath.Waypoints.Add(new Vector3(playerPos.X - markerSize, playerPos.Y, playerPos.Z));
+                    markerPath.Waypoints.Add(new Vector3(playerPos.X + markerSize, playerPos.Y, playerPos.Z));
+                    markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z - markerSize));
+                    markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z + markerSize));
+
+                    markerPath.Type = PathType.Linear;
+
+                    // Color coding: AFK = red (1.0), Active = green (0.3)
+                    float color = player.HasMoved() ? 0.3f : 1.0f;
+                    markerPath.Display(color);
+
+                    _playerMarkers[player.CharId] = markerPath;
                 }
                 else
                 {
-                    // Active - draw GREEN
-                    NavMesh.Display(playerPos, size, DecoType.Sphere, 0.1f);
-                }
+                    // Update existing marker position
+                    var markerPath = _playerMarkers[player.CharId];
+                    float markerSize = player.HasMoved() ? 2f : 3f;
 
-                // Draw name label above player
-                DrawPlayerLabel(playerPos, player);
+                    markerPath.Waypoints.Clear();
+                    markerPath.Waypoints.Add(new Vector3(playerPos.X - markerSize, playerPos.Y, playerPos.Z));
+                    markerPath.Waypoints.Add(new Vector3(playerPos.X + markerSize, playerPos.Y, playerPos.Z));
+                    markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z - markerSize));
+                    markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z + markerSize));
+                }
+            }
+
+            // Clean up markers for players no longer detected
+            var markersToRemove = _playerMarkers.Keys.Where(id => !activePlayerIds.Contains(id)).ToList();
+            foreach (var id in markersToRemove)
+            {
+                _playerMarkers[id].Delete();
+                _playerMarkers.Remove(id);
             }
         }
 
-        private void DrawPlayerLabel(Vector3 position, DetectedCharacter player)
+        private void CleanupPaths()
         {
-            try
+            if (_detectionRadiusPath != null)
             {
-                // Calculate screen position for the player's world position
-                var screenPos = Camera.WorldToScreen(position);
-
-                if (screenPos.X < 0 || screenPos.Y < 0)
-                    return; // Off screen
-
-                // Format label: Name (distance)
-                var status = player.HasMoved() ? "Active" : "AFK";
-                var label = $"{player.Name} ({player.Distance:F0}m) [{status}]";
-
-                // Draw text at screen position
-                // Note: AOSharp text rendering might not be available, so we'll use simpler approach
-                // We can enhance this later if needed
+                _detectionRadiusPath.Delete();
+                _detectionRadiusPath = null;
             }
-            catch
+
+            foreach (var marker in _playerMarkers.Values)
             {
-                // Label rendering is optional, don't spam logs
+                marker.Delete();
             }
+            _playerMarkers.Clear();
         }
 
         public void Toggle()
         {
             _enabled = !_enabled;
+
+            if (!_enabled)
+            {
+                CleanupPaths();
+            }
+
             Chat.WriteLine($"[ZeroIn] Visual radar: {(_enabled ? "ENABLED" : "DISABLED")}",
                 _enabled ? ChatColor.Green : ChatColor.Red);
         }
