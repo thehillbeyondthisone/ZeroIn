@@ -1,5 +1,6 @@
 using AOSharp.Core.UI;
 using AOSharp.Core;
+using AOSharp.Common.GameData;
 using Buddy.Shared.UI;
 
 namespace ZeroIn
