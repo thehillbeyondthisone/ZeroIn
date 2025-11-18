@@ -48,8 +48,16 @@ namespace ZeroIn
 
                 OpenMainWindow();
 
+                // Register commands (case-insensitive variants)
+                Chat.RegisterCommand("zeroin", (string command, string[] param, ChatWindow chatWindow) =>
+                {
+                    Chat.WriteLine("[ZeroIn] Opening main window...", ChatColor.Green);
+                    OpenMainWindow();
+                });
+
                 Chat.RegisterCommand("ZeroIn", (string command, string[] param, ChatWindow chatWindow) =>
                 {
+                    Chat.WriteLine("[ZeroIn] Opening main window...", ChatColor.Green);
                     OpenMainWindow();
                 });
 
@@ -77,16 +85,30 @@ namespace ZeroIn
 
         private void OpenMainWindow()
         {
-            MainWindow = new MainWindow("ZeroIn",
-                $"{XmlPath.WindowsRootDir}\\MainWindow.xml",
-                $"{XmlPath.WindowsRootDir}\\InfoWindow.xml",
-                $"{XmlPath.WindowsRootDir}\\RoamPathWindow.xml",
-                $"{XmlPath.ViewsRootDir}\\BuddyCoreView.xml",
-                $"{XmlPath.ViewsRootDir}\\PathSettingsView.xml",
-                $"{XmlPath.ViewsRootDir}\\RoamPathInitView.xml",
-                $"{XmlPath.ViewsRootDir}\\RoamPathMainView.xml");
+            try
+            {
+                Chat.WriteLine($"[ZeroIn] Creating main window...", ChatColor.Green);
+                Chat.WriteLine($"[ZeroIn] Plugin directory: {PluginDirectory}", ChatColor.Gray);
+                Chat.WriteLine($"[ZeroIn] Windows path: {XmlPath.WindowsRootDir}", ChatColor.Gray);
 
-            MainWindow.Show();
+                MainWindow = new MainWindow("ZeroIn",
+                    $"{XmlPath.WindowsRootDir}\\MainWindow.xml",
+                    $"{XmlPath.WindowsRootDir}\\InfoWindow.xml",
+                    $"{XmlPath.WindowsRootDir}\\RoamPathWindow.xml",
+                    $"{XmlPath.ViewsRootDir}\\BuddyCoreView.xml",
+                    $"{XmlPath.ViewsRootDir}\\PathSettingsView.xml",
+                    $"{XmlPath.ViewsRootDir}\\RoamPathInitView.xml",
+                    $"{XmlPath.ViewsRootDir}\\RoamPathMainView.xml");
+
+                Chat.WriteLine($"[ZeroIn] Showing window...", ChatColor.Green);
+                MainWindow.Show();
+                Chat.WriteLine($"[ZeroIn] Window shown!", ChatColor.Green);
+            }
+            catch (Exception ex)
+            {
+                Chat.WriteLine($"[ZeroIn] ERROR opening window: {ex.Message}", ChatColor.Red);
+                Chat.WriteLine($"[ZeroIn] Stack: {ex.StackTrace}", ChatColor.Red);
+            }
         }
 
         public static void SetPath(SPath path)
