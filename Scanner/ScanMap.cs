@@ -57,17 +57,20 @@ namespace ZeroIn.Scanner
                 return;
             }
 
+            var afkCount = characters.Count(c => c.IsLikelyAFK());
             Console.WriteLine("=".PadRight(80, '='));
-            Console.WriteLine($" ZeroIn Scan Results - {characters.Count} characters detected");
+            Console.WriteLine($" ZeroIn Scan Results - {characters.Count} characters detected ({afkCount} likely AFK)");
             Console.WriteLine("=".PadRight(80, '='));
 
             foreach (var character in characters.OrderBy(c => c.Name))
             {
                 var age = (DateTime.UtcNow - character.LastSeen).TotalSeconds;
-                Console.WriteLine($"  {character.Name}");
+                var afkStatus = character.IsLikelyAFK() ? $" [AFK {character.GetAFKConfidence()}%]" : "";
+                Console.WriteLine($"  {character.Name}{afkStatus}");
                 Console.WriteLine($"    Position: ({character.PositionX:F1}, {character.PositionY:F1}, {character.PositionZ:F1})");
+                Console.WriteLine($"    Playfield: {character.PlayfieldName} ({character.PlayfieldId})");
                 Console.WriteLine($"    Distance: {character.Distance:F1}m");
-                Console.WriteLine($"    Times Spotted: {character.TimesSpotted}");
+                Console.WriteLine($"    Times Spotted: {character.TimesSpotted} | Distance Moved: {character.TotalDistanceMoved:F1}m");
                 Console.WriteLine($"    Last Seen: {age:F0}s ago");
                 Console.WriteLine();
             }
@@ -99,14 +102,13 @@ namespace ZeroIn.Scanner
                 string path = Path.Combine(_outputPath, filename);
 
                 var sb = new StringBuilder();
-                sb.AppendLine("CharId,Name,TimesSpotted,PositionX,PositionY,PositionZ,Distance,Health,FirstSeen,LastSeen");
+                // Use the enhanced CSV header with AFK detection fields
+                sb.AppendLine(DetectedCharacter.GetCsvHeader());
 
                 foreach (var character in characters.OrderBy(c => c.Name))
                 {
-                    sb.AppendLine($"{character.CharId},{EscapeCsv(character.Name)},{character.TimesSpotted}," +
-                                  $"{character.PositionX:F2},{character.PositionY:F2},{character.PositionZ:F2}," +
-                                  $"{character.Distance:F2},{character.Health}," +
-                                  $"{character.FirstSeen:yyyy-MM-dd HH:mm:ss},{character.LastSeen:yyyy-MM-dd HH:mm:ss}");
+                    // Use the enhanced ToCsv method with all AFK tracking data
+                    sb.AppendLine(character.ToCsv());
                 }
 
                 File.WriteAllText(path, sb.ToString());
@@ -125,20 +127,23 @@ namespace ZeroIn.Scanner
                 string filename = $"scan_{areaName}_{timestamp}.txt";
                 string path = Path.Combine(_outputPath, filename);
 
+                var afkCount = characters.Count(c => c.IsLikelyAFK());
                 var sb = new StringBuilder();
                 sb.AppendLine($"ZeroIn Scan Results - {areaName}");
                 sb.AppendLine($"Scan Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-                sb.AppendLine($"Characters Detected: {characters.Count}");
+                sb.AppendLine($"Characters Detected: {characters.Count} ({afkCount} likely AFK)");
                 sb.AppendLine();
                 sb.AppendLine("=".PadRight(80, '='));
 
                 foreach (var character in characters.OrderBy(c => c.Name))
                 {
                     var age = (DateTime.UtcNow - character.LastSeen).TotalSeconds;
-                    sb.AppendLine($"{character.Name}");
+                    var afkStatus = character.IsLikelyAFK() ? $" [AFK {character.GetAFKConfidence()}%]" : "";
+                    sb.AppendLine($"{character.Name}{afkStatus}");
                     sb.AppendLine($"  Position: ({character.PositionX:F1}, {character.PositionY:F1}, {character.PositionZ:F1})");
+                    sb.AppendLine($"  Playfield: {character.PlayfieldName} ({character.PlayfieldId})");
                     sb.AppendLine($"  Distance: {character.Distance:F1}m");
-                    sb.AppendLine($"  Times Spotted: {character.TimesSpotted}");
+                    sb.AppendLine($"  Times Spotted: {character.TimesSpotted} | Distance Moved: {character.TotalDistanceMoved:F1}m");
                     sb.AppendLine($"  Last Seen: {age:F0}s ago");
                     sb.AppendLine();
                 }

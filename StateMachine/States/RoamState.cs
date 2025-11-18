@@ -78,7 +78,9 @@ namespace ZeroIn
                     player.Position.Y,
                     player.Position.Z,
                     player.Health,
-                    distance
+                    distance,
+                    Playfield.ModelIdentity.Instance,
+                    Playfield.Name
                 );
             }
         }

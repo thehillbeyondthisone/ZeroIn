@@ -2,6 +2,7 @@ using AOSharp.Core;
 using AOSharp.Core.UI;
 using AOSharp.Common.GameData;
 using AOSharp.Pathfinding;
+using AOSharp.Core.Misc;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -19,6 +20,8 @@ namespace ZeroIn
         private ZeroInConfig _config;
         private SPath _detectionRadiusPath;
         private Dictionary<uint, SPath> _playerMarkers = new Dictionary<uint, SPath>();
+        private AutoResetInterval _updateInterval;
+        private bool _pathsCreated = false;
 
         public bool Enabled
         {
@@ -30,6 +33,7 @@ namespace ZeroIn
         {
             _scanner = scanner;
             _config = config;
+            _updateInterval = new AutoResetInterval(500); // Update every 500ms instead of every frame
         }
 
         /// <summary>
@@ -39,9 +43,17 @@ namespace ZeroIn
         {
             if (!_enabled)
             {
-                CleanupPaths();
+                if (_pathsCreated)
+                {
+                    CleanupPaths();
+                    _pathsCreated = false;
+                }
                 return;
             }
+
+            // Throttle updates to reduce spam
+            if (!_updateInterval.Elapsed)
+                return;
 
             try
             {
@@ -54,6 +66,8 @@ namespace ZeroIn
 
                 // Draw detected players
                 DrawDetectedPlayers(localPlayer);
+
+                _pathsCreated = true;
             }
             catch (Exception ex)
             {
@@ -117,14 +131,16 @@ namespace ZeroIn
 
                 var playerPos = new Vector3(player.PositionX, player.PositionY, player.PositionZ);
 
+                // Determine marker size based on AFK status (AFK players get larger markers)
+                bool isAfk = player.IsLikelyAFK();
+                float markerSize = isAfk ? 3f : 2f;
+
                 // Create or update marker for this player
                 if (!_playerMarkers.ContainsKey(player.CharId))
                 {
                     var markerPath = SPath.Create();
-                    markerPath.Name = $"ZeroIn_Player_{player.CharId}";
+                    markerPath.Name = $"ZeroIn_Player_{player.CharId}_{(isAfk ? "AFK" : "Active")}";
                     markerPath.PlayfieldId = Playfield.ModelIdentity.Instance;
-
-                    float markerSize = player.HasMoved() ? 2f : 3f;
 
                     // Create a small cross marker
                     markerPath.Waypoints.Add(new Vector3(playerPos.X - markerSize, playerPos.Y, playerPos.Z));
@@ -137,9 +153,9 @@ namespace ZeroIn
                 }
                 else
                 {
-                    // Update existing marker position
+                    // Update existing marker position and size
                     var markerPath = _playerMarkers[player.CharId];
-                    float markerSize = player.HasMoved() ? 2f : 3f;
+                    markerPath.Name = $"ZeroIn_Player_{player.CharId}_{(isAfk ? "AFK" : "Active")}";
 
                     markerPath.Waypoints.Clear();
                     markerPath.Waypoints.Add(new Vector3(playerPos.X - markerSize, playerPos.Y, playerPos.Z));
