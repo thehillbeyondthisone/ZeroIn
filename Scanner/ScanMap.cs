@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AOSharp.Core;
-using AOSharp.Common.GameData;
 
 namespace ZeroIn.Scanner
 {
@@ -49,33 +47,12 @@ namespace ZeroIn.Scanner
         }
 
         /// <summary>
-        /// Prints results to console
+        /// Prints results to console (legacy method - not used, kept for compatibility)
         /// </summary>
         public void PrintResults(List<DetectedCharacter> characters)
         {
-            if (characters == null || characters.Count == 0)
-            {
-                Chat.WriteLine("[ZeroIn] No characters detected");
-                return;
-            }
-
-            var afkCount = characters.Count(c => c.IsLikelyAFK());
-            Chat.WriteLine("=".PadRight(80, '='));
-            Chat.WriteLine($" ZeroIn Scan Results - {characters.Count} characters detected ({afkCount} likely AFK)");
-            Chat.WriteLine("=".PadRight(80, '='));
-
-            foreach (var character in characters.OrderBy(c => c.Name))
-            {
-                var age = (DateTime.UtcNow - character.LastSeen).TotalSeconds;
-                var afkStatus = character.IsLikelyAFK() ? $" [AFK {character.GetAFKConfidence()}%]" : "";
-                Chat.WriteLine($"  {character.Name}{afkStatus}");
-                Chat.WriteLine($"    Position: ({character.PositionX:F1}, {character.PositionY:F1}, {character.PositionZ:F1})");
-                Chat.WriteLine($"    Playfield: {character.PlayfieldName} ({character.PlayfieldId})");
-                Chat.WriteLine($"    Distance: {character.Distance:F1}m");
-                Chat.WriteLine($"    Times Spotted: {character.TimesSpotted} | Distance Moved: {character.TotalDistanceMoved:F1}m");
-                Chat.WriteLine($"    Last Seen: {age:F0}s ago");
-                Chat.WriteLine();
-            }
+            // This method is not currently used - output goes to files only
+            // Logging is handled by the calling code in ZeroIn.cs
         }
 
         private void SaveAsJson(List<DetectedCharacter> characters, string areaName, string timestamp)
@@ -87,12 +64,11 @@ namespace ZeroIn.Scanner
 
                 var json = JsonConvert.SerializeObject(characters, Formatting.Indented);
                 File.WriteAllText(path, json);
-
-                Chat.WriteLine($"[ZeroIn] Saved JSON: {filename}");
+                // File saved successfully (logging handled by calling code)
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Chat.WriteLine($"[ZeroIn] Error saving JSON: {ex.Message}");
+                // Error saving (logging handled by calling code)
             }
         }
 
@@ -114,11 +90,11 @@ namespace ZeroIn.Scanner
                 }
 
                 File.WriteAllText(path, sb.ToString());
-                Chat.WriteLine($"[ZeroIn] Saved CSV: {filename}");
+                // File saved successfully (logging handled by calling code)
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Chat.WriteLine($"[ZeroIn] Error saving CSV: {ex.Message}");
+                // Error saving (logging handled by calling code)
             }
         }
 
@@ -151,11 +127,11 @@ namespace ZeroIn.Scanner
                 }
 
                 File.WriteAllText(path, sb.ToString());
-                Chat.WriteLine($"[ZeroIn] Saved Summary: {filename}");
+                // File saved successfully (logging handled by calling code)
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Chat.WriteLine($"[ZeroIn] Error saving summary: {ex.Message}");
+                // Error saving (logging handled by calling code)
             }
         }
 

@@ -109,7 +109,7 @@ namespace ZeroIn
                     Chat.WriteLine($"Views Root: {XmlPath.ViewsRootDir}", ChatColor.White);
 
                     string coreViewPath = $"{XmlPath.ViewsRootDir}\\BuddyCoreView.xml";
-                    Chat.WriteLine($"\nBuddyCoreView.xml path: {coreViewPath}", ChatColor.Cyan);
+                    Chat.WriteLine($"\nBuddyCoreView.xml path: {coreViewPath}", ChatColor.LightBlue);
                     Chat.WriteLine($"File exists: {File.Exists(coreViewPath)}", ChatColor.White);
 
                     if (File.Exists(coreViewPath))
@@ -123,7 +123,7 @@ namespace ZeroIn
                             {
                                 if (lines[i].Contains("HLayoutGroup"))
                                 {
-                                    Chat.WriteLine($"Line {i + 1}: {lines[i].Trim()}", ChatColor.Cyan);
+                                    Chat.WriteLine($"Line {i + 1}: {lines[i].Trim()}", ChatColor.LightBlue);
                                 }
                             }
                         }
@@ -134,7 +134,7 @@ namespace ZeroIn
                     }
 
                     string scanSettingsPath = $"{XmlPath.ViewsRootDir}\\ScanSettingsView.xml";
-                    Chat.WriteLine($"\nScanSettingsView.xml path: {scanSettingsPath}", ChatColor.Cyan);
+                    Chat.WriteLine($"\nScanSettingsView.xml path: {scanSettingsPath}", ChatColor.LightBlue);
                     Chat.WriteLine($"File exists: {File.Exists(scanSettingsPath)}", ChatColor.White);
 
                     if (File.Exists(scanSettingsPath))
@@ -148,7 +148,7 @@ namespace ZeroIn
                             {
                                 if (lines[i].Contains("HLayoutGroup"))
                                 {
-                                    Chat.WriteLine($"Line {i + 1}: {lines[i].Trim()}", ChatColor.Cyan);
+                                    Chat.WriteLine($"Line {i + 1}: {lines[i].Trim()}", ChatColor.LightBlue);
                                 }
                             }
                         }
