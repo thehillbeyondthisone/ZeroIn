@@ -13,10 +13,10 @@ namespace ZeroIn
     {
         private List<Identity> _ignoredIdentities;
         private List<int> _tauntItemIds;
-        private AutomatonRoambaConfig _config;
+        private ZeroInConfig _config;
         private List<CorpseTarget> _corpses;
 
-        public MobTargeting(AutomatonRoambaConfig config)
+        public MobTargeting(ZeroInConfig config)
         {
             _config = config;
             _tauntItemIds = new List<int> { 83919, 83920, 253187, 244655, 152029, 151692, 151693, 158045, 158046 };
