@@ -104,8 +104,7 @@ namespace Buddy.Shared.UI
         public void SetButtonState(bool state)
         {
             IsButtonEnabled = state;
-            if (EnabledButton != null)
-                EnabledButton.Text = state ? "Stop" : "Start";
+            // Button label is set in XML, we just track the state here
         }
 
         public void SetData(BuddyCoreConfig config)
@@ -118,7 +117,7 @@ namespace Buddy.Shared.UI
                     _channelId.Text = config.ChannelId.ToString();
 
                 if (_onInjectEnable != null)
-                    _onInjectEnable.Checked = config.OnInjectEnable;
+                    _onInjectEnable.IsChecked = config.OnInjectEnable;
             }
             catch (Exception)
             {
@@ -136,7 +135,7 @@ namespace Buddy.Shared.UI
                     config.ChannelId = channelId;
 
                 if (_onInjectEnable != null)
-                    config.OnInjectEnable = _onInjectEnable.Checked;
+                    config.OnInjectEnable = _onInjectEnable.IsChecked;
             }
             catch (Exception)
             {
