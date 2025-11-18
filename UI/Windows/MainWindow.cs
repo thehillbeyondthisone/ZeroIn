@@ -196,45 +196,53 @@ namespace ZeroIn
             {
                 SaveConfig(false);
 
-                if (ZeroIn.RoamPath == null || ZeroIn.RoamPath.SPath == null)
-                {
-                    Chat.WriteLine("[ZeroIn] No scan path loaded. Click 'Edit Scan Path' to create one.", ChatColor.Yellow);
-                    ZeroIn.Log.Information("No paths loaded");
-                    CoreSettingsView.IsButtonEnabled = false;
-                    CoreSettingsView.SetButtonState(false);
-                    return;
-                }
+                // Toggle button state
+                CoreSettingsView.IsButtonEnabled = !CoreSettingsView.IsButtonEnabled;
+                bool newState = CoreSettingsView.IsButtonEnabled;
 
-                if (ZeroIn.RoamPath.SPath.PlayfieldId != Playfield.ModelIdentity.Instance)
+                // If trying to start, validate conditions
+                if (newState)
                 {
-                    CoreSettingsView.IsButtonEnabled = false;
-                    CoreSettingsView.SetButtonState(false);
-                    Chat.WriteLine("[ZeroIn] Cannot start - path is for a different playfield.", ChatColor.Red);
-                    ZeroIn.Log.Information("Cannot start a path saved for a different playfield.");
-                    return;
-                }
-
-                if (CoreSettingsView.IsButtonEnabled && ZeroIn.RoamPath.SPath.Waypoints.Count == 0)
-                {
-                    CoreSettingsView.IsButtonEnabled = false;
-                    CoreSettingsView.SetButtonState(false);
-                    Chat.WriteLine("[ZeroIn] Path needs at least one waypoint. Click 'Edit Scan Path'.", ChatColor.Yellow);
-                    ZeroIn.Log.Information("Path needs to have at least one waypoint");
-                }
-                else
-                {
-                    if (ZeroIn.Ipc != null)
+                    if (ZeroIn.RoamPath == null || ZeroIn.RoamPath.SPath == null)
                     {
-                        ZeroIn.Ipc.Broadcast(new EnabledIPCMessage
-                        {
-                            SetEnabled = CoreSettingsView.IsButtonEnabled,
-                            RoamPath = ZeroIn.Config.RoamPath,
-                            PathConfig = ZeroIn.Config.PathingConfig,
-                        });
+                        Chat.WriteLine("[ZeroIn] No scan path loaded. Click 'Edit Scan Path' to create one.", ChatColor.Yellow);
+                        ZeroIn.Log.Information("No paths loaded");
+                        CoreSettingsView.IsButtonEnabled = false;
+                        CoreSettingsView.SetButtonState(false);
+                        return;
                     }
 
-                    OnEnabledPress(CoreSettingsView.IsButtonEnabled);
+                    if (ZeroIn.RoamPath.SPath.PlayfieldId != Playfield.ModelIdentity.Instance)
+                    {
+                        Chat.WriteLine("[ZeroIn] Cannot start - path is for a different playfield.", ChatColor.Red);
+                        ZeroIn.Log.Information("Cannot start a path saved for a different playfield.");
+                        CoreSettingsView.IsButtonEnabled = false;
+                        CoreSettingsView.SetButtonState(false);
+                        return;
+                    }
+
+                    if (ZeroIn.RoamPath.SPath.Waypoints.Count == 0)
+                    {
+                        Chat.WriteLine("[ZeroIn] Path needs at least one waypoint. Click 'Edit Scan Path'.", ChatColor.Yellow);
+                        ZeroIn.Log.Information("Path needs to have at least one waypoint");
+                        CoreSettingsView.IsButtonEnabled = false;
+                        CoreSettingsView.SetButtonState(false);
+                        return;
+                    }
                 }
+
+                // Broadcast state change to other clients
+                if (ZeroIn.Ipc != null)
+                {
+                    ZeroIn.Ipc.Broadcast(new EnabledIPCMessage
+                    {
+                        SetEnabled = newState,
+                        RoamPath = ZeroIn.Config.RoamPath,
+                        PathConfig = ZeroIn.Config.PathingConfig,
+                    });
+                }
+
+                OnEnabledPress(newState);
 
             }
             catch (Exception ex)
