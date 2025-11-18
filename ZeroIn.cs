@@ -128,6 +128,7 @@ namespace ZeroIn
                 Chat.WriteLine($"  MainWindow: {(File.Exists(mainWindowPath) ? "FOUND" : "MISSING")} - {mainWindowPath}", ChatColor.White);
                 Chat.WriteLine($"  InfoWindow: {(File.Exists(infoWindowPath) ? "FOUND" : "MISSING")} - {infoWindowPath}", ChatColor.White);
                 Chat.WriteLine($"  RoamPathWindow: {(File.Exists(roamWindowPath) ? "FOUND" : "MISSING")} - {roamWindowPath}", ChatColor.White);
+                Chat.WriteLine($"  BuddyCoreView: {(File.Exists(coreViewPath) ? "FOUND" : "MISSING")} - {coreViewPath}", ChatColor.White);
                 Chat.WriteLine($"  PathSettings: {(File.Exists(pathSettingsPath) ? "FOUND" : "MISSING")} - {pathSettingsPath}", ChatColor.White);
                 Chat.WriteLine($"  InitView: {(File.Exists(initViewPath) ? "FOUND" : "MISSING")} - {initViewPath}", ChatColor.White);
                 Chat.WriteLine($"  MainView: {(File.Exists(mainViewPath) ? "FOUND" : "MISSING")} - {mainViewPath}", ChatColor.White);
