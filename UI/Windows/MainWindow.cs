@@ -198,7 +198,10 @@ namespace ZeroIn
 
                 if (ZeroIn.RoamPath == null || ZeroIn.RoamPath.SPath == null)
                 {
+                    Chat.WriteLine("[ZeroIn] No scan path loaded. Click 'Edit Scan Path' to create one.", ChatColor.Yellow);
                     ZeroIn.Log.Information("No paths loaded");
+                    CoreSettingsView.IsButtonEnabled = false;
+                    CoreSettingsView.SetButtonState(false);
                     return;
                 }
 
@@ -206,6 +209,7 @@ namespace ZeroIn
                 {
                     CoreSettingsView.IsButtonEnabled = false;
                     CoreSettingsView.SetButtonState(false);
+                    Chat.WriteLine("[ZeroIn] Cannot start - path is for a different playfield.", ChatColor.Red);
                     ZeroIn.Log.Information("Cannot start a path saved for a different playfield.");
                     return;
                 }
@@ -214,16 +218,20 @@ namespace ZeroIn
                 {
                     CoreSettingsView.IsButtonEnabled = false;
                     CoreSettingsView.SetButtonState(false);
-                    ZeroIn.Log.Information("Path needs to have at least one waypoint");   
+                    Chat.WriteLine("[ZeroIn] Path needs at least one waypoint. Click 'Edit Scan Path'.", ChatColor.Yellow);
+                    ZeroIn.Log.Information("Path needs to have at least one waypoint");
                 }
                 else
                 {
-                    ZeroIn.Ipc.Broadcast(new EnabledIPCMessage
+                    if (ZeroIn.Ipc != null)
                     {
-                        SetEnabled = CoreSettingsView.IsButtonEnabled,
-                        RoamPath = ZeroIn.Config.RoamPath,
-                        PathConfig = ZeroIn.Config.PathingConfig,
-                    });
+                        ZeroIn.Ipc.Broadcast(new EnabledIPCMessage
+                        {
+                            SetEnabled = CoreSettingsView.IsButtonEnabled,
+                            RoamPath = ZeroIn.Config.RoamPath,
+                            PathConfig = ZeroIn.Config.PathingConfig,
+                        });
+                    }
 
                     OnEnabledPress(CoreSettingsView.IsButtonEnabled);
                 }
@@ -231,7 +239,8 @@ namespace ZeroIn
             }
             catch (Exception ex)
             {
-                ZeroIn.Log.Information(ex.Message);
+                Chat.WriteLine($"[ZeroIn] Error: {ex.Message}", ChatColor.Red);
+                ZeroIn.Log.Warning($"OnEnable error: {ex}");
             }
         }
 
@@ -254,16 +263,27 @@ namespace ZeroIn
 
         private void SaveConfig(bool displayMsg = true)
         {
-            ZeroIn.Config.CoreConfig = CoreSettingsView.GetData();
-            ZeroIn.Config.WindowCoords = new Vector2(Window.GetFrame().MinX, Window.GetFrame().MinY);
-            ScanSettingsView.UpdateConfig(ZeroIn.Config);
-            ZeroIn.Config.Save();
+            try
+            {
+                ZeroIn.Config.CoreConfig = CoreSettingsView.GetData();
+                ZeroIn.Config.WindowCoords = new Vector2(Window.GetFrame().MinX, Window.GetFrame().MinY);
 
-            if (ZeroIn.Ipc.ChannelId != ZeroIn.Config.CoreConfig.ChannelId)
-                ZeroIn.Ipc.SetChannelId((byte)ZeroIn.Config.CoreConfig.ChannelId);
+                if (ScanSettingsView != null)
+                    ScanSettingsView.UpdateConfig(ZeroIn.Config);
 
-            if (displayMsg)
-                ZeroIn.Log.Information("Scanner config saved!", ChatColor.Green);
+                ZeroIn.Config.Save();
+
+                if (ZeroIn.Ipc != null && ZeroIn.Ipc.ChannelId != ZeroIn.Config.CoreConfig.ChannelId)
+                    ZeroIn.Ipc.SetChannelId((byte)ZeroIn.Config.CoreConfig.ChannelId);
+
+                if (displayMsg)
+                    ZeroIn.Log.Information("Scanner config saved!", ChatColor.Green);
+            }
+            catch (Exception ex)
+            {
+                Chat.WriteLine($"[MainWindow] Error saving config: {ex.Message}", ChatColor.Red);
+                ZeroIn.Log.Warning($"Error saving config: {ex}");
+            }
         }
 
         private void OnAreaSetupClick(object sender, ButtonBase e)

@@ -126,7 +126,6 @@ namespace ZeroIn
 
                 Chat.WriteLine($"Checking XML files...", ChatColor.White);
                 Chat.WriteLine($"  MainWindow: {(File.Exists(mainWindowPath) ? "FOUND" : "MISSING")} - {mainWindowPath}", ChatColor.White);
-                Chat.WriteLine($"  InfoWindow: {(File.Exists(infoWindowPath) ? "FOUND" : "MISSING")} - {infoWindowPath}", ChatColor.White);
                 Chat.WriteLine($"  RoamPathWindow: {(File.Exists(roamWindowPath) ? "FOUND" : "MISSING")} - {roamWindowPath}", ChatColor.White);
                 Chat.WriteLine($"  BuddyCoreView: {(File.Exists(coreViewPath) ? "FOUND" : "MISSING")} - {coreViewPath}", ChatColor.White);
                 Chat.WriteLine($"  ScanSettings: {(File.Exists(scanSettingsPath) ? "FOUND" : "MISSING")} - {scanSettingsPath}", ChatColor.White);
