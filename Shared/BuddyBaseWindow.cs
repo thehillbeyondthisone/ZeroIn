@@ -117,7 +117,7 @@ namespace Buddy.Shared.UI
                     _channelId.Text = config.ChannelId.ToString();
 
                 if (_onInjectEnable != null)
-                    _onInjectEnable.IsChecked = config.OnInjectEnable;
+                    _onInjectEnable.SetValue(config.OnInjectEnable);
             }
             catch (Exception)
             {
