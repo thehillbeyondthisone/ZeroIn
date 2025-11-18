@@ -185,6 +185,13 @@ namespace ZeroIn
         {
             try
             {
+                // Check if window already exists and is valid
+                if (MainWindow != null && MainWindow.Window != null && MainWindow.Window.IsValid)
+                {
+                    Chat.WriteLine("[ZeroIn] Window is already open!", ChatColor.Yellow);
+                    return;
+                }
+
                 Chat.WriteLine($"=== ZeroIn Window Creation Debug ===", ChatColor.Yellow);
                 Chat.WriteLine($"Plugin directory: {PluginDirectory}", ChatColor.White);
                 Chat.WriteLine($"Windows root: {XmlPath.WindowsRootDir}", ChatColor.White);

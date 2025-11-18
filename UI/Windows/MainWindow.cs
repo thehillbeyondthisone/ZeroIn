@@ -326,7 +326,7 @@ namespace ZeroIn
                 var waypoints = ZeroIn.RoamPath.SPath.Waypoints.ToList();
 
                 // Check if path forms a closed loop
-                if (!ZeroIn.Scanner.GridGenerator.IsClosedLoop(waypoints))
+                if (!global::ZeroIn.Scanner.GridGenerator.IsClosedLoop(waypoints))
                 {
                     Chat.WriteLine("[ZeroIn] Path must be a closed loop! First and last points should be near each other.", ChatColor.Red);
                     Chat.WriteLine($"[ZeroIn] Distance between first/last: {AOSharp.Common.GameData.Vector3.Distance(waypoints[0], waypoints[waypoints.Count - 1]):F1}m", ChatColor.Yellow);
@@ -341,7 +341,7 @@ namespace ZeroIn
                 Chat.WriteLine($"[ZeroIn] Using scan spacing: {spacing}m", ChatColor.White);
 
                 // Generate grid pattern
-                var gridPoints = ZeroIn.Scanner.GridGenerator.GenerateLawnmowerPattern(waypoints, spacing);
+                var gridPoints = global::ZeroIn.Scanner.GridGenerator.GenerateLawnmowerPattern(waypoints, spacing);
 
                 if (gridPoints.Count == 0)
                 {
@@ -415,8 +415,8 @@ namespace ZeroIn
                 var detected = ZeroIn.Scanner.GetDetectedCharacters();
                 var afkPlayers = detected.Where(p => !p.HasMoved()).ToList();
 
-                _detectedCount.Text = $"#Detected: {detected.Count}";
-                _afkCount.Text = $"#AFK: {afkPlayers.Count}";
+                _detectedCount.Text = $"Detected: {detected.Count}";
+                _afkCount.Text = $"AFK: {afkPlayers.Count}";
             }
 
             if (_roamPathWindow != null && !_roamPathWindow.Window.IsValid)
