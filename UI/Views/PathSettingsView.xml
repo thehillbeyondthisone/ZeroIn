@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" standalone="yes"?>
+<Root>
+	<View min_size="Point(120,-1)" name="Root">
+		<BitmapView bitmap_id="GFX_GUI_FRIENDLIST_SPLITTER" layout_borders="Rect(0,10,0,10)"/>
+		<CheckBox name="AttackMobs" max_size="Point(140,-1)" label="Attack mobs" layout_borders="Rect(0,4,0,4)"/>
+		<View min_size="Point(155,-1)" view_layout="horizontal" layout_borders="Rect(0,4,0,4)">
+			<TextView value="Padding:"/>
+			<TextInputView name="AttackPadding" feature_flags="TVF_NUMERIC" min_size="Point(20,-1)"/>
+		</View>
+		<BitmapView bitmap_id="GFX_GUI_FRIENDLIST_SPLITTER" layout_borders="Rect(0,5,0,5)"/>
+		<CheckBox name="PathToCorpses" max_size="Point(125,-1)" label="Path to corpses" layout_borders="Rect(0,4,0,4)"/>
+		<BitmapView bitmap_id="GFX_GUI_FRIENDLIST_SPLITTER" layout_borders="Rect(0,5,0,5)"/>
+		<CheckBox name="PathToMobs" max_size="Point(137,-1)" label="Path to mobs" layout_borders="Rect(0,4,0,4)"/>
+			<View min_size="Point(145,-1)" view_layout="horizontal" layout_borders="Rect(0,4,0,4)">
+				<TextView value="Path Range:"/>
+				<TextInputView name="PathRange" feature_flags="TVF_NUMERIC" min_size="Point(20,-1)"/>
+			</View>
+		<BitmapView bitmap_id="GFX_GUI_FRIENDLIST_SPLITTER" layout_borders="Rect(0,5,0,5)"/>
+		<CheckBox name="TauntItem" max_size="Point(145,-1)" label="Taunt items" layout_borders="Rect(0,4,0,4)"/>
+		<View min_size="Point(145,-1)" view_layout="horizontal" layout_borders="Rect(0,4,0,4)">
+			<TextView value="Pull Range:"/>
+			<TextInputView name="TauntRange" feature_flags="TVF_NUMERIC" min_size="Point(20,-1)"/>
+		</View>
+
+		<BitmapView bitmap_id="GFX_GUI_FRIENDLIST_SPLITTER" layout_borders="Rect(0,5,0,5)"/>
+		<CheckBox name="SetAttackRange" max_size="Point(120,-1)" label="Override Attack" layout_borders="Rect(0,4,0,4)"/>
+		<View min_size="Point(130,-1)" view_layout="horizontal" layout_borders="Rect(0,4,0,4)">
+			<TextView value="Attack Range:"/>
+			<TextInputView name="AttackRange" feature_flags="TVF_NUMERIC" min_size="Point(20,-1)"/>
+		</View>
+		<BitmapView bitmap_id="GFX_GUI_FRIENDLIST_SPLITTER" layout_borders="Rect(0,5,0,5)"/>
+		<CheckBox name="PriorityNamesOnly" max_size="Point(140,-1)" label="Priority Only" layout_borders="Rect(0,4,0,4)"/>
+		<BitmapView bitmap_id="GFX_GUI_FRIENDLIST_SPLITTER" layout_borders="Rect(0,5,0,5)"/>
+		<View min_size="Point(130,-1)" view_layout="horizontal" layout_borders="Rect(0,4,0,4)">
+			<TextView value="Wander Limit:"/>
+			<TextInputView name="WanderLimit" feature_flags="TVF_NUMERIC" min_size="Point(20,-1)"/>
+		</View>
+		<View min_size="Point(130,-1)" view_layout="horizontal" layout_borders="Rect(0,4,0,4)">
+			<TextView value="Fight Timeout:"/>
+			<TextInputView name="FightTimeout" feature_flags="TVF_NUMERIC" min_size="Point(20,-1)"/>
+		</View>
+		<View min_size="Point(131,-1)" view_layout="horizontal" layout_borders="Rect(0,4,0,4)">
+			<TextView value="Loot Timeout:"/>
+			<TextInputView name="LootTimeout" feature_flags="TVF_NUMERIC" min_size="Point(20,-1)"/>
+		</View>
+		<View min_size="Point(130,-1)" layout_borders="Rect(0,4,0,4)">
+			<TextView value="Follow Targets:" min_size="Point(116,-1)" layout_borders="Rect(0,4,0,4)"/>
+			<TextInputView name="FollowTarget" min_size="Point(110,80)" font="BOLD" feature_flags="TVF_MULTILINE|TVF_ALT_ENTER_MODE|TVF_ACCEPT_TXT_INPUT|TVF_ACCEPT_MOUSE_INPUT"/>
+		</View>
+		<BitmapView bitmap_id="GFX_GUI_FRIENDLIST_SPLITTER" layout_borders="Rect(0,10,0,10)"/>
+		<TextView min_size="Point(120,-1)" value="Don't Roam If:" layout_borders="Rect(0,0,0,4)"/>
+		<View min_size="Point(120,-1)" view_layout="horizontal" layout_borders="Rect(0,4,0,4)">
+			<CheckBox name="DisableIfHp" min_size="Point(85,-1)" max_size="Point(85,-1)" label="HP (%)  &lt;"/>
+			<TextInputView name="HpPercent" feature_flags="TVF_NUMERIC" min_size="Point(20,-1)" max_size="Point(20,-1)"/>
+		</View>
+		<View min_size="Point(120,-1)" view_layout="horizontal" layout_borders="Rect(0,4,0,4)">
+			<CheckBox name="DisableIfNp" min_size="Point(85,-1)" max_size="Point(85,-1)" label="NP (%)  &lt;"/>
+			<TextInputView name="NpPercent" feature_flags="TVF_NUMERIC" min_size="Point(20,-1)" max_size="Point(20,-1)"/>
+		</View>
+		<CheckBox name="DisableIfAttacked" min_size="Point(120,-1)" max_size="Point(80,-1)" label="Being Attacked"  layout_borders="Rect(0,4,0,4)"/>
+		<BitmapView bitmap_id="GFX_GUI_FRIENDLIST_SPLITTER" layout_borders="Rect(0,10,0,10)"/>
+		<CheckBox name="SyncSettings" min_size="Point(130,-1)" label="Sync Settings"  layout_borders="Rect(0,4,0,4)"/>
+		<BitmapView bitmap_id="GFX_GUI_FRIENDLIST_SPLITTER" layout_borders="Rect(0,10,0,10)"/>
+	</View>
+</Root>

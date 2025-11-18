@@ -1,0 +1,31 @@
+<?xml version="1.0" standalone="yes"?>
+<root>
+	<ScrollView h_alignment="LEFT" label="#ZeroIn Scanner" v_scrollbar_mode="auto" scroll_client="scanner_scroll">
+		<ScrollViewChild name="scanner_scroll" min_size="Point(200,600)" max_size="Point(200, -1)">
+			<View min_size="Point(200,-1)" view_layout="vertical" name="Root">
+				<!-- Scan Control -->
+				<View name="CoreViewRoot">
+					<Haxxor/>
+				</View>
+
+				<!-- Scan Path Setup -->
+				<TextView h_alignment="LEFT" label="#Scan Path" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
+				<Button name="AreaSetup" label="Edit Scan Path" layout_borders="Rect(0,0,0,8)"/>
+
+				<!-- Scan Settings -->
+				<View name="ScanSettingsRoot">
+					<Haxxor/>
+				</View>
+
+				<!-- Scan Results -->
+				<TextView h_alignment="LEFT" label="#Scan Results" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
+				<TextView h_alignment="LEFT" name="DetectedCount" label="#Detected: 0" layout_borders="Rect(0,0,0,2)"/>
+				<TextView h_alignment="LEFT" name="AFKCount" label="#AFK: 0" layout_borders="Rect(0,0,0,2)"/>
+				<Button name="ViewResults" label="View Details" layout_borders="Rect(0,0,0,8)"/>
+
+				<Button name="SaveConfig" label="Save Config" layout_borders="Rect(0,0,0,8)"/>
+			</View>
+			<VLayoutSpacer/>
+		</ScrollViewChild>
+	</ScrollView>
+</root>

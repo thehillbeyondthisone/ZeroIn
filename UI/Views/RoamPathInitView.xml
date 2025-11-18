@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" standalone="yes"?>
+<Root>
+	<View min_size="Point(500,110)"  layout_borders="Rect(0,10,0,10)">
+		<Button name="CreateNewPath" min_size="Point(110,-1)" label="Create New Path"/>
+		<TextView layout_borders="Rect(0,4,0,4)" value="OR" font="BOLD"/>
+		<Button name="EditCurrentPath" min_size="Point(110,-1)" label="Edit Current Path"/>
+		<TextView layout_borders="Rect(0,4,0,4)" value="OR" font="BOLD"/>
+		<View layout_borders="Rect(0,4,0,4)">
+			<TextView layout_borders="Rect(0,0,0,6)" value="File Name:"/>
+			<ComboBox name="AllPaths" feature_flags="TVF_RENDER_SHADOW" min_size="Point(125, 15)" max_size="Point(125, 15)"/>
+			<Button name="LoadPath" layout_borders="Rect(0,10,0,0)" min_size="Point(110,-1)" label="Load Path"/>
+		</View>
+	</View>
+</Root>
