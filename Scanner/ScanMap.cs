@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using ZeroIn.Config;
 
 namespace ZeroIn.Scanner
 {
@@ -13,126 +12,38 @@ namespace ZeroIn.Scanner
     /// </summary>
     public class ScanMap
     {
-        private ZeroInConfig _config;
-        private string _outputPath;
+        private readonly string _outputPath;
 
-        public ScanMap(ZeroInConfig config)
+        public ScanMap(string basePath)
         {
-            _config = config;
-            _outputPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "AOSharp",
-                "AOSP",
-                "ZeroIn",
-                config.OutputFolder
-            );
+            _outputPath = Path.Combine(basePath, "ScanResults");
 
             // Create output directory
             if (!Directory.Exists(_outputPath))
+            {
                 Directory.CreateDirectory(_outputPath);
+            }
         }
 
         /// <summary>
-        /// Saves scan results to configured output formats
+        /// Saves detected characters to files
         /// </summary>
         public void SaveResults(List<DetectedCharacter> characters, string areaName)
         {
             if (characters == null || characters.Count == 0)
-            {
-                Console.WriteLine("[ZeroIn] No characters to save");
                 return;
-            }
 
-            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            string baseName = $"{SanitizeFileName(areaName)}_{timestamp}";
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmmss");
+            string safeAreaName = MakeSafeFilename(areaName);
 
-            try
-            {
-                if (_config.SaveToJson)
-                {
-                    SaveJson(characters, baseName);
-                }
+            // Save as JSON
+            SaveAsJson(characters, safeAreaName, timestamp);
 
-                if (_config.SaveToCsv)
-                {
-                    SaveCsv(characters, baseName);
-                }
+            // Save as CSV
+            SaveAsCsv(characters, safeAreaName, timestamp);
 
-                // Always save a summary
-                SaveSummary(characters, baseName);
-
-                Console.WriteLine($"[ZeroIn] Results saved to: {_outputPath}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ZeroIn] Error saving results: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Saves results as JSON
-        /// </summary>
-        private void SaveJson(List<DetectedCharacter> characters, string baseName)
-        {
-            string filePath = Path.Combine(_outputPath, $"{baseName}.json");
-            string json = JsonConvert.SerializeObject(characters, Formatting.Indented);
-            File.WriteAllText(filePath, json);
-            Console.WriteLine($"[ZeroIn] Saved JSON: {filePath}");
-        }
-
-        /// <summary>
-        /// Saves results as CSV
-        /// </summary>
-        private void SaveCsv(List<DetectedCharacter> characters, string baseName)
-        {
-            string filePath = Path.Combine(_outputPath, $"{baseName}.csv");
-            var sb = new StringBuilder();
-
-            // Header
-            sb.AppendLine(DetectedCharacter.GetCsvHeader());
-
-            // Data rows
-            foreach (var character in characters.OrderBy(c => c.Name))
-            {
-                sb.AppendLine(character.ToCsv());
-            }
-
-            File.WriteAllText(filePath, sb.ToString());
-            Console.WriteLine($"[ZeroIn] Saved CSV: {filePath}");
-        }
-
-        /// <summary>
-        /// Saves a text summary
-        /// </summary>
-        private void SaveSummary(List<DetectedCharacter> characters, string baseName)
-        {
-            string filePath = Path.Combine(_outputPath, $"{baseName}_summary.txt");
-            var sb = new StringBuilder();
-
-            sb.AppendLine("=".PadRight(80, '='));
-            sb.AppendLine($" ZeroIn Scan Results - {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-            sb.AppendLine("=".PadRight(80, '='));
-            sb.AppendLine();
-            sb.AppendLine($"Total Characters Detected: {characters.Count}");
-            sb.AppendLine($"AFK Characters: {characters.Count(c => !c.HasMoved())}");
-            sb.AppendLine($"Moving Characters: {characters.Count(c => c.HasMoved())}");
-            sb.AppendLine();
-            sb.AppendLine("=".PadRight(80, '='));
-            sb.AppendLine(" Character List");
-            sb.AppendLine("=".PadRight(80, '='));
-            sb.AppendLine();
-
-            foreach (var character in characters.OrderBy(c => c.Name))
-            {
-                sb.AppendLine($"[{(character.HasMoved() ? "MOVING" : "AFK   ")}] {character}");
-                sb.AppendLine($"           First Seen: {character.FirstSeen:HH:mm:ss}");
-                sb.AppendLine($"           Last Seen:  {character.LastSeen:HH:mm:ss}");
-                sb.AppendLine($"           Spotted:    {character.TimesSpotted} times");
-                sb.AppendLine();
-            }
-
-            File.WriteAllText(filePath, sb.ToString());
-            Console.WriteLine($"[ZeroIn] Saved summary: {filePath}");
+            // Save summary text
+            SaveAsSummary(characters, safeAreaName, timestamp);
         }
 
         /// <summary>
@@ -146,42 +57,121 @@ namespace ZeroIn.Scanner
                 return;
             }
 
-            Console.WriteLine();
             Console.WriteLine("=".PadRight(80, '='));
-            Console.WriteLine($" Scan Complete - {characters.Count} Characters Found");
+            Console.WriteLine($" ZeroIn Scan Results - {characters.Count} characters detected");
             Console.WriteLine("=".PadRight(80, '='));
 
-            var afkChars = characters.Where(c => !c.HasMoved()).ToList();
-            var movingChars = characters.Where(c => c.HasMoved()).ToList();
-
-            if (afkChars.Count > 0)
+            foreach (var character in characters.OrderBy(c => c.Name))
             {
-                Console.WriteLine($"\nAFK Characters ({afkChars.Count}):");
-                foreach (var character in afkChars.OrderBy(c => c.Name))
-                {
-                    Console.WriteLine($"  {character}");
-                }
+                var age = (DateTime.UtcNow - character.LastSeen).TotalSeconds;
+                Console.WriteLine($"  {character.Name}");
+                Console.WriteLine($"    Position: ({character.PositionX:F1}, {character.PositionY:F1}, {character.PositionZ:F1})");
+                Console.WriteLine($"    Distance: {character.Distance:F1}m");
+                Console.WriteLine($"    Times Spotted: {character.TimesSpotted}");
+                Console.WriteLine($"    Last Seen: {age:F0}s ago");
+                Console.WriteLine();
             }
-
-            if (movingChars.Count > 0)
-            {
-                Console.WriteLine($"\nMoving Characters ({movingChars.Count}):");
-                foreach (var character in movingChars.OrderBy(c => c.Name))
-                {
-                    Console.WriteLine($"  {character}");
-                }
-            }
-
-            Console.WriteLine();
         }
 
-        /// <summary>
-        /// Sanitizes a filename
-        /// </summary>
-        private string SanitizeFileName(string fileName)
+        private void SaveAsJson(List<DetectedCharacter> characters, string areaName, string timestamp)
         {
+            try
+            {
+                string filename = $"scan_{areaName}_{timestamp}.json";
+                string path = Path.Combine(_outputPath, filename);
+
+                var json = JsonConvert.SerializeObject(characters, Formatting.Indented);
+                File.WriteAllText(path, json);
+
+                Console.WriteLine($"[ZeroIn] Saved JSON: {filename}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ZeroIn] Error saving JSON: {ex.Message}");
+            }
+        }
+
+        private void SaveAsCsv(List<DetectedCharacter> characters, string areaName, string timestamp)
+        {
+            try
+            {
+                string filename = $"scan_{areaName}_{timestamp}.csv";
+                string path = Path.Combine(_outputPath, filename);
+
+                var sb = new StringBuilder();
+                sb.AppendLine("CharId,Name,TimesSpotted,PositionX,PositionY,PositionZ,Distance,Health,FirstSeen,LastSeen");
+
+                foreach (var character in characters.OrderBy(c => c.Name))
+                {
+                    sb.AppendLine($"{character.CharId},{EscapeCsv(character.Name)},{character.TimesSpotted}," +
+                                  $"{character.PositionX:F2},{character.PositionY:F2},{character.PositionZ:F2}," +
+                                  $"{character.Distance:F2},{character.Health}," +
+                                  $"{character.FirstSeen:yyyy-MM-dd HH:mm:ss},{character.LastSeen:yyyy-MM-dd HH:mm:ss}");
+                }
+
+                File.WriteAllText(path, sb.ToString());
+                Console.WriteLine($"[ZeroIn] Saved CSV: {filename}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ZeroIn] Error saving CSV: {ex.Message}");
+            }
+        }
+
+        private void SaveAsSummary(List<DetectedCharacter> characters, string areaName, string timestamp)
+        {
+            try
+            {
+                string filename = $"scan_{areaName}_{timestamp}.txt";
+                string path = Path.Combine(_outputPath, filename);
+
+                var sb = new StringBuilder();
+                sb.AppendLine($"ZeroIn Scan Results - {areaName}");
+                sb.AppendLine($"Scan Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                sb.AppendLine($"Characters Detected: {characters.Count}");
+                sb.AppendLine();
+                sb.AppendLine("=".PadRight(80, '='));
+
+                foreach (var character in characters.OrderBy(c => c.Name))
+                {
+                    var age = (DateTime.UtcNow - character.LastSeen).TotalSeconds;
+                    sb.AppendLine($"{character.Name}");
+                    sb.AppendLine($"  Position: ({character.PositionX:F1}, {character.PositionY:F1}, {character.PositionZ:F1})");
+                    sb.AppendLine($"  Distance: {character.Distance:F1}m");
+                    sb.AppendLine($"  Times Spotted: {character.TimesSpotted}");
+                    sb.AppendLine($"  Last Seen: {age:F0}s ago");
+                    sb.AppendLine();
+                }
+
+                File.WriteAllText(path, sb.ToString());
+                Console.WriteLine($"[ZeroIn] Saved Summary: {filename}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ZeroIn] Error saving summary: {ex.Message}");
+            }
+        }
+
+        private string MakeSafeFilename(string filename)
+        {
+            if (string.IsNullOrWhiteSpace(filename))
+                return "Unknown";
+
             var invalid = Path.GetInvalidFileNameChars();
-            return string.Join("_", fileName.Split(invalid, StringSplitOptions.RemoveEmptyEntries));
+            return string.Join("_", filename.Split(invalid));
+        }
+
+        private string EscapeCsv(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            if (value.Contains(",") || value.Contains("\"") || value.Contains("\n"))
+            {
+                return $"\"{value.Replace("\"", "\"\"")}\"";
+            }
+
+            return value;
         }
     }
 }
