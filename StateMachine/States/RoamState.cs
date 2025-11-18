@@ -22,28 +22,31 @@ namespace ZeroIn
             // Scan for nearby players (ZeroIn functionality)
             ScanForPlayers();
 
-            if (StateMachine.Context.HealthOrNanoTooLow() && !StateMachine.Context.IsInCombat())
-            {
-                StateMachine.Fire(Trigger.TooLowOnStats);
-                return;
-            }
+            // DISABLED: Combat and looting behavior
+            // ZeroIn is a scanner, not a combat bot
+            // if (StateMachine.Context.HealthOrNanoTooLow() && !StateMachine.Context.IsInCombat())
+            // {
+            //     StateMachine.Fire(Trigger.TooLowOnStats);
+            //     return;
+            // }
 
-            if (StateMachine.Context.MobTargeting.TryGetNextCorpse(out Corpse corpse))
-            {
-                SMovementController.SetDestination(corpse.Position);
-                StateMachine.Fire(Trigger.LootTargetFound);
-                return;
-            }
+            // if (StateMachine.Context.MobTargeting.TryGetNextCorpse(out Corpse corpse))
+            // {
+            //     SMovementController.SetDestination(corpse.Position);
+            //     StateMachine.Fire(Trigger.LootTargetFound);
+            //     return;
+            // }
 
-            if (StateMachine.Context.MobTargeting.TryGetNextTarget(out SimpleChar target, out _, out _))
-            {
-                StateMachine.Context.NextTarget = target;
-                StateMachine.Fire(Trigger.AliveTargetFound);
-                return;
-            }
+            // if (StateMachine.Context.MobTargeting.TryGetNextTarget(out SimpleChar target, out _, out _))
+            // {
+            //     StateMachine.Context.NextTarget = target;
+            //     StateMachine.Fire(Trigger.AliveTargetFound);
+            //     return;
+            // }
 
             StateMachine.Context.NextTarget = null;
 
+            // Just follow the path and scan - no combat!
             ZeroIn.SetPath(ZeroIn.RoamPath.SPath);
         }
 
