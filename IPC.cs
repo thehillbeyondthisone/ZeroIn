@@ -32,7 +32,7 @@ namespace ZeroIn
             {
                 ZeroIn.Config.PathingConfig = enabledIpc.PathConfig;
                 ZeroIn.Config.Save();
-                ZeroIn.MainWindow.PathSettingsView.SetData(enabledIpc.PathConfig);
+                // Scanner settings are configured locally, not synced
             }
 
             if (!string.IsNullOrEmpty(enabledIpc.RoamPath) && ZeroIn.RoamPath.SPath != null)

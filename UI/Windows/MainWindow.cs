@@ -311,7 +311,7 @@ namespace ZeroIn
                 Chat.WriteLine($"=== ZeroIn Scan Results ===", ChatColor.Yellow);
                 Chat.WriteLine($"Total detected: {detected.Count}", ChatColor.LightBlue);
 
-                var afkPlayers = detected.Where(p => !p.HasMoved).ToList();
+                var afkPlayers = detected.Where(p => !p.HasMoved()).ToList();
                 Chat.WriteLine($"AFK players: {afkPlayers.Count}", ChatColor.LightBlue);
 
                 if (detected.Count > 0)
@@ -319,7 +319,7 @@ namespace ZeroIn
                     Chat.WriteLine($"\nTop 10 recent detections:", ChatColor.White);
                     foreach (var player in detected.OrderByDescending(p => p.LastSeen).Take(10))
                     {
-                        var status = player.HasMoved ? "Active" : "AFK";
+                        var status = player.HasMoved() ? "Active" : "AFK";
                         var age = (DateTime.UtcNow - player.LastSeen).TotalSeconds;
                         Chat.WriteLine($"  [{status}] {player.Name} - seen {age:F0}s ago (spotted {player.TimesSpotted}x)", ChatColor.White);
                     }
@@ -346,7 +346,7 @@ namespace ZeroIn
             if (_detectedCount != null && _afkCount != null && ZeroIn.Scanner != null)
             {
                 var detected = ZeroIn.Scanner.GetDetectedCharacters();
-                var afkPlayers = detected.Where(p => !p.HasMoved).ToList();
+                var afkPlayers = detected.Where(p => !p.HasMoved()).ToList();
 
                 _detectedCount.Text = $"#Detected: {detected.Count}";
                 _afkCount.Text = $"#AFK: {afkPlayers.Count}";

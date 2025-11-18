@@ -1,5 +1,6 @@
 using AOSharp.Core.UI;
 using AOSharp.Common.GameData.UI;
+using AOSharp.Common.GameData;
 using AOSharp.Core;
 using System;
 
