@@ -50,11 +50,9 @@ namespace ZeroIn.Scanner
             return _tracked.Values.Select(Clone).ToList();
         }
 
-        public List<DetectedCharacter> GetAFKCharacters(TimeSpan? threshold = null)
+        public List<DetectedCharacter> GetAFKCharacters(int minStationaryCount = 5, double maxSecondsWithoutMovement = 60)
         {
-            var t = threshold ?? TimeSpan.FromSeconds(30);
-            var now = DateTime.UtcNow;
-            return _tracked.Values.Where(c => (now - c.LastSeen) >= t).Select(Clone).ToList();
+            return _tracked.Values.Where(c => c.IsLikelyAFK(minStationaryCount, maxSecondsWithoutMovement)).Select(Clone).ToList();
         }
 
         public string GetSummary()
@@ -77,7 +75,7 @@ namespace ZeroIn.Scanner
         /// Adapter call � provide primitive values from AOSharp-aware code.
         /// This method snapshots previous position, increments TimesSpotted, and updates fields.
         /// </summary>
-        public void OnCharacterSeen(int instanceId, string name, float posX, float posY, float posZ, int health = 0, float distance = 0f)
+        public void OnCharacterSeen(int instanceId, string name, float posX, float posY, float posZ, int health = 0, float distance = 0f, int playfieldId = 0, string playfieldName = null)
         {
             uint id = unchecked((uint)instanceId);
 
@@ -95,6 +93,15 @@ namespace ZeroIn.Scanner
                 existing.Distance = distance;
                 existing.Health = health;
                 existing.LastSeen = DateTime.UtcNow;
+
+                // Update playfield info if provided
+                if (playfieldId != 0)
+                    existing.PlayfieldId = playfieldId;
+                if (!string.IsNullOrEmpty(playfieldName))
+                    existing.PlayfieldName = playfieldName;
+
+                // Track movement for AFK detection
+                existing.UpdateMovementTracking();
 
                 _tracked[id] = existing;
             }
@@ -114,7 +121,9 @@ namespace ZeroIn.Scanner
                     Health = health,
                     TimesSpotted = 1,
                     FirstSeen = DateTime.UtcNow,
-                    LastSeen = DateTime.UtcNow
+                    LastSeen = DateTime.UtcNow,
+                    PlayfieldId = playfieldId,
+                    PlayfieldName = playfieldName ?? string.Empty
                 };
 
                 _tracked.Add(id, d);
@@ -139,6 +148,8 @@ namespace ZeroIn.Scanner
                 CharId = src.CharId,
                 Name = src.Name,
                 TimesSpotted = src.TimesSpotted,
+                PlayfieldId = src.PlayfieldId,
+                PlayfieldName = src.PlayfieldName,
                 PositionX = src.PositionX,
                 PositionY = src.PositionY,
                 PositionZ = src.PositionZ,
@@ -148,7 +159,10 @@ namespace ZeroIn.Scanner
                 Distance = src.Distance,
                 Health = src.Health,
                 FirstSeen = src.FirstSeen,
-                LastSeen = src.LastSeen
+                LastSeen = src.LastSeen,
+                TotalDistanceMoved = src.TotalDistanceMoved,
+                StationaryCount = src.StationaryCount,
+                LastMovementTime = src.LastMovementTime
             };
         }
     }

@@ -8,6 +8,7 @@ namespace ZeroIn.Scanner
     /// <summary>
     /// Canonical DetectedCharacter used across ZeroIn.
     /// Implements helpers used by ScanMap and other modules.
+    /// Enhanced with robust AFK detection and map overlay data.
     /// </summary>
     public class DetectedCharacter
     {
@@ -22,6 +23,8 @@ namespace ZeroIn.Scanner
         // Metadata
         public string Name { get; set; } = string.Empty;
         public int TimesSpotted { get; set; } = 0;
+        public int PlayfieldId { get; set; } = 0;
+        public string PlayfieldName { get; set; } = string.Empty;
 
         // Spatial (current)
         public float PositionX { get; set; } = 0f;
@@ -41,12 +44,43 @@ namespace ZeroIn.Scanner
         public DateTime FirstSeen { get; set; } = DateTime.MinValue;
         public DateTime LastSeen { get; set; } = DateTime.MinValue;
 
+        // AFK Detection tracking
+        public float TotalDistanceMoved { get; set; } = 0f;
+        public int StationaryCount { get; set; } = 0; // How many times we've seen them without movement
+        public DateTime LastMovementTime { get; set; } = DateTime.MinValue;
+
         // Utility: update "previous" snapshot (call before updating positions)
         public void SnapshotPreviousPosition()
         {
             PrevPositionX = PositionX;
             PrevPositionY = PositionY;
             PrevPositionZ = PositionZ;
+        }
+
+        /// <summary>
+        /// Update movement tracking when position changes.
+        /// Call this after updating position to track movement statistics.
+        /// </summary>
+        public void UpdateMovementTracking(float threshold = 0.25f)
+        {
+            var dx = PositionX - PrevPositionX;
+            var dy = PositionY - PrevPositionY;
+            var dz = PositionZ - PrevPositionZ;
+            var distSq = dx * dx + dy * dy + dz * dz;
+            var dist = (float)Math.Sqrt(distSq);
+
+            if (distSq >= (threshold * threshold))
+            {
+                // Player moved
+                TotalDistanceMoved += dist;
+                LastMovementTime = DateTime.UtcNow;
+                StationaryCount = 0;
+            }
+            else
+            {
+                // Player didn't move
+                StationaryCount++;
+            }
         }
 
         /// <summary>
@@ -64,15 +98,86 @@ namespace ZeroIn.Scanner
         }
 
         /// <summary>
+        /// Determines if player is likely AFK based on robust criteria.
+        /// A player is considered AFK if:
+        /// - They haven't moved for several detections (StationaryCount >= minStationaryCount)
+        /// - OR they haven't moved in a long time (based on LastMovementTime)
+        /// - AND total distance moved is very small
+        /// </summary>
+        public bool IsLikelyAFK(int minStationaryCount = 5, double maxSecondsWithoutMovement = 60)
+        {
+            // If we haven't seen them move at all and they've been spotted multiple times
+            if (LastMovementTime == DateTime.MinValue && TimesSpotted >= minStationaryCount)
+                return true;
+
+            // If they've been stationary for multiple observations
+            if (StationaryCount >= minStationaryCount)
+                return true;
+
+            // If they haven't moved in a long time
+            if (LastMovementTime != DateTime.MinValue)
+            {
+                var secondsSinceMovement = (DateTime.UtcNow - LastMovementTime).TotalSeconds;
+                if (secondsSinceMovement >= maxSecondsWithoutMovement)
+                    return true;
+            }
+
+            // If total distance moved is very small relative to how long we've been watching
+            var observationDuration = (LastSeen - FirstSeen).TotalSeconds;
+            if (observationDuration > 30 && TotalDistanceMoved < 5f) // Less than 5 meters in 30+ seconds
+                return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Get AFK confidence as a percentage (0-100).
+        /// Higher confidence means more likely to be AFK.
+        /// </summary>
+        public int GetAFKConfidence()
+        {
+            int confidence = 0;
+
+            // Factor 1: Stationary count (up to 30 points)
+            confidence += Math.Min(StationaryCount * 6, 30);
+
+            // Factor 2: Time without movement (up to 30 points)
+            if (LastMovementTime != DateTime.MinValue)
+            {
+                var secondsSinceMovement = (DateTime.UtcNow - LastMovementTime).TotalSeconds;
+                confidence += (int)Math.Min(secondsSinceMovement / 2, 30);
+            }
+            else if (TimesSpotted > 3)
+            {
+                confidence += 30; // Never seen moving and spotted multiple times
+            }
+
+            // Factor 3: Low total distance moved (up to 20 points)
+            var observationDuration = Math.Max((LastSeen - FirstSeen).TotalSeconds, 1);
+            var metersPerSecond = TotalDistanceMoved / (float)observationDuration;
+            if (metersPerSecond < 0.1f) // Moving less than 0.1 m/s
+                confidence += 20;
+
+            // Factor 4: Multiple sightings (up to 20 points)
+            confidence += Math.Min(TimesSpotted * 2, 20);
+
+            return Math.Min(confidence, 100);
+        }
+
+        /// <summary>
         /// CSV header used by ScanMap.
+        /// Enhanced with AFK detection and map overlay data.
         /// </summary>
         public static string GetCsvHeader()
         {
-            return "CharId,InstanceId,Name,TimesSpotted,FirstSeen,LastSeen,PosX,PosY,PosZ,PrevPosX,PrevPosY,PrevPosZ,Distance,Health";
+            return "CharId,InstanceId,Name,PlayfieldId,PlayfieldName,TimesSpotted,FirstSeen,LastSeen," +
+                   "PosX,PosY,PosZ,Distance,Health," +
+                   "TotalDistanceMoved,StationaryCount,LastMovementTime,IsAFK,AFKConfidence";
         }
 
         /// <summary>
         /// Produce a CSV line for this character.
+        /// Enhanced with comprehensive data for map overlay visualization.
         /// </summary>
         public string ToCsv()
         {
@@ -81,17 +186,21 @@ namespace ZeroIn.Scanner
             sb.Append(CharId).Append(',');
             sb.Append(InstanceId).Append(',');
             sb.Append(EscapeCsv(Name)).Append(',');
+            sb.Append(PlayfieldId).Append(',');
+            sb.Append(EscapeCsv(PlayfieldName)).Append(',');
             sb.Append(TimesSpotted).Append(',');
             sb.Append(FirstSeen == DateTime.MinValue ? "" : FirstSeen.ToString("o")).Append(',');
             sb.Append(LastSeen == DateTime.MinValue ? "" : LastSeen.ToString("o")).Append(',');
             sb.Append(PositionX.ToString(CultureInfo.InvariantCulture)).Append(',');
             sb.Append(PositionY.ToString(CultureInfo.InvariantCulture)).Append(',');
             sb.Append(PositionZ.ToString(CultureInfo.InvariantCulture)).Append(',');
-            sb.Append(PrevPositionX.ToString(CultureInfo.InvariantCulture)).Append(',');
-            sb.Append(PrevPositionY.ToString(CultureInfo.InvariantCulture)).Append(',');
-            sb.Append(PrevPositionZ.ToString(CultureInfo.InvariantCulture)).Append(',');
             sb.Append(Distance.ToString(CultureInfo.InvariantCulture)).Append(',');
-            sb.Append(Health);
+            sb.Append(Health).Append(',');
+            sb.Append(TotalDistanceMoved.ToString(CultureInfo.InvariantCulture)).Append(',');
+            sb.Append(StationaryCount).Append(',');
+            sb.Append(LastMovementTime == DateTime.MinValue ? "" : LastMovementTime.ToString("o")).Append(',');
+            sb.Append(IsLikelyAFK()).Append(',');
+            sb.Append(GetAFKConfidence());
             return sb.ToString();
         }
 
