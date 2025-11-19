@@ -59,7 +59,23 @@ namespace ZeroIn
             {
                 var localPlayer = DynelManager.LocalPlayer;
                 if (localPlayer == null || !localPlayer.IsValid)
+                {
+                    // Clean up paths when player is invalid
+                    if (_pathsCreated)
+                    {
+                        CleanupPaths();
+                        _pathsCreated = false;
+                    }
                     return;
+                }
+
+                // Validate player position (not zero/default)
+                var position = localPlayer.Position;
+                if (position.X == 0 && position.Y == 0 && position.Z == 0)
+                {
+                    // Player position is invalid, skip drawing
+                    return;
+                }
 
                 // Draw detection radius circle around player (if enabled)
                 if (_config.ShowDetectionRadius)
@@ -102,36 +118,54 @@ namespace ZeroIn
             float radius = _config.PlayerDetectionRange;
             var position = localPlayer.Position;
 
+            // Validate radius is reasonable
+            if (radius <= 0 || radius > 1000)
+                return;
+
             // Create a circular path around the player for detection radius visualization
             if (_detectionRadiusPath == null)
             {
-                _detectionRadiusPath = SPath.Create();
-                _detectionRadiusPath.Name = $"[SCAN_RADIUS] {radius:F0}m";
-                _detectionRadiusPath.PlayfieldId = Playfield.ModelIdentity.Instance;
-
                 // Create a circle with 36 points (10 degree increments)
                 int numPoints = 36;
+                var waypoints = new System.Collections.Generic.List<Vector3>();
+
                 for (int i = 0; i < numPoints; i++)
                 {
                     float angle = (float)(i * Math.PI * 2 / numPoints);
                     float x = position.X + radius * (float)Math.Cos(angle);
                     float z = position.Z + radius * (float)Math.Sin(angle);
 
-                    _detectionRadiusPath.Waypoints.Add(new Vector3(x, position.Y, z));
+                    waypoints.Add(new Vector3(x, position.Y, z));
                 }
 
-                _detectionRadiusPath.IsLooping = true; // Make it a closed circle
+                // Only create path if we have valid, distinct waypoints
+                if (waypoints.Count >= 3)
+                {
+                    _detectionRadiusPath = SPath.Create();
+                    _detectionRadiusPath.Name = $"[SCAN_RADIUS] {radius:F0}m";
+                    _detectionRadiusPath.PlayfieldId = Playfield.ModelIdentity.Instance;
+
+                    foreach (var wp in waypoints)
+                    {
+                        _detectionRadiusPath.Waypoints.Add(wp);
+                    }
+
+                    _detectionRadiusPath.IsLooping = true; // Make it a closed circle
+                }
             }
             else
             {
                 // Update circle position to follow player
-                for (int i = 0; i < _detectionRadiusPath.Waypoints.Count; i++)
+                if (_detectionRadiusPath.Waypoints.Count > 0)
                 {
-                    float angle = (float)(i * Math.PI * 2 / _detectionRadiusPath.Waypoints.Count);
-                    float x = position.X + radius * (float)Math.Cos(angle);
-                    float z = position.Z + radius * (float)Math.Sin(angle);
+                    for (int i = 0; i < _detectionRadiusPath.Waypoints.Count; i++)
+                    {
+                        float angle = (float)(i * Math.PI * 2 / _detectionRadiusPath.Waypoints.Count);
+                        float x = position.X + radius * (float)Math.Cos(angle);
+                        float z = position.Z + radius * (float)Math.Sin(angle);
 
-                    _detectionRadiusPath.Waypoints[i] = new Vector3(x, position.Y, z);
+                        _detectionRadiusPath.Waypoints[i] = new Vector3(x, position.Y, z);
+                    }
                 }
             }
         }
@@ -203,6 +237,14 @@ namespace ZeroIn
         /// </summary>
         private void AddMarkerShape(SPath path, Vector3 center, float size, string shape, bool isAfk)
         {
+            // Validate size
+            if (size <= 0 || size > 100)
+                size = 2f; // Default to 2m if invalid
+
+            // Validate center position is not at origin (likely invalid)
+            if (center.X == 0 && center.Y == 0 && center.Z == 0)
+                return;
+
             // Tag-only mode: just a single point (shows only the path name as a tag)
             if (_config.TagOnlyMode)
             {
@@ -216,9 +258,11 @@ namespace ZeroIn
             switch (actualShape.ToLower())
             {
                 case "cross":
-                    // Cross shape (X pattern)
+                    // Cross shape (X pattern) - separate line segments
+                    // Horizontal line
                     path.Waypoints.Add(new Vector3(center.X - size, center.Y, center.Z));
                     path.Waypoints.Add(new Vector3(center.X + size, center.Y, center.Z));
+                    // Vertical line (needs center point to create gap)
                     path.Waypoints.Add(new Vector3(center.X, center.Y, center.Z));
                     path.Waypoints.Add(new Vector3(center.X, center.Y, center.Z - size));
                     path.Waypoints.Add(new Vector3(center.X, center.Y, center.Z + size));
