@@ -15,6 +15,10 @@ namespace ZeroIn
         private Checkbox _saveToCsv;
         private Checkbox _logToConsole;
         private Checkbox _continuousScanning;
+        private Checkbox _showDetectionRadius;
+        private Checkbox _showPlayerMarkers;
+        private Checkbox _showAFKPaths;
+        private Checkbox _tagOnlyMode;
         private Checkbox _enableCombat;
         private Checkbox _enableLooting;
         private Checkbox _enableHealthCheck;
@@ -44,6 +48,10 @@ namespace ZeroIn
                     Root.FindChild("SaveToCsv", out _saveToCsv);
                     Root.FindChild("LogToConsole", out _logToConsole);
                     Root.FindChild("ContinuousScanning", out _continuousScanning);
+                    Root.FindChild("ShowDetectionRadius", out _showDetectionRadius);
+                    Root.FindChild("ShowPlayerMarkers", out _showPlayerMarkers);
+                    Root.FindChild("ShowAFKPaths", out _showAFKPaths);
+                    Root.FindChild("TagOnlyMode", out _tagOnlyMode);
                     Root.FindChild("EnableCombat", out _enableCombat);
                     Root.FindChild("EnableLooting", out _enableLooting);
                     Root.FindChild("EnableHealthCheck", out _enableHealthCheck);
@@ -84,6 +92,18 @@ namespace ZeroIn
 
                 if (_continuousScanning != null)
                     _continuousScanning.SetValue(config.ContinuousScanning);
+
+                if (_showDetectionRadius != null)
+                    _showDetectionRadius.SetValue(config.ShowDetectionRadius);
+
+                if (_showPlayerMarkers != null)
+                    _showPlayerMarkers.SetValue(config.ShowPlayerMarkers);
+
+                if (_showAFKPaths != null)
+                    _showAFKPaths.SetValue(config.ShowAFKPaths);
+
+                if (_tagOnlyMode != null)
+                    _tagOnlyMode.SetValue(config.TagOnlyMode);
 
                 if (_enableCombat != null)
                     _enableCombat.SetValue(config.EnableCombat);
@@ -129,6 +149,18 @@ namespace ZeroIn
 
                 if (_continuousScanning != null)
                     config.ContinuousScanning = _continuousScanning.IsChecked;
+
+                if (_showDetectionRadius != null)
+                    config.ShowDetectionRadius = _showDetectionRadius.IsChecked;
+
+                if (_showPlayerMarkers != null)
+                    config.ShowPlayerMarkers = _showPlayerMarkers.IsChecked;
+
+                if (_showAFKPaths != null)
+                    config.ShowAFKPaths = _showAFKPaths.IsChecked;
+
+                if (_tagOnlyMode != null)
+                    config.TagOnlyMode = _tagOnlyMode.IsChecked;
 
                 if (_enableCombat != null)
                     config.EnableCombat = _enableCombat.IsChecked;

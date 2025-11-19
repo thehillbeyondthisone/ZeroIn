@@ -154,6 +154,11 @@ namespace ZeroIn
 
                 // Determine marker size based on AFK status (AFK players get larger markers)
                 bool isAfk = player.IsLikelyAFK();
+
+                // Skip AFK players if ShowAFKPaths is disabled
+                if (isAfk && !_config.ShowAFKPaths)
+                    continue;
+
                 float markerSize = isAfk ? _config.AFKMarkerSize : _config.ActiveMarkerSize;
                 string markerType = isAfk ? "AFK_PLAYER" : "ACTIVE_PLAYER";
 

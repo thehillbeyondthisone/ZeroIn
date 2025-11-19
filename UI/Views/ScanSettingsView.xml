@@ -30,6 +30,13 @@
 		<!-- Continuous Scan -->
 		<Checkbox h_alignment="LEFT" label="Continuous Scanning" name="ContinuousScanning" layout_borders="Rect(0,0,0,8)"/>
 
+		<!-- Visual Settings -->
+		<TextView h_alignment="LEFT" label="Visual Settings" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
+		<Checkbox h_alignment="LEFT" label="Show Detection Radius" name="ShowDetectionRadius" layout_borders="Rect(0,0,0,2)"/>
+		<Checkbox h_alignment="LEFT" label="Show Player Markers" name="ShowPlayerMarkers" layout_borders="Rect(0,0,0,2)"/>
+		<Checkbox h_alignment="LEFT" label="Show AFK Paths" name="ShowAFKPaths" layout_borders="Rect(0,0,0,2)"/>
+		<Checkbox h_alignment="LEFT" label="Tag-Only Mode (Names Only)" name="TagOnlyMode" layout_borders="Rect(0,0,0,8)"/>
+
 		<!-- Combat Settings -->
 		<TextView h_alignment="LEFT" label="Combat Settings" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
 		<Checkbox h_alignment="LEFT" label="Enable Combat (Mob Targeting)" name="EnableCombat" layout_borders="Rect(0,0,0,2)"/>

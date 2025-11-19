@@ -46,6 +46,7 @@ namespace ZeroIn
         public string PlayerMarkerShape = "cross"; // cross, circle, square, diamond
         public bool ShowDetectionRadius = true; // Show circular detection radius
         public bool ShowPlayerMarkers = true; // Show player position markers
+        public bool ShowAFKPaths = true; // Show paths to AFK players
         public bool TagOnlyMode = false; // If true, only show player name tags, no marker shapes
 
         // Debug settings
