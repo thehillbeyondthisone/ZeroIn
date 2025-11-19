@@ -17,11 +17,13 @@ namespace ZeroIn
     {
         private bool _enabled = true;
         private bool _debugMode = false;
+        private bool _initialized = false;
         private CharacterScanner _scanner;
         private ZeroInConfig _config;
         private SPath _detectionRadiusPath;
         private Dictionary<uint, SPath> _playerMarkers = new Dictionary<uint, SPath>();
         private AutoResetInterval _updateInterval;
+        private AutoResetInterval _initDelay;
         private bool _pathsCreated = false;
         private int _drawCallCount = 0;
         private int _errorCount = 0;
@@ -55,6 +57,7 @@ namespace ZeroIn
             _scanner = scanner;
             _config = config;
             _updateInterval = new AutoResetInterval(500); // Update every 500ms instead of every frame
+            _initDelay = new AutoResetInterval(2000); // Wait 2 seconds after injection before initializing
         }
 
         /// <summary>
@@ -76,6 +79,17 @@ namespace ZeroIn
                 return;
             }
 
+            // Wait for initialization delay to pass (prevents errors during injection)
+            if (!_initialized)
+            {
+                if (!_initDelay.Elapsed)
+                    return;
+
+                _initialized = true;
+                if (_debugMode)
+                    Chat.WriteLine("[VisualRadar] Initialization delay complete, radar active", ChatColor.Green);
+            }
+
             // Throttle updates to reduce spam
             if (!_updateInterval.Elapsed)
                 return;
@@ -85,7 +99,8 @@ namespace ZeroIn
                 var localPlayer = DynelManager.LocalPlayer;
                 if (localPlayer == null || !localPlayer.IsValid)
                 {
-                    if (_debugMode && _drawCallCount % 100 == 0)
+                    // Don't spam errors during early initialization
+                    if (_debugMode && _drawCallCount % 100 == 0 && _initialized)
                         Chat.WriteLine($"[VisualRadar] LocalPlayer is null or invalid (draw #{_drawCallCount})", ChatColor.Yellow);
 
                     // Clean up paths when player is invalid
@@ -103,8 +118,17 @@ namespace ZeroIn
                 var position = localPlayer.Position;
                 if (position.X == 0 && position.Y == 0 && position.Z == 0)
                 {
-                    if (_debugMode && _drawCallCount % 100 == 0)
+                    // Don't spam errors during early initialization
+                    if (_debugMode && _drawCallCount % 100 == 0 && _initialized)
                         Chat.WriteLine($"[VisualRadar] Player position is at origin (0,0,0) - invalid (draw #{_drawCallCount})", ChatColor.Yellow);
+                    return;
+                }
+
+                // Validate playfield is loaded
+                if (Playfield.ModelIdentity.Instance == 0)
+                {
+                    if (_debugMode && _drawCallCount % 100 == 0)
+                        Chat.WriteLine($"[VisualRadar] Playfield not loaded yet", ChatColor.Yellow);
                     return;
                 }
 

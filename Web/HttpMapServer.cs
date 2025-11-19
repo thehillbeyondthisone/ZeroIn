@@ -295,29 +295,58 @@ namespace ZeroIn.Web
         {
             // Extract filename from path
             var filename = path.Substring("/maps/".Length);
-            var mapPath = Path.Combine(_dataPath, "Maps", filename);
 
-            if (!File.Exists(mapPath))
+            // Try multiple locations for map files
+            string mapPath = null;
+
+            // First try the Maps folder in data path
+            var dataMapPath = Path.Combine(_dataPath, "Maps", filename);
+            if (File.Exists(dataMapPath))
+            {
+                mapPath = dataMapPath;
+            }
+            // Then try the PlanetMap folder in plugin directory
+            else
+            {
+                var pluginMapPath = Path.Combine(ZeroIn.ZeroIn.PluginDirectory, "PlanetMap", filename);
+                if (File.Exists(pluginMapPath))
+                {
+                    mapPath = pluginMapPath;
+                }
+                // Try with .bin extension (the map files are PNG but named .bin)
+                else
+                {
+                    var binPath = Path.Combine(ZeroIn.ZeroIn.PluginDirectory, "PlanetMap", Path.ChangeExtension(filename, ".bin"));
+                    if (File.Exists(binPath))
+                    {
+                        mapPath = binPath;
+                    }
+                    // Try subdirectories
+                    else
+                    {
+                        // Try normal/PlanetMapGfxNormal.bin
+                        binPath = Path.Combine(ZeroIn.ZeroIn.PluginDirectory, "PlanetMap", "normal", "PlanetMapGfxNormal.bin");
+                        if (File.Exists(binPath) && (filename.Contains("normal") || filename.Contains("planet")))
+                        {
+                            mapPath = binPath;
+                        }
+                    }
+                }
+            }
+
+            if (mapPath == null || !File.Exists(mapPath))
             {
                 response.StatusCode = 404;
-                SendJson(response, new { error = "Map not found" });
+                SendJson(response, new { error = "Map not found", requested = filename });
                 return;
             }
 
             try
             {
                 var bytes = File.ReadAllBytes(mapPath);
-                var ext = Path.GetExtension(filename).ToLower();
 
-                response.ContentType = ext switch
-                {
-                    ".png" => "image/png",
-                    ".jpg" => "image/jpeg",
-                    ".jpeg" => "image/jpeg",
-                    ".gif" => "image/gif",
-                    _ => "application/octet-stream"
-                };
-
+                // Always serve as PNG since the .bin files are actually PNG images
+                response.ContentType = "image/png";
                 response.ContentLength64 = bytes.Length;
                 response.OutputStream.Write(bytes, 0, bytes.Length);
                 response.Close();
