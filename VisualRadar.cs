@@ -159,6 +159,10 @@ namespace ZeroIn
                 if (isAfk && !_config.ShowAFKPaths)
                     continue;
 
+                // Skip active (non-AFK) players if ShowActivePlayerPaths is disabled
+                if (!isAfk && !_config.ShowActivePlayerPaths)
+                    continue;
+
                 float markerSize = isAfk ? _config.AFKMarkerSize : _config.ActiveMarkerSize;
                 string markerType = isAfk ? "AFK_PLAYER" : "ACTIVE_PLAYER";
 

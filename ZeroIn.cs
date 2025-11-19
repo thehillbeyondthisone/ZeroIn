@@ -80,6 +80,7 @@ namespace ZeroIn
                         Chat.WriteLine("/radar radius - Toggle detection radius circle", ChatColor.White);
                         Chat.WriteLine("/radar players - Toggle player markers", ChatColor.White);
                         Chat.WriteLine("/radar afk - Toggle AFK player paths", ChatColor.White);
+                        Chat.WriteLine("/radar active - Toggle active player paths", ChatColor.White);
                         Chat.WriteLine("/radar tags - Toggle tag-only mode", ChatColor.White);
                         Chat.WriteLine("/radar help - Show radar command help", ChatColor.White);
                         Chat.WriteLine("/debug - Toggle verbose debug logging", ChatColor.White);
@@ -148,12 +149,19 @@ namespace ZeroIn
                                 Config.ShowAFKPaths ? ChatColor.Green : ChatColor.Red);
                             break;
 
+                        case "active":
+                            Config.ShowActivePlayerPaths = !Config.ShowActivePlayerPaths;
+                            Chat.WriteLine($"[ZeroIn] Active player paths: {(Config.ShowActivePlayerPaths ? "ON" : "OFF")}",
+                                Config.ShowActivePlayerPaths ? ChatColor.Green : ChatColor.Red);
+                            break;
+
                         case "help":
                             Chat.WriteLine("=== ZeroIn Radar Commands ===", ChatColor.Yellow);
                             Chat.WriteLine("/radar - Toggle all radar visuals", ChatColor.White);
                             Chat.WriteLine("/radar radius - Toggle detection radius circle", ChatColor.White);
                             Chat.WriteLine("/radar players - Toggle player markers", ChatColor.White);
                             Chat.WriteLine("/radar afk - Toggle AFK player paths", ChatColor.White);
+                            Chat.WriteLine("/radar active - Toggle active (non-AFK) player paths", ChatColor.White);
                             Chat.WriteLine("/radar tags - Toggle tag-only mode (names only, no shapes)", ChatColor.White);
                             break;
 
@@ -240,6 +248,7 @@ namespace ZeroIn
                     Chat.WriteLine($"  Detection radius: {(Config.ShowDetectionRadius ? "ON" : "OFF")}", Config.ShowDetectionRadius ? ChatColor.Green : ChatColor.Red);
                     Chat.WriteLine($"  Player markers: {(Config.ShowPlayerMarkers ? "ON" : "OFF")}", Config.ShowPlayerMarkers ? ChatColor.Green : ChatColor.Red);
                     Chat.WriteLine($"  AFK paths: {(Config.ShowAFKPaths ? "ON" : "OFF")}", Config.ShowAFKPaths ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"  Active player paths: {(Config.ShowActivePlayerPaths ? "ON" : "OFF")}", Config.ShowActivePlayerPaths ? ChatColor.Green : ChatColor.Red);
                     Chat.WriteLine($"  Tag-only mode: {(Config.TagOnlyMode ? "ON" : "OFF")}", Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
                     Chat.WriteLine($"Continuous scanning: {(Config.ContinuousScanning ? "ON" : "OFF")}", Config.ContinuousScanning ? ChatColor.Green : ChatColor.Red);
 

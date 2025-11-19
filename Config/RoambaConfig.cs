@@ -47,7 +47,8 @@ namespace ZeroIn
         public bool ShowDetectionRadius = true; // Show circular detection radius
         public bool ShowPlayerMarkers = true; // Show player position markers
         public bool ShowAFKPaths = true; // Show paths to AFK players
-        public bool TagOnlyMode = false; // If true, only show player name tags, no marker shapes
+        public bool ShowActivePlayerPaths = true; // Show paths to active (non-AFK) players
+        public bool TagOnlyMode = true; // If true, only show player name tags, no marker shapes (DEFAULT)
 
         // Debug settings
         public bool VerboseDebug = false; // Enable verbose debug output to console

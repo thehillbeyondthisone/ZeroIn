@@ -15,10 +15,11 @@ namespace ZeroIn
         private Checkbox _saveToCsv;
         private Checkbox _logToConsole;
         private Checkbox _continuousScanning;
-        private Checkbox _showDetectionRadius;
-        private Checkbox _showPlayerMarkers;
-        private Checkbox _showAFKPaths;
-        private Checkbox _tagOnlyMode;
+        private Button _toggleDetectionRadius;
+        private Button _togglePlayerMarkers;
+        private Button _toggleAFKPaths;
+        private Button _toggleActivePlayerPaths;
+        private Button _toggleTagOnly;
         private Checkbox _enableCombat;
         private Checkbox _enableLooting;
         private Checkbox _enableHealthCheck;
@@ -48,13 +49,70 @@ namespace ZeroIn
                     Root.FindChild("SaveToCsv", out _saveToCsv);
                     Root.FindChild("LogToConsole", out _logToConsole);
                     Root.FindChild("ContinuousScanning", out _continuousScanning);
-                    Root.FindChild("ShowDetectionRadius", out _showDetectionRadius);
-                    Root.FindChild("ShowPlayerMarkers", out _showPlayerMarkers);
-                    Root.FindChild("ShowAFKPaths", out _showAFKPaths);
-                    Root.FindChild("TagOnlyMode", out _tagOnlyMode);
+                    Root.FindChild("ToggleDetectionRadius", out _toggleDetectionRadius);
+                    Root.FindChild("TogglePlayerMarkers", out _togglePlayerMarkers);
+                    Root.FindChild("ToggleAFKPaths", out _toggleAFKPaths);
+                    Root.FindChild("ToggleActivePlayerPaths", out _toggleActivePlayerPaths);
+                    Root.FindChild("ToggleTagOnly", out _toggleTagOnly);
                     Root.FindChild("EnableCombat", out _enableCombat);
                     Root.FindChild("EnableLooting", out _enableLooting);
                     Root.FindChild("EnableHealthCheck", out _enableHealthCheck);
+
+                    // Wire up button click handlers with instant feedback
+                    if (_toggleDetectionRadius != null)
+                    {
+                        _toggleDetectionRadius.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.ShowDetectionRadius = !ZeroIn.Config.ShowDetectionRadius;
+                            _toggleDetectionRadius.Text = $"Detection Radius: {(ZeroIn.Config.ShowDetectionRadius ? "ON" : "OFF")}";
+                            Chat.WriteLine($"[ZeroIn] Detection radius: {(ZeroIn.Config.ShowDetectionRadius ? "ON" : "OFF")}",
+                                ZeroIn.Config.ShowDetectionRadius ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    if (_togglePlayerMarkers != null)
+                    {
+                        _togglePlayerMarkers.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.ShowPlayerMarkers = !ZeroIn.Config.ShowPlayerMarkers;
+                            _togglePlayerMarkers.Text = $"Player Markers: {(ZeroIn.Config.ShowPlayerMarkers ? "ON" : "OFF")}";
+                            Chat.WriteLine($"[ZeroIn] Player markers: {(ZeroIn.Config.ShowPlayerMarkers ? "ON" : "OFF")}",
+                                ZeroIn.Config.ShowPlayerMarkers ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    if (_toggleAFKPaths != null)
+                    {
+                        _toggleAFKPaths.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.ShowAFKPaths = !ZeroIn.Config.ShowAFKPaths;
+                            _toggleAFKPaths.Text = $"AFK Paths: {(ZeroIn.Config.ShowAFKPaths ? "ON" : "OFF")}";
+                            Chat.WriteLine($"[ZeroIn] AFK player paths: {(ZeroIn.Config.ShowAFKPaths ? "ON" : "OFF")}",
+                                ZeroIn.Config.ShowAFKPaths ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    if (_toggleActivePlayerPaths != null)
+                    {
+                        _toggleActivePlayerPaths.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.ShowActivePlayerPaths = !ZeroIn.Config.ShowActivePlayerPaths;
+                            _toggleActivePlayerPaths.Text = $"Active Player Paths: {(ZeroIn.Config.ShowActivePlayerPaths ? "ON" : "OFF")}";
+                            Chat.WriteLine($"[ZeroIn] Active player paths: {(ZeroIn.Config.ShowActivePlayerPaths ? "ON" : "OFF")}",
+                                ZeroIn.Config.ShowActivePlayerPaths ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    if (_toggleTagOnly != null)
+                    {
+                        _toggleTagOnly.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.TagOnlyMode = !ZeroIn.Config.TagOnlyMode;
+                            _toggleTagOnly.Text = $"Tag-Only Mode: {(ZeroIn.Config.TagOnlyMode ? "ON" : "OFF")}";
+                            Chat.WriteLine($"[ZeroIn] Tag-only mode: {(ZeroIn.Config.TagOnlyMode ? "ON (names only)" : "OFF (shapes visible)")}",
+                                ZeroIn.Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
                 }
             }
             catch (System.Exception ex)
@@ -93,17 +151,21 @@ namespace ZeroIn
                 if (_continuousScanning != null)
                     _continuousScanning.SetValue(config.ContinuousScanning);
 
-                if (_showDetectionRadius != null)
-                    _showDetectionRadius.SetValue(config.ShowDetectionRadius);
+                // Update button labels based on config
+                if (_toggleDetectionRadius != null)
+                    _toggleDetectionRadius.Text = $"Detection Radius: {(config.ShowDetectionRadius ? "ON" : "OFF")}";
 
-                if (_showPlayerMarkers != null)
-                    _showPlayerMarkers.SetValue(config.ShowPlayerMarkers);
+                if (_togglePlayerMarkers != null)
+                    _togglePlayerMarkers.Text = $"Player Markers: {(config.ShowPlayerMarkers ? "ON" : "OFF")}";
 
-                if (_showAFKPaths != null)
-                    _showAFKPaths.SetValue(config.ShowAFKPaths);
+                if (_toggleAFKPaths != null)
+                    _toggleAFKPaths.Text = $"AFK Paths: {(config.ShowAFKPaths ? "ON" : "OFF")}";
 
-                if (_tagOnlyMode != null)
-                    _tagOnlyMode.SetValue(config.TagOnlyMode);
+                if (_toggleActivePlayerPaths != null)
+                    _toggleActivePlayerPaths.Text = $"Active Player Paths: {(config.ShowActivePlayerPaths ? "ON" : "OFF")}";
+
+                if (_toggleTagOnly != null)
+                    _toggleTagOnly.Text = $"Tag-Only Mode: {(config.TagOnlyMode ? "ON" : "OFF")}";
 
                 if (_enableCombat != null)
                     _enableCombat.SetValue(config.EnableCombat);
@@ -150,17 +212,8 @@ namespace ZeroIn
                 if (_continuousScanning != null)
                     config.ContinuousScanning = _continuousScanning.IsChecked;
 
-                if (_showDetectionRadius != null)
-                    config.ShowDetectionRadius = _showDetectionRadius.IsChecked;
-
-                if (_showPlayerMarkers != null)
-                    config.ShowPlayerMarkers = _showPlayerMarkers.IsChecked;
-
-                if (_showAFKPaths != null)
-                    config.ShowAFKPaths = _showAFKPaths.IsChecked;
-
-                if (_tagOnlyMode != null)
-                    config.TagOnlyMode = _tagOnlyMode.IsChecked;
+                // Visual settings are managed by button clicks, no need to update from buttons here
+                // They update config directly when clicked
 
                 if (_enableCombat != null)
                     config.EnableCombat = _enableCombat.IsChecked;
