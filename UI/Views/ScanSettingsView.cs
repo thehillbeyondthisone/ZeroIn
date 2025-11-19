@@ -64,7 +64,6 @@ namespace ZeroIn
                         _toggleDetectionRadius.Clicked = (s, e) =>
                         {
                             ZeroIn.Config.ShowDetectionRadius = !ZeroIn.Config.ShowDetectionRadius;
-                            _toggleDetectionRadius.Text = $"Detection Radius: {(ZeroIn.Config.ShowDetectionRadius ? "ON" : "OFF")}";
                             Chat.WriteLine($"[ZeroIn] Detection radius: {(ZeroIn.Config.ShowDetectionRadius ? "ON" : "OFF")}",
                                 ZeroIn.Config.ShowDetectionRadius ? ChatColor.Green : ChatColor.Red);
                         };
@@ -75,7 +74,6 @@ namespace ZeroIn
                         _togglePlayerMarkers.Clicked = (s, e) =>
                         {
                             ZeroIn.Config.ShowPlayerMarkers = !ZeroIn.Config.ShowPlayerMarkers;
-                            _togglePlayerMarkers.Text = $"Player Markers: {(ZeroIn.Config.ShowPlayerMarkers ? "ON" : "OFF")}";
                             Chat.WriteLine($"[ZeroIn] Player markers: {(ZeroIn.Config.ShowPlayerMarkers ? "ON" : "OFF")}",
                                 ZeroIn.Config.ShowPlayerMarkers ? ChatColor.Green : ChatColor.Red);
                         };
@@ -86,7 +84,6 @@ namespace ZeroIn
                         _toggleAFKPaths.Clicked = (s, e) =>
                         {
                             ZeroIn.Config.ShowAFKPaths = !ZeroIn.Config.ShowAFKPaths;
-                            _toggleAFKPaths.Text = $"AFK Paths: {(ZeroIn.Config.ShowAFKPaths ? "ON" : "OFF")}";
                             Chat.WriteLine($"[ZeroIn] AFK player paths: {(ZeroIn.Config.ShowAFKPaths ? "ON" : "OFF")}",
                                 ZeroIn.Config.ShowAFKPaths ? ChatColor.Green : ChatColor.Red);
                         };
@@ -97,7 +94,6 @@ namespace ZeroIn
                         _toggleActivePlayerPaths.Clicked = (s, e) =>
                         {
                             ZeroIn.Config.ShowActivePlayerPaths = !ZeroIn.Config.ShowActivePlayerPaths;
-                            _toggleActivePlayerPaths.Text = $"Active Player Paths: {(ZeroIn.Config.ShowActivePlayerPaths ? "ON" : "OFF")}";
                             Chat.WriteLine($"[ZeroIn] Active player paths: {(ZeroIn.Config.ShowActivePlayerPaths ? "ON" : "OFF")}",
                                 ZeroIn.Config.ShowActivePlayerPaths ? ChatColor.Green : ChatColor.Red);
                         };
@@ -108,7 +104,6 @@ namespace ZeroIn
                         _toggleTagOnly.Clicked = (s, e) =>
                         {
                             ZeroIn.Config.TagOnlyMode = !ZeroIn.Config.TagOnlyMode;
-                            _toggleTagOnly.Text = $"Tag-Only Mode: {(ZeroIn.Config.TagOnlyMode ? "ON" : "OFF")}";
                             Chat.WriteLine($"[ZeroIn] Tag-only mode: {(ZeroIn.Config.TagOnlyMode ? "ON (names only)" : "OFF (shapes visible)")}",
                                 ZeroIn.Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
                         };
@@ -151,21 +146,7 @@ namespace ZeroIn
                 if (_continuousScanning != null)
                     _continuousScanning.SetValue(config.ContinuousScanning);
 
-                // Update button labels based on config
-                if (_toggleDetectionRadius != null)
-                    _toggleDetectionRadius.Text = $"Detection Radius: {(config.ShowDetectionRadius ? "ON" : "OFF")}";
-
-                if (_togglePlayerMarkers != null)
-                    _togglePlayerMarkers.Text = $"Player Markers: {(config.ShowPlayerMarkers ? "ON" : "OFF")}";
-
-                if (_toggleAFKPaths != null)
-                    _toggleAFKPaths.Text = $"AFK Paths: {(config.ShowAFKPaths ? "ON" : "OFF")}";
-
-                if (_toggleActivePlayerPaths != null)
-                    _toggleActivePlayerPaths.Text = $"Active Player Paths: {(config.ShowActivePlayerPaths ? "ON" : "OFF")}";
-
-                if (_toggleTagOnly != null)
-                    _toggleTagOnly.Text = $"Tag-Only Mode: {(config.TagOnlyMode ? "ON" : "OFF")}";
+                // Button labels are static in XML - toggles provide chat feedback only
 
                 if (_enableCombat != null)
                     _enableCombat.SetValue(config.EnableCombat);

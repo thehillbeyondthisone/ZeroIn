@@ -31,12 +31,12 @@
 		<Checkbox h_alignment="LEFT" label="Continuous Scanning" name="ContinuousScanning" layout_borders="Rect(0,0,0,8)"/>
 
 		<!-- Visual Settings -->
-		<TextView h_alignment="LEFT" label="Visual Toggles (Click to Toggle)" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
-		<Button name="ToggleDetectionRadius" label="Detection Radius: ON" layout_borders="Rect(0,0,0,2)"/>
-		<Button name="TogglePlayerMarkers" label="Player Markers: ON" layout_borders="Rect(0,0,0,2)"/>
-		<Button name="ToggleAFKPaths" label="AFK Paths: ON" layout_borders="Rect(0,0,0,2)"/>
-		<Button name="ToggleTagOnly" label="Tag-Only Mode: OFF" layout_borders="Rect(0,0,0,2)"/>
-		<Button name="ToggleActivePlayerPaths" label="Active Player Paths: ON" layout_borders="Rect(0,0,0,8)"/>
+		<TextView h_alignment="LEFT" label="Visual Toggles (Click = Toggle + Chat)" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
+		<Button name="ToggleDetectionRadius" label="Toggle Detection Radius" layout_borders="Rect(0,0,0,2)"/>
+		<Button name="TogglePlayerMarkers" label="Toggle Player Markers" layout_borders="Rect(0,0,0,2)"/>
+		<Button name="ToggleAFKPaths" label="Toggle AFK Paths" layout_borders="Rect(0,0,0,2)"/>
+		<Button name="ToggleTagOnly" label="Toggle Tag-Only Mode" layout_borders="Rect(0,0,0,2)"/>
+		<Button name="ToggleActivePlayerPaths" label="Toggle Active Player Paths" layout_borders="Rect(0,0,0,8)"/>
 
 		<!-- Combat Settings -->
 		<TextView h_alignment="LEFT" label="Combat Settings" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
