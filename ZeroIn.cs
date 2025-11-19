@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using AOSharp.Common.GameData;
 using ZeroIn.Scanner;
+using ZeroIn.Web;
 
 namespace ZeroIn
 {
@@ -21,6 +22,7 @@ namespace ZeroIn
         public static CharacterScanner Scanner;
         public static ScanMap Map;
         public static VisualRadar Radar;
+        public static HttpMapServer MapServer;
 
         public override void Run()
         {
@@ -85,6 +87,7 @@ namespace ZeroIn
                         Chat.WriteLine("/radar debug - Toggle radar debug mode", ChatColor.White);
                         Chat.WriteLine("/radar stats - Show radar statistics", ChatColor.White);
                         Chat.WriteLine("/radar help - Show radar command help", ChatColor.White);
+                        Chat.WriteLine("/map - Open live web map in browser", ChatColor.White);
                         Chat.WriteLine("/debug - Toggle verbose debug logging", ChatColor.White);
                         return;
                     }
@@ -272,6 +275,21 @@ namespace ZeroIn
                     Chat.WriteLine($"Verbose debug: {(Config.VerboseDebug ? "ON" : "OFF")}", Config.VerboseDebug ? ChatColor.Green : ChatColor.Red);
                 });
 
+                // Add /map command to open browser
+                Chat.RegisterCommand("map", (string command, string[] param, ChatWindow chatWindow) =>
+                {
+                    Chat.WriteLine("[ZeroIn] Live map available at: http://localhost:8080", ChatColor.Yellow);
+                    Chat.WriteLine("[ZeroIn] Open this URL in your web browser to view the live map", ChatColor.White);
+                    try
+                    {
+                        System.Diagnostics.Process.Start("http://localhost:8080");
+                    }
+                    catch
+                    {
+                        Chat.WriteLine("[ZeroIn] Could not auto-open browser. Please open manually.", ChatColor.Yellow);
+                    }
+                });
+
                 Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /status, /debug, /map, /debugxml", ChatColor.Green);
 
                 Chat.WriteLine("[ZeroIn] Initializing state machine...", ChatColor.White);
@@ -280,8 +298,14 @@ namespace ZeroIn
                 Chat.WriteLine("[ZeroIn] Initializing IPC...", ChatColor.White);
                 Ipc = new IPC((byte)Config.CoreConfig.ChannelId);
 
+                Chat.WriteLine("[ZeroIn] Starting HTTP map server on port 8080...", ChatColor.White);
+                MapServer = new HttpMapServer(8080, CommonParameters.PluginDataPath);
+                MapServer.Start();
+                Chat.WriteLine("[ZeroIn] Live map available at: http://localhost:8080", ChatColor.Yellow);
+
                 Chat.WriteLine("[ZeroIn] *** PLUGIN LOADED SUCCESSFULLY ***", ChatColor.Green);
                 Chat.WriteLine("[ZeroIn] Type /zeroin to open the UI", ChatColor.Yellow);
+                Chat.WriteLine("[ZeroIn] Live map: http://localhost:8080", ChatColor.Yellow);
             }
             catch (Exception e)
             {
@@ -433,6 +457,32 @@ namespace ZeroIn
             {
                 // Silently catch to avoid spam
                 Log?.Warning($"OnUpdate error: {ex.Message}");
+            }
+        }
+
+        public override void Teardown()
+        {
+            try
+            {
+                Chat.WriteLine("[ZeroIn] Shutting down...", ChatColor.Yellow);
+
+                // Stop HTTP server
+                MapServer?.Stop();
+
+                // Clean up visual radar
+                if (Radar != null)
+                {
+                    Radar.Enabled = false;
+                }
+
+                // Unregister Game.OnUpdate
+                Game.OnUpdate -= OnUpdate;
+
+                Chat.WriteLine("[ZeroIn] Shutdown complete", ChatColor.Green);
+            }
+            catch (Exception ex)
+            {
+                Log?.Warning($"Teardown error: {ex}");
             }
         }
     }
