@@ -1,0 +1,58 @@
+<?xml version="1.0" ?><root>
+	<Playfield id="152" name="The Grid" x="-33000000" xscale="0.00001" z="-251000000" zscale="0.00001"/>
+	<Playfield id="4107" name="The Fixer Grid" x="504000000" xscale="0.00001" z="-251000000" zscale="0.00001"/>
+	<Playfield id="505" name="Avalon" x="35214" xscale="1.0" z="44561" zscale="1.0"/>
+	<Playfield id="540" name="Old Athen" x="39521" xscale="1.0" z="40670" zscale="1.0"/>
+	<Playfield id="545" name="West Athen" x="39122" xscale="1.0" z="40660" zscale="1.0"/>
+	<Playfield id="550" name="Athen Shire" x="37065" xscale="1.0" z="39823" zscale="1.0"/>
+	<Playfield id="551" name="Wailing Wastes" x="37078" xscale="1.0" z="41020" zscale="1.0"/>
+	<Playfield id="556" name="Coast of Peace" x="38500" xscale="1.0" z="25060" zscale="1.0"/>
+	<Playfield id="560" name="Mort" x="41975" xscale="1.0" z="45030" zscale="1.0"/>
+	<Playfield id="565" name="Newland Desert" x="41950" xscale="1.0" z="42166" zscale="1.0"/>
+	<Playfield id="566" name="Newland City" x="42862" xscale="1.0" z="42389" zscale="1.0"/>
+	<Playfield id="567" name="Newland" x="41950" xscale="1.0" z="42166" zscale="1.0"/>
+	<Playfield id="570" name="Perpetual Wastelands" x="45486" xscale="1.0" z="45364" zscale="1.0"/>
+	<Playfield id="585" name="Aegean" x="39721" xscale="1.0" z="39429" zscale="1.0"/>
+	<Playfield id="586" name="Wartorn Valley" x="39743" xscale="1.0" z="40342" zscale="1.0"/>
+	<Playfield id="590" name="Central Artery Valley" x="42835" xscale="1.0" z="36042" zscale="1.0"/>
+	<Playfield id="595" name="Deep Artery Valley" x="46224" xscale="1.0" z="35132" zscale="1.0"/>
+	<Playfield id="600" name="Varmint Woods" x="41975" xscale="1.0" z="39148" zscale="1.0"/>
+	<Playfield id="605" name="Belial Forest" x="46215" xscale="1.0" z="32165" zscale="1.0"/>
+	<Playfield id="610" name="Southern Artery Valley" x="42830" xscale="1.0" z="33283" zscale="1.0"/>
+	<Playfield id="615" name="Southern Fouls Hills" x="46680" xscale="1.0" z="24729" zscale="1.0"/>
+	<Playfield id="620" name="Eastern Fouls Plain" x="46689" xscale="1.0" z="27864" zscale="1.0"/>
+	<Playfield id="625" name="Milky Way" x="41872" xscale="1.0" z="30640" zscale="0.993"/>
+	<Playfield id="630" name="Pleasant Meadows" x="43490" xscale="1.0" z="27918" zscale="1.0"/>
+	<Playfield id="635" name="Stret East Bank" x="40855" xscale="1.0" z="33041" zscale="1.0"/>
+	<Playfield id="640" name="Tir" x="47921" xscale="1.0" z="39716" zscale="1.0"/>
+	<Playfield id="641" name="Tir Arena" x="47921" xscale="1.0" z="39716" zscale="1.0"/>
+	<Playfield id="646" name="Tir County" x="46178" xscale="1.0" z="39071" zscale="1.0"/>
+	<Playfield id="647" name="Greater Tir County" x="46175" xscale="1.0" z="39073" zscale="1.0"/>
+	<Playfield id="650" name="Upper Stret East Bank" x="40859" xscale="1.0" z="36062" zscale="1.0"/>
+	<Playfield id="655" name="Andromeda" x="37179" xscale="1.0" z="31331" zscale="1.0"/>
+	<Playfield id="656" name="Coast of Tranquility" x="38500" xscale="1.0" z="25060" zscale="1.0"/>
+	<Playfield id="665" name="Broken Shores" x="30990" xscale="1.0" z="29450" zscale="0.99"/>
+	<Playfield id="670" name="Clondyke" x="37169" xscale="1.0" z="27031" zscale="1.0"/>
+	<Playfield id="685" name="Galway County" x="34500" xscale="1.0" z="29814" zscale="1.0"/>
+	<Playfield id="687" name="Galway Shire" x="34500" xscale="1.0" z="29814" zscale="1.0"/>
+	<Playfield id="695" name="Lush Fields" x="39945" xscale="1.0" z="27030" zscale="1.0"/>
+	<Playfield id="696" name="Mutant Domain" x="41950" xscale="1.0" z="27720" zscale="1.0"/>
+	<Playfield id="700" name="Omni-1 HQ" x="43187" xscale="1.0" z="27102" zscale="1.0"/>
+	<Playfield id="705" name="Omni-1 Entertainment" x="43756" xscale="1.0" z="26526" zscale="1.0"/>
+	<Playfield id="706" name="Omni Entertainment Arena" x="44151" xscale="1.0" z="26896" zscale="1.0"/>
+	<Playfield id="710" name="Omni-1 Trade" x="43313" xscale="1.0" z="27607" zscale="1.0"/>
+	<Playfield id="716" name="Omni Forest" x="44526" xscale="1.0" z="24729" zscale="1.0"/>
+	<Playfield id="717" name="Greater Omni Forest" x="44526" xscale="1.0" z="24729" zscale="1.0"/>
+	<Playfield id="730" name="Rome Red district" x="34025" xscale="1.0" z="30760" zscale="1.0"/>
+	<Playfield id="735" name="Rome Blue district" x="33895" xscale="1.0" z="30760" zscale="1.0"/>
+	<Playfield id="740" name="Rome Green district" x="33815" xscale="1.0" z="30760" zscale="1.0"/>
+	<Playfield id="750" name="The Reck" x="32350" xscale="0.995" z="27360" zscale="0.98"/>
+	<Playfield id="760" name="4 Holes" x="38486" xscale="1.0" z="33943" zscale="1.0"/>
+	<Playfield id="790" name="Stret West Bank" x="38081" xscale="1.0" z="36332" zscale="1.0"/>
+	<Playfield id="791" name="Holes in the Wall" x="38081" xscale="1.0" z="37660" zscale="1.0"/>
+	<Playfield id="795" name="The Longest Road" x="33884" xscale="0.993" z="39227" zscale="1.0"/>
+	<Playfield id="800" name="Borealis" x="37107" xscale="1.0" z="38360" zscale="1.0"/>
+	<Playfield id="6550" name="Uturn Canyon" x="39915" xscale="1.0" z="31480" zscale="0.83"/>
+	<Playfield id="6551" name="Uturn Forest" x="39915" xscale="1.0" z="31480" zscale="0.83"/>
+	<Playfield id="6553" name="Andromeda - Arete Landing" x="37179" xscale="1.0" z="31331" zscale="1.0"/>
+</root>
