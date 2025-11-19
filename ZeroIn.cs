@@ -56,7 +56,7 @@ namespace ZeroIn
 
                 Chat.WriteLine("[ZeroIn] Loading map coordinates...", ChatColor.White);
                 MapCoords = new MapCoordinateLoader(CommonParameters.PluginDataPath);
-                string mapCoordsPath = Path.Combine(PluginDirectory, "PlanetMap", "MapCoordinates.xml");
+                string mapCoordsPath = System.IO.Path.Combine(PluginDirectory, "PlanetMap", "MapCoordinates.xml");
                 MapCoords.LoadCoordinates(mapCoordsPath);
                 Chat.WriteLine("[ZeroIn] Map coordinates loaded successfully", ChatColor.Green);
 

@@ -264,7 +264,7 @@ namespace ZeroIn.Web
         private void ServeMapInfo(HttpListenerResponse response)
         {
             var playfieldId = Playfield.ModelIdentity.Instance;
-            var mapInfo = _mapCoords?.GetPlayfieldInfo(playfieldId);
+            var mapInfo = _mapCoords?.GetPlayfieldInfo((uint)playfieldId);
 
             if (mapInfo == null)
             {
@@ -308,7 +308,7 @@ namespace ZeroIn.Web
             // Then try the PlanetMap folder in plugin directory
             else
             {
-                var pluginMapPath = Path.Combine(ZeroIn.ZeroIn.PluginDirectory, "PlanetMap", filename);
+                var pluginMapPath = Path.Combine(ZeroIn.PluginDirectory, "PlanetMap", filename);
                 if (File.Exists(pluginMapPath))
                 {
                     mapPath = pluginMapPath;
@@ -316,7 +316,7 @@ namespace ZeroIn.Web
                 // Try with .bin extension (the map files are PNG but named .bin)
                 else
                 {
-                    var binPath = Path.Combine(ZeroIn.ZeroIn.PluginDirectory, "PlanetMap", Path.ChangeExtension(filename, ".bin"));
+                    var binPath = Path.Combine(ZeroIn.PluginDirectory, "PlanetMap", Path.ChangeExtension(filename, ".bin"));
                     if (File.Exists(binPath))
                     {
                         mapPath = binPath;
@@ -325,7 +325,7 @@ namespace ZeroIn.Web
                     else
                     {
                         // Try normal/PlanetMapGfxNormal.bin
-                        binPath = Path.Combine(ZeroIn.ZeroIn.PluginDirectory, "PlanetMap", "normal", "PlanetMapGfxNormal.bin");
+                        binPath = Path.Combine(ZeroIn.PluginDirectory, "PlanetMap", "normal", "PlanetMapGfxNormal.bin");
                         if (File.Exists(binPath) && (filename.Contains("normal") || filename.Contains("planet")))
                         {
                             mapPath = binPath;
