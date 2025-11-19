@@ -81,7 +81,7 @@ namespace ZeroIn
                         Chat.WriteLine("/radar players - Toggle player markers", ChatColor.White);
                         Chat.WriteLine("/radar afk - Toggle AFK player paths", ChatColor.White);
                         Chat.WriteLine("/radar active - Toggle active player paths", ChatColor.White);
-                        Chat.WriteLine("/radar tags - Toggle tag-only mode", ChatColor.White);
+                        Chat.WriteLine("/radar lines - Toggle line mode (shapes vs waypoints)", ChatColor.White);
                         Chat.WriteLine("/radar debug - Toggle radar debug mode", ChatColor.White);
                         Chat.WriteLine("/radar stats - Show radar statistics", ChatColor.White);
                         Chat.WriteLine("/radar help - Show radar command help", ChatColor.White);
@@ -138,11 +138,11 @@ namespace ZeroIn
                                 Config.ShowPlayerMarkers ? ChatColor.Green : ChatColor.Red);
                             break;
 
-                        case "tags":
-                        case "tagonly":
-                            Config.TagOnlyMode = !Config.TagOnlyMode;
-                            Chat.WriteLine($"[ZeroIn] Tag-only mode: {(Config.TagOnlyMode ? "ON (names only)" : "OFF (shapes visible)")}",
-                                Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
+                        case "lines":
+                        case "shapes":
+                            Config.ShowMarkerLines = !Config.ShowMarkerLines;
+                            Chat.WriteLine($"[ZeroIn] Line mode: {(Config.ShowMarkerLines ? "ON (shapes)" : "OFF (minimal waypoints)")}",
+                                Config.ShowMarkerLines ? ChatColor.Green : ChatColor.Red);
                             break;
 
                         case "afk":
@@ -172,7 +172,7 @@ namespace ZeroIn
                             Chat.WriteLine("/radar players - Toggle player markers", ChatColor.White);
                             Chat.WriteLine("/radar afk - Toggle AFK player paths", ChatColor.White);
                             Chat.WriteLine("/radar active - Toggle active (non-AFK) player paths", ChatColor.White);
-                            Chat.WriteLine("/radar tags - Toggle tag-only mode (names only, no shapes)", ChatColor.White);
+                            Chat.WriteLine("/radar lines - Toggle line mode (ON=shapes, OFF=minimal waypoints)", ChatColor.White);
                             Chat.WriteLine("/radar debug - Toggle detailed debug logging", ChatColor.White);
                             Chat.WriteLine("/radar stats - Show radar statistics and error counts", ChatColor.White);
                             break;
@@ -261,7 +261,7 @@ namespace ZeroIn
                     Chat.WriteLine($"  Player markers: {(Config.ShowPlayerMarkers ? "ON" : "OFF")}", Config.ShowPlayerMarkers ? ChatColor.Green : ChatColor.Red);
                     Chat.WriteLine($"  AFK paths: {(Config.ShowAFKPaths ? "ON" : "OFF")}", Config.ShowAFKPaths ? ChatColor.Green : ChatColor.Red);
                     Chat.WriteLine($"  Active player paths: {(Config.ShowActivePlayerPaths ? "ON" : "OFF")}", Config.ShowActivePlayerPaths ? ChatColor.Green : ChatColor.Red);
-                    Chat.WriteLine($"  Tag-only mode: {(Config.TagOnlyMode ? "ON" : "OFF")}", Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"  Line mode: {(Config.ShowMarkerLines ? "ON (shapes)" : "OFF (waypoints)")}", Config.ShowMarkerLines ? ChatColor.Green : ChatColor.Red);
                     Chat.WriteLine($"Continuous scanning: {(Config.ContinuousScanning ? "ON" : "OFF")}", Config.ContinuousScanning ? ChatColor.Green : ChatColor.Red);
 
                     var detected = Scanner.GetDetectedCharacters();

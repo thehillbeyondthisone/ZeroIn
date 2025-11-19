@@ -103,9 +103,9 @@ namespace ZeroIn
                     {
                         _toggleTagOnly.Clicked = (s, e) =>
                         {
-                            ZeroIn.Config.TagOnlyMode = !ZeroIn.Config.TagOnlyMode;
-                            Chat.WriteLine($"[ZeroIn] Tag-only mode: {(ZeroIn.Config.TagOnlyMode ? "ON (names only)" : "OFF (shapes visible)")}",
-                                ZeroIn.Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
+                            ZeroIn.Config.ShowMarkerLines = !ZeroIn.Config.ShowMarkerLines;
+                            Chat.WriteLine($"[ZeroIn] Line mode: {(ZeroIn.Config.ShowMarkerLines ? "ON (shapes)" : "OFF (minimal waypoints)")}",
+                                ZeroIn.Config.ShowMarkerLines ? ChatColor.Green : ChatColor.Red);
                         };
                     }
                 }

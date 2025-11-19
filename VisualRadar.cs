@@ -241,8 +241,6 @@ namespace ZeroIn
                 if ((now - player.LastSeen).TotalSeconds > 30)
                     continue;
 
-                activePlayerIds.Add(player.CharId);
-
                 var playerPos = new Vector3(player.PositionX, player.PositionY, player.PositionZ);
 
                 // Determine marker size based on AFK status (AFK players get larger markers)
@@ -255,6 +253,9 @@ namespace ZeroIn
                 // Skip active (non-AFK) players if ShowActivePlayerPaths is disabled
                 if (!isAfk && !_config.ShowActivePlayerPaths)
                     continue;
+
+                // Only add to activePlayerIds if we're actually going to show this player
+                activePlayerIds.Add(player.CharId);
 
                 float markerSize = isAfk ? _config.AFKMarkerSize : _config.ActiveMarkerSize;
                 string markerType = isAfk ? "AFK_PLAYER" : "ACTIVE_PLAYER";
@@ -312,8 +313,8 @@ namespace ZeroIn
                 return;
             }
 
-            // Tag-only mode: just a single point (shows only the path name as a tag)
-            if (_config.TagOnlyMode)
+            // Minimal waypoint mode: just a single point (minimal visibility, like zone waypoints)
+            if (!_config.ShowMarkerLines)
             {
                 path.Waypoints.Add(center);
                 return;
