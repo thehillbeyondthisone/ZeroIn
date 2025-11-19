@@ -69,6 +69,21 @@ namespace ZeroIn
                 Chat.WriteLine("[ZeroIn] Registering commands...", ChatColor.White);
                 Chat.RegisterCommand("zeroin", (string command, string[] param, ChatWindow chatWindow) =>
                 {
+                    if (param.Length > 0 && param[0].ToLower() == "help")
+                    {
+                        Chat.WriteLine("=== ZeroIn Commands ===", ChatColor.Yellow);
+                        Chat.WriteLine("/zeroin - Open ZeroIn UI window", ChatColor.White);
+                        Chat.WriteLine("/zeroin help - Show this help menu", ChatColor.White);
+                        Chat.WriteLine("/scan - List all detected players", ChatColor.White);
+                        Chat.WriteLine("/radar - Toggle all radar visuals on/off", ChatColor.White);
+                        Chat.WriteLine("/radar radius - Toggle detection radius circle", ChatColor.White);
+                        Chat.WriteLine("/radar players - Toggle player markers", ChatColor.White);
+                        Chat.WriteLine("/radar afk - Toggle AFK player paths", ChatColor.White);
+                        Chat.WriteLine("/radar tags - Toggle tag-only mode", ChatColor.White);
+                        Chat.WriteLine("/radar help - Show radar command help", ChatColor.White);
+                        Chat.WriteLine("/debug - Toggle verbose debug logging", ChatColor.White);
+                        return;
+                    }
                     Chat.WriteLine("[ZeroIn] Command received: /zeroin", ChatColor.Green);
                     OpenMainWindow();
                 });
@@ -126,11 +141,18 @@ namespace ZeroIn
                                 Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
                             break;
 
+                        case "afk":
+                            Config.ShowAFKPaths = !Config.ShowAFKPaths;
+                            Chat.WriteLine($"[ZeroIn] AFK paths: {(Config.ShowAFKPaths ? "ON" : "OFF")}",
+                                Config.ShowAFKPaths ? ChatColor.Green : ChatColor.Red);
+                            break;
+
                         case "help":
                             Chat.WriteLine("=== ZeroIn Radar Commands ===", ChatColor.Yellow);
                             Chat.WriteLine("/radar - Toggle all radar visuals", ChatColor.White);
                             Chat.WriteLine("/radar radius - Toggle detection radius circle", ChatColor.White);
                             Chat.WriteLine("/radar players - Toggle player markers", ChatColor.White);
+                            Chat.WriteLine("/radar afk - Toggle AFK player paths", ChatColor.White);
                             Chat.WriteLine("/radar tags - Toggle tag-only mode (names only, no shapes)", ChatColor.White);
                             break;
 
