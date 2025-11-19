@@ -16,17 +16,38 @@ namespace ZeroIn
     public class VisualRadar
     {
         private bool _enabled = true;
+        private bool _debugMode = false;
         private CharacterScanner _scanner;
         private ZeroInConfig _config;
         private SPath _detectionRadiusPath;
         private Dictionary<uint, SPath> _playerMarkers = new Dictionary<uint, SPath>();
         private AutoResetInterval _updateInterval;
         private bool _pathsCreated = false;
+        private int _drawCallCount = 0;
+        private int _errorCount = 0;
 
         public bool Enabled
         {
             get => _enabled;
             set => _enabled = value;
+        }
+
+        public bool DebugMode
+        {
+            get => _debugMode;
+            set
+            {
+                _debugMode = value;
+                if (_debugMode)
+                {
+                    Chat.WriteLine("[VisualRadar] Debug mode ENABLED - detailed logging active", ChatColor.Yellow);
+                    Chat.WriteLine($"[VisualRadar] Current state: Enabled={_enabled}, PathsCreated={_pathsCreated}, DrawCalls={_drawCallCount}, Errors={_errorCount}", ChatColor.White);
+                }
+                else
+                {
+                    Chat.WriteLine("[VisualRadar] Debug mode DISABLED", ChatColor.Yellow);
+                }
+            }
         }
 
         public VisualRadar(CharacterScanner scanner, ZeroInConfig config)
@@ -41,10 +62,14 @@ namespace ZeroIn
         /// </summary>
         public void Draw()
         {
+            _drawCallCount++;
+
             if (!_enabled)
             {
                 if (_pathsCreated)
                 {
+                    if (_debugMode)
+                        Chat.WriteLine("[VisualRadar] Radar disabled, cleaning up paths", ChatColor.Yellow);
                     CleanupPaths();
                     _pathsCreated = false;
                 }
@@ -60,9 +85,14 @@ namespace ZeroIn
                 var localPlayer = DynelManager.LocalPlayer;
                 if (localPlayer == null || !localPlayer.IsValid)
                 {
+                    if (_debugMode && _drawCallCount % 100 == 0)
+                        Chat.WriteLine($"[VisualRadar] LocalPlayer is null or invalid (draw #{_drawCallCount})", ChatColor.Yellow);
+
                     // Clean up paths when player is invalid
                     if (_pathsCreated)
                     {
+                        if (_debugMode)
+                            Chat.WriteLine("[VisualRadar] Cleaning up paths due to invalid player", ChatColor.Yellow);
                         CleanupPaths();
                         _pathsCreated = false;
                     }
@@ -73,8 +103,14 @@ namespace ZeroIn
                 var position = localPlayer.Position;
                 if (position.X == 0 && position.Y == 0 && position.Z == 0)
                 {
-                    // Player position is invalid, skip drawing
+                    if (_debugMode && _drawCallCount % 100 == 0)
+                        Chat.WriteLine($"[VisualRadar] Player position is at origin (0,0,0) - invalid (draw #{_drawCallCount})", ChatColor.Yellow);
                     return;
+                }
+
+                if (_debugMode && _drawCallCount % 200 == 0)
+                {
+                    Chat.WriteLine($"[VisualRadar] Draw #{_drawCallCount}: Pos=({position.X:F1},{position.Y:F1},{position.Z:F1}), Markers={_playerMarkers.Count}, Errors={_errorCount}", ChatColor.White);
                 }
 
                 // Draw detection radius circle around player (if enabled)
@@ -84,6 +120,8 @@ namespace ZeroIn
                 }
                 else if (_detectionRadiusPath != null)
                 {
+                    if (_debugMode)
+                        Chat.WriteLine("[VisualRadar] Hiding detection radius (toggled off)", ChatColor.Yellow);
                     // Hide detection radius if toggled off
                     _detectionRadiusPath.Delete();
                     _detectionRadiusPath = null;
@@ -97,6 +135,9 @@ namespace ZeroIn
                 else
                 {
                     // Clean up player markers if toggled off
+                    if (_playerMarkers.Count > 0 && _debugMode)
+                        Chat.WriteLine($"[VisualRadar] Cleaning up {_playerMarkers.Count} player markers (toggled off)", ChatColor.Yellow);
+
                     foreach (var marker in _playerMarkers.Values)
                     {
                         marker.Delete();
@@ -108,8 +149,11 @@ namespace ZeroIn
             }
             catch (Exception ex)
             {
-                // Silently catch rendering errors to avoid spam
-                ZeroIn.Log?.Warning($"VisualRadar.Draw error: {ex.Message}");
+                _errorCount++;
+                // Always log errors to help diagnose issues
+                Chat.WriteLine($"[VisualRadar] ERROR #{_errorCount} in Draw(): {ex.Message}", ChatColor.Red);
+                Chat.WriteLine($"[VisualRadar] Stack: {ex.StackTrace}", ChatColor.Red);
+                ZeroIn.Log?.Warning($"VisualRadar.Draw error #{_errorCount}: {ex}");
             }
         }
 
@@ -120,11 +164,18 @@ namespace ZeroIn
 
             // Validate radius is reasonable
             if (radius <= 0 || radius > 1000)
+            {
+                if (_debugMode && _errorCount % 10 == 0)
+                    Chat.WriteLine($"[VisualRadar] Invalid radius: {radius}m (must be 0-1000)", ChatColor.Red);
                 return;
+            }
 
             // Create a circular path around the player for detection radius visualization
             if (_detectionRadiusPath == null)
             {
+                if (_debugMode)
+                    Chat.WriteLine($"[VisualRadar] Creating detection radius circle: {radius:F0}m at ({position.X:F1},{position.Y:F1},{position.Z:F1})", ChatColor.Green);
+
                 // Create a circle with 36 points (10 degree increments)
                 int numPoints = 36;
                 var waypoints = new System.Collections.Generic.List<Vector3>();
@@ -151,6 +202,14 @@ namespace ZeroIn
                     }
 
                     _detectionRadiusPath.IsLooping = true; // Make it a closed circle
+
+                    if (_debugMode)
+                        Chat.WriteLine($"[VisualRadar] Detection radius path created with {waypoints.Count} waypoints", ChatColor.Green);
+                }
+                else
+                {
+                    if (_debugMode)
+                        Chat.WriteLine($"[VisualRadar] ERROR: Not enough waypoints ({waypoints.Count}) to create radius path", ChatColor.Red);
                 }
             }
             else
@@ -239,11 +298,19 @@ namespace ZeroIn
         {
             // Validate size
             if (size <= 0 || size > 100)
+            {
+                if (_debugMode)
+                    Chat.WriteLine($"[VisualRadar] Invalid marker size: {size}m, using default 2m", ChatColor.Yellow);
                 size = 2f; // Default to 2m if invalid
+            }
 
             // Validate center position is not at origin (likely invalid)
             if (center.X == 0 && center.Y == 0 && center.Z == 0)
+            {
+                if (_debugMode)
+                    Chat.WriteLine($"[VisualRadar] ERROR: Cannot create marker at origin (0,0,0)", ChatColor.Red);
                 return;
+            }
 
             // Tag-only mode: just a single point (shows only the path name as a tag)
             if (_config.TagOnlyMode)
@@ -311,17 +378,32 @@ namespace ZeroIn
 
         private void CleanupPaths()
         {
-            if (_detectionRadiusPath != null)
-            {
-                _detectionRadiusPath.Delete();
-                _detectionRadiusPath = null;
-            }
+            if (_debugMode)
+                Chat.WriteLine($"[VisualRadar] Cleaning up paths: RadiusPath={(_detectionRadiusPath != null)}, PlayerMarkers={_playerMarkers.Count}", ChatColor.Yellow);
 
-            foreach (var marker in _playerMarkers.Values)
+            try
             {
-                marker.Delete();
+                if (_detectionRadiusPath != null)
+                {
+                    _detectionRadiusPath.Delete();
+                    _detectionRadiusPath = null;
+                }
+
+                foreach (var marker in _playerMarkers.Values)
+                {
+                    marker.Delete();
+                }
+                _playerMarkers.Clear();
+
+                if (_debugMode)
+                    Chat.WriteLine("[VisualRadar] Cleanup completed successfully", ChatColor.Green);
             }
-            _playerMarkers.Clear();
+            catch (Exception ex)
+            {
+                _errorCount++;
+                Chat.WriteLine($"[VisualRadar] ERROR during cleanup: {ex.Message}", ChatColor.Red);
+                ZeroIn.Log?.Warning($"VisualRadar.CleanupPaths error: {ex}");
+            }
         }
 
         public void Toggle()
@@ -335,6 +417,28 @@ namespace ZeroIn
 
             Chat.WriteLine($"[ZeroIn] Visual radar: {(_enabled ? "ENABLED" : "DISABLED")}",
                 _enabled ? ChatColor.Green : ChatColor.Red);
+
+            if (_debugMode)
+            {
+                Chat.WriteLine($"[VisualRadar] Stats - DrawCalls: {_drawCallCount}, Errors: {_errorCount}, PathsCreated: {_pathsCreated}", ChatColor.White);
+            }
+        }
+
+        public void PrintStats()
+        {
+            Chat.WriteLine("=== VisualRadar Statistics ===", ChatColor.Yellow);
+            Chat.WriteLine($"Enabled: {_enabled}", _enabled ? ChatColor.Green : ChatColor.Red);
+            Chat.WriteLine($"Debug Mode: {_debugMode}", _debugMode ? ChatColor.Green : ChatColor.Red);
+            Chat.WriteLine($"Paths Created: {_pathsCreated}", ChatColor.White);
+            Chat.WriteLine($"Draw Calls: {_drawCallCount}", ChatColor.White);
+            Chat.WriteLine($"Errors: {_errorCount}", _errorCount > 0 ? ChatColor.Red : ChatColor.Green);
+            Chat.WriteLine($"Active Player Markers: {_playerMarkers.Count}", ChatColor.White);
+            Chat.WriteLine($"Detection Radius Path: {(_detectionRadiusPath != null ? "Active" : "None")}", ChatColor.White);
+
+            if (_detectionRadiusPath != null)
+            {
+                Chat.WriteLine($"  Radius Waypoints: {_detectionRadiusPath.Waypoints.Count}", ChatColor.White);
+            }
         }
     }
 }

@@ -82,6 +82,8 @@ namespace ZeroIn
                         Chat.WriteLine("/radar afk - Toggle AFK player paths", ChatColor.White);
                         Chat.WriteLine("/radar active - Toggle active player paths", ChatColor.White);
                         Chat.WriteLine("/radar tags - Toggle tag-only mode", ChatColor.White);
+                        Chat.WriteLine("/radar debug - Toggle radar debug mode", ChatColor.White);
+                        Chat.WriteLine("/radar stats - Show radar statistics", ChatColor.White);
                         Chat.WriteLine("/radar help - Show radar command help", ChatColor.White);
                         Chat.WriteLine("/debug - Toggle verbose debug logging", ChatColor.White);
                         return;
@@ -155,6 +157,14 @@ namespace ZeroIn
                                 Config.ShowActivePlayerPaths ? ChatColor.Green : ChatColor.Red);
                             break;
 
+                        case "debug":
+                            Radar.DebugMode = !Radar.DebugMode;
+                            break;
+
+                        case "stats":
+                            Radar.PrintStats();
+                            break;
+
                         case "help":
                             Chat.WriteLine("=== ZeroIn Radar Commands ===", ChatColor.Yellow);
                             Chat.WriteLine("/radar - Toggle all radar visuals", ChatColor.White);
@@ -163,6 +173,8 @@ namespace ZeroIn
                             Chat.WriteLine("/radar afk - Toggle AFK player paths", ChatColor.White);
                             Chat.WriteLine("/radar active - Toggle active (non-AFK) player paths", ChatColor.White);
                             Chat.WriteLine("/radar tags - Toggle tag-only mode (names only, no shapes)", ChatColor.White);
+                            Chat.WriteLine("/radar debug - Toggle detailed debug logging", ChatColor.White);
+                            Chat.WriteLine("/radar stats - Show radar statistics and error counts", ChatColor.White);
                             break;
 
                         default:
@@ -260,7 +272,7 @@ namespace ZeroIn
                     Chat.WriteLine($"Verbose debug: {(Config.VerboseDebug ? "ON" : "OFF")}", Config.VerboseDebug ? ChatColor.Green : ChatColor.Red);
                 });
 
-                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /status, /debug, /debugxml", ChatColor.Green);
+                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /status, /debug, /map, /debugxml", ChatColor.Green);
 
                 Chat.WriteLine("[ZeroIn] Initializing state machine...", ChatColor.White);
                 StateMachine = new RoamStateMachine(new MobTargeting(Config), Scanner, Map, Config.CoreConfig.OnInjectEnable);
