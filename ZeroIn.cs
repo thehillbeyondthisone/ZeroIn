@@ -8,6 +8,7 @@ using System.Linq;
 using AOSharp.Common.GameData;
 using ZeroIn.Scanner;
 using ZeroIn.Web;
+using ZeroIn.PlanetMap;
 
 namespace ZeroIn
 {
@@ -23,6 +24,7 @@ namespace ZeroIn
         public static ScanMap Map;
         public static VisualRadar Radar;
         public static HttpMapServer MapServer;
+        public static MapCoordinateLoader MapCoords;
 
         public override void Run()
         {
@@ -51,6 +53,12 @@ namespace ZeroIn
 
                 Chat.WriteLine("[ZeroIn] Loading roam path...", ChatColor.White);
                 RoamPath = RoamPath.Load(Config.RoamPath);  // RoamPath config which contains SPath and Targeting Rules
+
+                Chat.WriteLine("[ZeroIn] Loading map coordinates...", ChatColor.White);
+                MapCoords = new MapCoordinateLoader(CommonParameters.PluginDataPath);
+                string mapCoordsPath = Path.Combine(PluginDirectory, "PlanetMap", "MapCoordinates.xml");
+                MapCoords.LoadCoordinates(mapCoordsPath);
+                Chat.WriteLine("[ZeroIn] Map coordinates loaded successfully", ChatColor.Green);
 
                 // Initialize Scanner for player detection
                 Chat.WriteLine("[ZeroIn] Initializing player scanner...", ChatColor.White);
@@ -299,7 +307,7 @@ namespace ZeroIn
                 Ipc = new IPC((byte)Config.CoreConfig.ChannelId);
 
                 Chat.WriteLine("[ZeroIn] Starting HTTP map server on port 8080...", ChatColor.White);
-                MapServer = new HttpMapServer(8080, CommonParameters.PluginDataPath);
+                MapServer = new HttpMapServer(8080, CommonParameters.PluginDataPath, MapCoords);
                 MapServer.Start();
                 Chat.WriteLine("[ZeroIn] Live map available at: http://localhost:8080", ChatColor.Yellow);
 

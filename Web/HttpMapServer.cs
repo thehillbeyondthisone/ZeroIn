@@ -9,6 +9,7 @@ using AOSharp.Core;
 using AOSharp.Common.GameData;
 using Newtonsoft.Json;
 using ZeroIn.Scanner;
+using ZeroIn.PlanetMap;
 
 namespace ZeroIn.Web
 {
@@ -22,11 +23,13 @@ namespace ZeroIn.Web
         private bool _running = false;
         private readonly int _port;
         private readonly string _dataPath;
+        private readonly MapCoordinateLoader _mapCoords;
 
-        public HttpMapServer(int port, string dataPath)
+        public HttpMapServer(int port, string dataPath, MapCoordinateLoader mapCoords)
         {
             _port = port;
             _dataPath = dataPath;
+            _mapCoords = mapCoords;
         }
 
         public void Start()
@@ -119,6 +122,9 @@ namespace ZeroIn.Web
                         break;
                     case "/api/config":
                         ServeConfig(response);
+                        break;
+                    case "/api/mapinfo":
+                        ServeMapInfo(response);
                         break;
                     default:
                         // Try to serve map image
@@ -250,6 +256,36 @@ namespace ZeroIn.Web
                 detectionRange = ZeroIn.Config?.PlayerDetectionRange ?? 50f,
                 afkMarkerSize = ZeroIn.Config?.AFKMarkerSize ?? 5f,
                 activeMarkerSize = ZeroIn.Config?.ActiveMarkerSize ?? 2f
+            };
+
+            SendJson(response, data);
+        }
+
+        private void ServeMapInfo(HttpListenerResponse response)
+        {
+            var playfieldId = Playfield.ModelIdentity.Instance;
+            var mapInfo = _mapCoords?.GetPlayfieldInfo(playfieldId);
+
+            if (mapInfo == null)
+            {
+                SendJson(response, new
+                {
+                    error = "No map data for current playfield",
+                    playfieldId = playfieldId,
+                    playfieldName = Playfield.Name
+                });
+                return;
+            }
+
+            var data = new
+            {
+                playfieldId = mapInfo.Id,
+                playfieldName = mapInfo.Name,
+                referenceX = mapInfo.X,
+                referenceZ = mapInfo.Z,
+                xScale = mapInfo.XScale,
+                zScale = mapInfo.ZScale,
+                hasMapCoords = true
             };
 
             SendJson(response, data);
