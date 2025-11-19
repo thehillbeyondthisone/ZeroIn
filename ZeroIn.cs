@@ -14,6 +14,7 @@ namespace ZeroIn
 {
     public class ZeroIn : AOPluginEntry
     {
+        public static string PluginDir; // Make plugin directory accessible
         public static ZeroInConfig Config;
         public static RoamPath RoamPath;
         public static Logger Log;
@@ -30,6 +31,7 @@ namespace ZeroIn
         {
             try
             {
+                PluginDir = PluginDirectory; // Store for access by other classes
                 Chat.WriteLine("[ZeroIn] Plugin starting...", ChatColor.Green);
                 Logger.Information("Loaded!");
 
@@ -56,7 +58,7 @@ namespace ZeroIn
 
                 Chat.WriteLine("[ZeroIn] Loading map coordinates...", ChatColor.White);
                 MapCoords = new MapCoordinateLoader(CommonParameters.PluginDataPath);
-                string mapCoordsPath = System.IO.Path.Combine(PluginDirectory, "PlanetMap", "MapCoordinates.xml");
+                string mapCoordsPath = System.IO.Path.Combine(PluginDir, "PlanetMap", "MapCoordinates.xml");
                 MapCoords.LoadCoordinates(mapCoordsPath);
                 Chat.WriteLine("[ZeroIn] Map coordinates loaded successfully", ChatColor.Green);
 
