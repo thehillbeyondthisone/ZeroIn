@@ -55,57 +55,6 @@ namespace ZeroIn
                     Root.FindChild("EnableCombat", out _enableCombat);
                     Root.FindChild("EnableLooting", out _enableLooting);
                     Root.FindChild("EnableHealthCheck", out _enableHealthCheck);
-
-                    // Wire up event handlers for visual settings with chat feedback
-                    if (_showDetectionRadius != null)
-                    {
-                        _showDetectionRadius.Clicked += (s, e) =>
-                        {
-                            ZeroIn.Config.ShowDetectionRadius = _showDetectionRadius.IsChecked;
-                            Chat.WriteLine($"[ZeroIn] Detection radius: {(ZeroIn.Config.ShowDetectionRadius ? "ON" : "OFF")}",
-                                ZeroIn.Config.ShowDetectionRadius ? ChatColor.Green : ChatColor.Red);
-                        };
-                    }
-
-                    if (_showPlayerMarkers != null)
-                    {
-                        _showPlayerMarkers.Clicked += (s, e) =>
-                        {
-                            ZeroIn.Config.ShowPlayerMarkers = _showPlayerMarkers.IsChecked;
-                            Chat.WriteLine($"[ZeroIn] Player markers: {(ZeroIn.Config.ShowPlayerMarkers ? "ON" : "OFF")}",
-                                ZeroIn.Config.ShowPlayerMarkers ? ChatColor.Green : ChatColor.Red);
-                        };
-                    }
-
-                    if (_showAFKPaths != null)
-                    {
-                        _showAFKPaths.Clicked += (s, e) =>
-                        {
-                            ZeroIn.Config.ShowAFKPaths = _showAFKPaths.IsChecked;
-                            Chat.WriteLine($"[ZeroIn] AFK paths: {(ZeroIn.Config.ShowAFKPaths ? "ON" : "OFF")}",
-                                ZeroIn.Config.ShowAFKPaths ? ChatColor.Green : ChatColor.Red);
-                        };
-                    }
-
-                    if (_tagOnlyMode != null)
-                    {
-                        _tagOnlyMode.Clicked += (s, e) =>
-                        {
-                            ZeroIn.Config.TagOnlyMode = _tagOnlyMode.IsChecked;
-                            Chat.WriteLine($"[ZeroIn] Tag-only mode: {(ZeroIn.Config.TagOnlyMode ? "ON (names only)" : "OFF (shapes visible)")}",
-                                ZeroIn.Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
-                        };
-                    }
-
-                    if (_continuousScanning != null)
-                    {
-                        _continuousScanning.Clicked += (s, e) =>
-                        {
-                            ZeroIn.Config.ContinuousScanning = _continuousScanning.IsChecked;
-                            Chat.WriteLine($"[ZeroIn] Continuous scanning: {(ZeroIn.Config.ContinuousScanning ? "ON" : "OFF")}",
-                                ZeroIn.Config.ContinuousScanning ? ChatColor.Green : ChatColor.Red);
-                        };
-                    }
                 }
             }
             catch (System.Exception ex)

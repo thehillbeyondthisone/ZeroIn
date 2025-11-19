@@ -295,7 +295,10 @@ namespace ZeroIn
                     ZeroIn.Ipc.SetChannelId((byte)ZeroIn.Config.CoreConfig.ChannelId);
 
                 if (displayMsg)
-                    ZeroIn.Log.Information("Scanner config saved!", ChatColor.Green);
+                {
+                    Chat.WriteLine("[ZeroIn] Configuration saved successfully!", ChatColor.Green);
+                    ZeroIn.Log.Information("Scanner config saved!");
+                }
             }
             catch (Exception ex)
             {

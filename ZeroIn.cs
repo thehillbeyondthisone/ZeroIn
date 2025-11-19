@@ -74,6 +74,7 @@ namespace ZeroIn
                         Chat.WriteLine("=== ZeroIn Commands ===", ChatColor.Yellow);
                         Chat.WriteLine("/zeroin - Open ZeroIn UI window", ChatColor.White);
                         Chat.WriteLine("/zeroin help - Show this help menu", ChatColor.White);
+                        Chat.WriteLine("/status - Show current ZeroIn status and settings", ChatColor.White);
                         Chat.WriteLine("/scan - List all detected players", ChatColor.White);
                         Chat.WriteLine("/radar - Toggle all radar visuals on/off", ChatColor.White);
                         Chat.WriteLine("/radar radius - Toggle detection radius circle", ChatColor.White);
@@ -231,7 +232,26 @@ namespace ZeroIn
                     Chat.WriteLine("[ZeroIn] This enables detailed logging for scanning, targeting, and grid generation.", ChatColor.White);
                 });
 
-                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /debug, /debugxml", ChatColor.Green);
+                // Add status command to show current settings
+                Chat.RegisterCommand("status", (string command, string[] param, ChatWindow chatWindow) =>
+                {
+                    Chat.WriteLine("=== ZeroIn Status ===", ChatColor.Yellow);
+                    Chat.WriteLine($"Radar: {(Radar.Enabled ? "ON" : "OFF")}", Radar.Enabled ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"  Detection radius: {(Config.ShowDetectionRadius ? "ON" : "OFF")}", Config.ShowDetectionRadius ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"  Player markers: {(Config.ShowPlayerMarkers ? "ON" : "OFF")}", Config.ShowPlayerMarkers ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"  AFK paths: {(Config.ShowAFKPaths ? "ON" : "OFF")}", Config.ShowAFKPaths ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"  Tag-only mode: {(Config.TagOnlyMode ? "ON" : "OFF")}", Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"Continuous scanning: {(Config.ContinuousScanning ? "ON" : "OFF")}", Config.ContinuousScanning ? ChatColor.Green : ChatColor.Red);
+
+                    var detected = Scanner.GetDetectedCharacters();
+                    int afkCount = detected.Count(p => p.IsLikelyAFK());
+                    Chat.WriteLine($"Detected players: {detected.Count} ({afkCount} AFK)", ChatColor.LightBlue);
+
+                    Chat.WriteLine($"Combat enabled: {(Config.EnableCombat ? "ON" : "OFF")}", Config.EnableCombat ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"Verbose debug: {(Config.VerboseDebug ? "ON" : "OFF")}", Config.VerboseDebug ? ChatColor.Green : ChatColor.Red);
+                });
+
+                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /status, /debug, /debugxml", ChatColor.Green);
 
                 Chat.WriteLine("[ZeroIn] Initializing state machine...", ChatColor.White);
                 StateMachine = new RoamStateMachine(new MobTargeting(Config), Scanner, Map, Config.CoreConfig.OnInjectEnable);
