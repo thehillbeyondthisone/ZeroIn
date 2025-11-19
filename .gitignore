@@ -47,3 +47,9 @@ bld/
 
 # Output/Results
 ScanResults/
+
+# Temporary files
+*.png
+*.jpg
+*.jpeg
+*.zip

@@ -1,5 +1,7 @@
 using AOSharp.Core;
+using AOSharp.Core.UI;
 using AOSharp.Pathfinding;
+using System.Linq;
 
 namespace ZeroIn
 {
@@ -71,6 +73,7 @@ namespace ZeroIn
             var localPos = localPlayer.Position;
 
             // Scan all nearby players
+            int scanned = 0;
             foreach (var player in DynelManager.Players)
             {
                 if (player == null || !player.IsValid) continue;
@@ -93,6 +96,7 @@ namespace ZeroIn
                     Playfield.ModelIdentity.Instance,
                     Playfield.Name
                 );
+                scanned++;
             }
         }
     }

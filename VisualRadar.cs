@@ -61,11 +61,32 @@ namespace ZeroIn
                 if (localPlayer == null || !localPlayer.IsValid)
                     return;
 
-                // Draw detection radius circle around player
-                DrawDetectionRadius(localPlayer);
+                // Draw detection radius circle around player (if enabled)
+                if (_config.ShowDetectionRadius)
+                {
+                    DrawDetectionRadius(localPlayer);
+                }
+                else if (_detectionRadiusPath != null)
+                {
+                    // Hide detection radius if toggled off
+                    _detectionRadiusPath.Delete();
+                    _detectionRadiusPath = null;
+                }
 
-                // Draw detected players
-                DrawDetectedPlayers(localPlayer);
+                // Draw detected players (if enabled)
+                if (_config.ShowPlayerMarkers)
+                {
+                    DrawDetectedPlayers(localPlayer);
+                }
+                else
+                {
+                    // Clean up player markers if toggled off
+                    foreach (var marker in _playerMarkers.Values)
+                    {
+                        marker.Delete();
+                    }
+                    _playerMarkers.Clear();
+                }
 
                 _pathsCreated = true;
             }
@@ -85,7 +106,7 @@ namespace ZeroIn
             if (_detectionRadiusPath == null)
             {
                 _detectionRadiusPath = SPath.Create();
-                _detectionRadiusPath.Name = "ZeroIn_DetectionRadius";
+                _detectionRadiusPath.Name = $"[SCAN_RADIUS] {radius:F0}m";
                 _detectionRadiusPath.PlayfieldId = Playfield.ModelIdentity.Instance;
 
                 // Create a circle with 36 points (10 degree increments)
@@ -133,21 +154,27 @@ namespace ZeroIn
 
                 // Determine marker size based on AFK status (AFK players get larger markers)
                 bool isAfk = player.IsLikelyAFK();
-                float markerSize = isAfk ? 3f : 2f;
+
+                // Skip AFK players if ShowAFKPaths is disabled
+                if (isAfk && !_config.ShowAFKPaths)
+                    continue;
+
+                // Skip active (non-AFK) players if ShowActivePlayerPaths is disabled
+                if (!isAfk && !_config.ShowActivePlayerPaths)
+                    continue;
+
+                float markerSize = isAfk ? _config.AFKMarkerSize : _config.ActiveMarkerSize;
+                string markerType = isAfk ? "AFK_PLAYER" : "ACTIVE_PLAYER";
 
                 // Create or update marker for this player
                 if (!_playerMarkers.ContainsKey(player.CharId))
                 {
                     var markerPath = SPath.Create();
-                    markerPath.Name = $"ZeroIn_Player_{player.CharId}_{(isAfk ? "AFK" : "Active")}";
+                    markerPath.Name = $"[{markerType}] {player.Name}";
                     markerPath.PlayfieldId = Playfield.ModelIdentity.Instance;
 
-                    // Create a small cross marker
-                    markerPath.Waypoints.Add(new Vector3(playerPos.X - markerSize, playerPos.Y, playerPos.Z));
-                    markerPath.Waypoints.Add(new Vector3(playerPos.X + markerSize, playerPos.Y, playerPos.Z));
-                    markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z));
-                    markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z - markerSize));
-                    markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z + markerSize));
+                    // Create marker shape
+                    AddMarkerShape(markerPath, playerPos, markerSize, _config.PlayerMarkerShape, isAfk);
 
                     _playerMarkers[player.CharId] = markerPath;
                 }
@@ -155,14 +182,10 @@ namespace ZeroIn
                 {
                     // Update existing marker position and size
                     var markerPath = _playerMarkers[player.CharId];
-                    markerPath.Name = $"ZeroIn_Player_{player.CharId}_{(isAfk ? "AFK" : "Active")}";
+                    markerPath.Name = $"[{markerType}] {player.Name}";
 
                     markerPath.Waypoints.Clear();
-                    markerPath.Waypoints.Add(new Vector3(playerPos.X - markerSize, playerPos.Y, playerPos.Z));
-                    markerPath.Waypoints.Add(new Vector3(playerPos.X + markerSize, playerPos.Y, playerPos.Z));
-                    markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z));
-                    markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z - markerSize));
-                    markerPath.Waypoints.Add(new Vector3(playerPos.X, playerPos.Y, playerPos.Z + markerSize));
+                    AddMarkerShape(markerPath, playerPos, markerSize, _config.PlayerMarkerShape, isAfk);
                 }
             }
 
@@ -172,6 +195,73 @@ namespace ZeroIn
             {
                 _playerMarkers[id].Delete();
                 _playerMarkers.Remove(id);
+            }
+        }
+
+        /// <summary>
+        /// Adds waypoints to create different marker shapes
+        /// </summary>
+        private void AddMarkerShape(SPath path, Vector3 center, float size, string shape, bool isAfk)
+        {
+            // Tag-only mode: just a single point (shows only the path name as a tag)
+            if (_config.TagOnlyMode)
+            {
+                path.Waypoints.Add(center);
+                return;
+            }
+
+            // AFK players get diamond markers, active players get the configured shape
+            string actualShape = isAfk ? "diamond" : shape;
+
+            switch (actualShape.ToLower())
+            {
+                case "cross":
+                    // Cross shape (X pattern)
+                    path.Waypoints.Add(new Vector3(center.X - size, center.Y, center.Z));
+                    path.Waypoints.Add(new Vector3(center.X + size, center.Y, center.Z));
+                    path.Waypoints.Add(new Vector3(center.X, center.Y, center.Z));
+                    path.Waypoints.Add(new Vector3(center.X, center.Y, center.Z - size));
+                    path.Waypoints.Add(new Vector3(center.X, center.Y, center.Z + size));
+                    break;
+
+                case "circle":
+                    // Circle shape (8 points)
+                    int numPoints = 8;
+                    for (int i = 0; i <= numPoints; i++) // <= to close the circle
+                    {
+                        float angle = (float)(i * Math.PI * 2 / numPoints);
+                        float x = center.X + size * (float)Math.Cos(angle);
+                        float z = center.Z + size * (float)Math.Sin(angle);
+                        path.Waypoints.Add(new Vector3(x, center.Y, z));
+                    }
+                    break;
+
+                case "square":
+                    // Square shape
+                    path.Waypoints.Add(new Vector3(center.X - size, center.Y, center.Z - size));
+                    path.Waypoints.Add(new Vector3(center.X + size, center.Y, center.Z - size));
+                    path.Waypoints.Add(new Vector3(center.X + size, center.Y, center.Z + size));
+                    path.Waypoints.Add(new Vector3(center.X - size, center.Y, center.Z + size));
+                    path.Waypoints.Add(new Vector3(center.X - size, center.Y, center.Z - size)); // Close the square
+                    break;
+
+                case "diamond":
+                    // Diamond shape (rotated square)
+                    path.Waypoints.Add(new Vector3(center.X, center.Y, center.Z - size));       // Top
+                    path.Waypoints.Add(new Vector3(center.X + size, center.Y, center.Z));      // Right
+                    path.Waypoints.Add(new Vector3(center.X, center.Y, center.Z + size));       // Bottom
+                    path.Waypoints.Add(new Vector3(center.X - size, center.Y, center.Z));      // Left
+                    path.Waypoints.Add(new Vector3(center.X, center.Y, center.Z - size));       // Close
+                    break;
+
+                default:
+                    // Default to cross if invalid shape specified
+                    path.Waypoints.Add(new Vector3(center.X - size, center.Y, center.Z));
+                    path.Waypoints.Add(new Vector3(center.X + size, center.Y, center.Z));
+                    path.Waypoints.Add(new Vector3(center.X, center.Y, center.Z));
+                    path.Waypoints.Add(new Vector3(center.X, center.Y, center.Z - size));
+                    path.Waypoints.Add(new Vector3(center.X, center.Y, center.Z + size));
+                    break;
             }
         }
 

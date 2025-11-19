@@ -40,6 +40,25 @@ namespace ZeroIn
         public bool EnableLooting = false;
         public bool EnableHealthCheck = false;
 
+        // Visual radar settings
+        public float AFKMarkerSize = 5f; // AFK players get larger markers
+        public float ActiveMarkerSize = 2f; // Active players get smaller markers
+        public string PlayerMarkerShape = "cross"; // cross, circle, square, diamond
+        public bool ShowDetectionRadius = true; // Show circular detection radius
+        public bool ShowPlayerMarkers = true; // Show player position markers
+        public bool ShowAFKPaths = true; // Show paths to AFK players
+        public bool ShowActivePlayerPaths = true; // Show paths to active (non-AFK) players
+        public bool TagOnlyMode = true; // If true, only show player name tags, no marker shapes (DEFAULT)
+
+        // Debug settings
+        public bool VerboseDebug = false; // Enable verbose debug output to console
+
+        // Combat targeting settings (simple version for ZeroIn)
+        public bool HostileMobsOnly = true; // Only target hostile/aggressive mobs
+        public int MinMobLevel = 1;
+        public int MaxMobLevel = 220;
+        public System.Collections.Generic.List<string> MobBlacklist = new System.Collections.Generic.List<string>(); // Mob names to never attack
+
         public ZeroInConfig()
         {
             CoreConfig = new BuddyCoreConfig();

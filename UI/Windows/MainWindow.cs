@@ -295,7 +295,10 @@ namespace ZeroIn
                     ZeroIn.Ipc.SetChannelId((byte)ZeroIn.Config.CoreConfig.ChannelId);
 
                 if (displayMsg)
-                    ZeroIn.Log.Information("Scanner config saved!", ChatColor.Green);
+                {
+                    Chat.WriteLine("[ZeroIn] Configuration saved successfully!", ChatColor.Green);
+                    ZeroIn.Log.Information("Scanner config saved!");
+                }
             }
             catch (Exception ex)
             {
@@ -323,16 +326,14 @@ namespace ZeroIn
                     return;
                 }
 
-                var waypoints = ZeroIn.RoamPath.SPath.Waypoints.ToList();
-
-                // Check if path forms a closed loop
-                if (!global::ZeroIn.Scanner.GridGenerator.IsClosedLoop(waypoints))
+                // Check if path is marked as a loop in the path editor
+                if (!ZeroIn.RoamPath.SPath.IsLooping)
                 {
-                    Chat.WriteLine("[ZeroIn] Path must be a closed loop! First and last points should be near each other.", ChatColor.Red);
-                    Chat.WriteLine($"[ZeroIn] Distance between first/last: {AOSharp.Common.GameData.Vector3.Distance(waypoints[0], waypoints[waypoints.Count - 1]):F1}m", ChatColor.Yellow);
-                    Chat.WriteLine("[ZeroIn] Tip: Use 'Toggle Loop' in the path editor, or manually add a point near the start.", ChatColor.Yellow);
+                    Chat.WriteLine("[ZeroIn] Path must be marked as a loop! Use 'Toggle Loop' in the path editor.", ChatColor.Red);
                     return;
                 }
+
+                var waypoints = ZeroIn.RoamPath.SPath.Waypoints.ToList();
 
                 Chat.WriteLine("[ZeroIn] Generating lawnmower search pattern...", ChatColor.Yellow);
 

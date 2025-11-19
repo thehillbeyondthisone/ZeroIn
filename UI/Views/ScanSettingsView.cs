@@ -15,6 +15,11 @@ namespace ZeroIn
         private Checkbox _saveToCsv;
         private Checkbox _logToConsole;
         private Checkbox _continuousScanning;
+        private Button _toggleDetectionRadius;
+        private Button _togglePlayerMarkers;
+        private Button _toggleAFKPaths;
+        private Button _toggleActivePlayerPaths;
+        private Button _toggleTagOnly;
         private Checkbox _enableCombat;
         private Checkbox _enableLooting;
         private Checkbox _enableHealthCheck;
@@ -44,9 +49,65 @@ namespace ZeroIn
                     Root.FindChild("SaveToCsv", out _saveToCsv);
                     Root.FindChild("LogToConsole", out _logToConsole);
                     Root.FindChild("ContinuousScanning", out _continuousScanning);
+                    Root.FindChild("ToggleDetectionRadius", out _toggleDetectionRadius);
+                    Root.FindChild("TogglePlayerMarkers", out _togglePlayerMarkers);
+                    Root.FindChild("ToggleAFKPaths", out _toggleAFKPaths);
+                    Root.FindChild("ToggleActivePlayerPaths", out _toggleActivePlayerPaths);
+                    Root.FindChild("ToggleTagOnly", out _toggleTagOnly);
                     Root.FindChild("EnableCombat", out _enableCombat);
                     Root.FindChild("EnableLooting", out _enableLooting);
                     Root.FindChild("EnableHealthCheck", out _enableHealthCheck);
+
+                    // Wire up button click handlers with instant feedback
+                    if (_toggleDetectionRadius != null)
+                    {
+                        _toggleDetectionRadius.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.ShowDetectionRadius = !ZeroIn.Config.ShowDetectionRadius;
+                            Chat.WriteLine($"[ZeroIn] Detection radius: {(ZeroIn.Config.ShowDetectionRadius ? "ON" : "OFF")}",
+                                ZeroIn.Config.ShowDetectionRadius ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    if (_togglePlayerMarkers != null)
+                    {
+                        _togglePlayerMarkers.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.ShowPlayerMarkers = !ZeroIn.Config.ShowPlayerMarkers;
+                            Chat.WriteLine($"[ZeroIn] Player markers: {(ZeroIn.Config.ShowPlayerMarkers ? "ON" : "OFF")}",
+                                ZeroIn.Config.ShowPlayerMarkers ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    if (_toggleAFKPaths != null)
+                    {
+                        _toggleAFKPaths.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.ShowAFKPaths = !ZeroIn.Config.ShowAFKPaths;
+                            Chat.WriteLine($"[ZeroIn] AFK player paths: {(ZeroIn.Config.ShowAFKPaths ? "ON" : "OFF")}",
+                                ZeroIn.Config.ShowAFKPaths ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    if (_toggleActivePlayerPaths != null)
+                    {
+                        _toggleActivePlayerPaths.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.ShowActivePlayerPaths = !ZeroIn.Config.ShowActivePlayerPaths;
+                            Chat.WriteLine($"[ZeroIn] Active player paths: {(ZeroIn.Config.ShowActivePlayerPaths ? "ON" : "OFF")}",
+                                ZeroIn.Config.ShowActivePlayerPaths ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    if (_toggleTagOnly != null)
+                    {
+                        _toggleTagOnly.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.TagOnlyMode = !ZeroIn.Config.TagOnlyMode;
+                            Chat.WriteLine($"[ZeroIn] Tag-only mode: {(ZeroIn.Config.TagOnlyMode ? "ON (names only)" : "OFF (shapes visible)")}",
+                                ZeroIn.Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
                 }
             }
             catch (System.Exception ex)
@@ -84,6 +145,8 @@ namespace ZeroIn
 
                 if (_continuousScanning != null)
                     _continuousScanning.SetValue(config.ContinuousScanning);
+
+                // Button labels are static in XML - toggles provide chat feedback only
 
                 if (_enableCombat != null)
                     _enableCombat.SetValue(config.EnableCombat);
@@ -129,6 +192,9 @@ namespace ZeroIn
 
                 if (_continuousScanning != null)
                     config.ContinuousScanning = _continuousScanning.IsChecked;
+
+                // Visual settings are managed by button clicks, no need to update from buttons here
+                // They update config directly when clicked
 
                 if (_enableCombat != null)
                     config.EnableCombat = _enableCombat.IsChecked;

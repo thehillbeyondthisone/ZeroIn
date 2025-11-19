@@ -1,0 +1,87 @@
+<?xml version="1.0" ?><root>
+	<Playfield id="120" name="Camelot Castle" x="33430" xscale="7.9" z="25242" zscale="7.9"/>
+	<Playfield id="125" name="Smugglers Den" x="33428" xscale="7.9" z="25607" zscale="7.9"/>
+	<Playfield id="127" name="Condemned Subway" x="33380" xscale="7.9" z="27520" zscale="7.9"/>
+	<Playfield id="152" name="The Grid" x="-93000000" xscale="0.00001" z="101700000" zscale="0.00001"/>
+	<Playfield id="1931" name="Temple of Three Winds" x="33437" xscale="7.9" z="26962" zscale="7.9"/>
+	<Playfield id="1933" name="Steps of Madness" x="33467" xscale="7.9" z="26599" zscale="7.9"/>
+	<Playfield id="1941" name="Foremans Office" x="33361" xscale="7.9" z="26247" zscale="7.9"/>
+	<Playfield id="1943" name="Inner Sanctum" x="33434" xscale="7.9" z="24832" zscale="7.9"/>
+	<Playfield id="4107" name="The Fixer Grid" x="45000000" xscale="0.00001" z="101700000" zscale="0.00001"/>
+	<Playfield id="4805" name="Crypt of Home" x="33348" xscale="7.9" z="25891" zscale="7.9"/>
+	<Playfield id="505" name="Avalon" x="35214" xscale="1.0" z="44561" zscale="1.0"/>
+	<Playfield id="540" name="Old Athen" x="39521" xscale="1.0" z="40670" zscale="1.0"/>
+	<Playfield id="545" name="West Athen" x="39122" xscale="1.0" z="40660" zscale="1.0"/>
+	<Playfield id="550" name="Athen Shire" x="37065" xscale="1.0" z="39823" zscale="1.0"/>
+	<Playfield id="551" name="Wailing Wastes" x="37078" xscale="1.0" z="41020" zscale="1.0"/>
+	<Playfield id="556" name="Coast of Peace" x="38500" xscale="1.0" z="25060" zscale="1.0"/>
+	<Playfield id="560" name="Mort" x="41975" xscale="1.0" z="45030" zscale="1.0"/>
+	<Playfield id="565" name="Newland Desert" x="41950" xscale="1.0" z="42166" zscale="1.0"/>
+	<Playfield id="566" name="Newland City" x="42862" xscale="1.0" z="42389" zscale="1.0"/>
+	<Playfield id="567" name="Newland" x="41950" xscale="1.0" z="42166" zscale="1.0"/>
+	<Playfield id="570" name="Perpetual Wastelands" x="45486" xscale="1.0" z="45364" zscale="1.0"/>
+	<Playfield id="585" name="Aegean" x="39721" xscale="1.0" z="39429" zscale="1.0"/>
+	<Playfield id="586" name="Wartorn Valley" x="39743" xscale="1.0" z="40342" zscale="1.0"/>
+	<Playfield id="590" name="Central Artery Valley" x="42835" xscale="1.0" z="36042" zscale="1.0"/>
+	<Playfield id="595" name="Deep Artery Valley" x="46224" xscale="1.0" z="35132" zscale="1.0"/>
+	<Playfield id="600" name="Varmint Woods" x="41975" xscale="1.0" z="39148" zscale="1.0"/>
+	<Playfield id="605" name="Belial Forest" x="46215" xscale="1.0" z="32165" zscale="1.0"/>
+	<Playfield id="610" name="Southern Artery Valley" x="42830" xscale="1.0" z="33283" zscale="1.0"/>
+	<Playfield id="615" name="Southern Fouls Hills" x="46680" xscale="1.0" z="24729" zscale="1.0"/>
+	<Playfield id="620" name="Eastern Fouls Plain" x="46689" xscale="1.0" z="27864" zscale="1.0"/>
+	<Playfield id="625" name="Milky Way" x="41872" xscale="1.0" z="30640" zscale="0.993"/>
+	<Playfield id="630" name="Pleasant Meadows" x="43490" xscale="1.0" z="27918" zscale="1.0"/>
+	<Playfield id="635" name="Stret East Bank" x="40855" xscale="1.0" z="33041" zscale="1.0"/>
+	<Playfield id="640" name="Tir" x="47921" xscale="1.0" z="39716" zscale="1.0"/>
+	<Playfield id="641" name="Tir Arena" x="47921" xscale="1.0" z="39716" zscale="1.0"/>
+	<Playfield id="646" name="Tir County" x="46178" xscale="1.0" z="39071" zscale="1.0"/>
+	<Playfield id="647" name="Greater Tir County" x="46175" xscale="1.0" z="39073" zscale="1.0"/>
+	<Playfield id="650" name="Upper Stret East Bank" x="40859" xscale="1.0" z="36062" zscale="1.0"/>
+	<Playfield id="655" name="Andromeda" x="37179" xscale="1.0" z="31331" zscale="1.0"/>
+	<Playfield id="656" name="Coast of Tranquility" x="38500" xscale="1.0" z="25060" zscale="1.0"/>
+	<Playfield id="665" name="Broken Shores" x="30990" xscale="1.0" z="29450" zscale="0.99"/>
+	<Playfield id="670" name="Clondyke" x="37169" xscale="1.0" z="27031" zscale="1.0"/>
+	<Playfield id="685" name="Galway County" x="34500" xscale="1.0" z="29814" zscale="1.0"/>
+	<Playfield id="687" name="Galway Shire" x="34500" xscale="1.0" z="29814" zscale="1.0"/>
+	<Playfield id="695" name="Lush Fields" x="39945" xscale="1.0" z="27030" zscale="1.0"/>
+	<Playfield id="696" name="Mutant Domain" x="41950" xscale="1.0" z="27720" zscale="1.0"/>
+	<Playfield id="700" name="Omni-1 HQ" x="43187" xscale="1.0" z="27102" zscale="1.0"/>
+	<Playfield id="705" name="Omni-1 Entertainment" x="43756" xscale="1.0" z="26526" zscale="1.0"/>
+	<Playfield id="706" name="Omni Entertainment Arena" x="44151" xscale="1.0" z="26896" zscale="1.0"/>
+	<Playfield id="710" name="Omni-1 Trade" x="43313" xscale="1.0" z="27607" zscale="1.0"/>
+	<Playfield id="716" name="Omni Forest" x="44526" xscale="1.0" z="24729" zscale="1.0"/>
+	<Playfield id="717" name="Greater Omni Forest" x="44526" xscale="1.0" z="24729" zscale="1.0"/>
+	<Playfield id="730" name="Rome Red district" x="34025" xscale="1.0" z="30760" zscale="1.0"/>
+	<Playfield id="735" name="Rome Blue district" x="33895" xscale="1.0" z="30760" zscale="1.0"/>
+	<Playfield id="740" name="Rome Green district" x="33815" xscale="1.0" z="30760" zscale="1.0"/>
+	<Playfield id="750" name="The Reck" x="32350" xscale="0.995" z="27360" zscale="0.98"/>
+	<Playfield id="760" name="4 Holes" x="38486" xscale="1.0" z="33943" zscale="1.0"/>
+	<Playfield id="790" name="Stret West Bank" x="38081" xscale="1.0" z="36332" zscale="1.0"/>
+	<Playfield id="791" name="Holes in the Wall" x="38081" xscale="1.0" z="37660" zscale="1.0"/>
+	<Playfield id="795" name="The Longest Road" x="33884" xscale="0.993" z="39227" zscale="1.0"/>
+	<Playfield id="800" name="Borealis" x="37107" xscale="1.0" z="38360" zscale="1.0"/>
+	<Playfield id="6550" name="Uturn Canyon" x="39915" xscale="1.0" z="31480" zscale="0.83"/>
+	<Playfield id="6551" name="Uturn Forest" x="39915" xscale="1.0" z="31480" zscale="0.83"/>
+	<Playfield id="6553" name="Andromeda - Arete Landing" x="37179" xscale="1.0" z="31331" zscale="1.0"/>
+	<Playfield id="4364" name="Unicorn Outpost" x="40155" xscale="2.5" z="34043" zscale="2.5"/>
+	<Playfield id="4368" name="Unicorn Outpost - Lower Level" x="39688" xscale="2.63333" z="33127" zscale="2.63333"/>
+	<Playfield id="4374" name="Sector 10" x="39512" xscale="2.63333" z="32364" zscale="2.63333"/>
+	<Playfield id="4474" name="Sector 10 - The Pit (Team)" x="39415" xscale="2.63333" z="32345" zscale="2.63333"/>
+	<Playfield id="4475" name="Sector 10 - The Pit (Solo)" x="39415" xscale="2.63333" z="32345" zscale="2.63333"/>
+	<Playfield id="4365" name="Sector 13" x="39590" xscale="2.63333" z="30400" zscale="2.63333"/>
+	<Playfield id="4366" name="Sector 28" x="39596" xscale="2.63333" z="29707" zscale="2.63333"/>
+	<Playfield id="4367" name="Sector 35" x="39583" xscale="2.63333" z="29058" zscale="2.63333"/>
+	<Playfield id="4370" name="Sector 42" x="39512" xscale="2.63333" z="28254" zscale="2.63333"/>
+	<Playfield id="4468" name="Sector 7" x="39675" xscale="2.63333" z="31884" zscale="2.63333"/>
+	<Playfield id="6123" name="Sector 7 - Crashed Alien Ship" x="33778" xscale="7.9" z="26862" zscale="7.9"/>
+	<Playfield id="5001" name="Playa del Desierto" x="39643" xscale="2.63333" z="25390" zscale="2.63333"/>
+	<Playfield id="5002" name="Montroyal City" x="39280" xscale="2.63333" z="25923" zscale="2.63333"/>
+	<Playfield id="6010" name="Serenity Islands" x="38886" xscale="2.63333" z="25799" zscale="2.63333"/>
+	<Playfield id="6300" name="SBC-Xpm Site Alpha-Romeo (Level 10-30)" x="39522" xscale="2.63333" z="27380" zscale="2.63333"/>
+	<Playfield id="6301" name="SBC-Xpm Site Alpha-Romeo (Level 31-60)" x="39522" xscale="2.63333" z="27380" zscale="2.63333"/>
+	<Playfield id="6302" name="SBC-Xpm Site Alpha-Romeo (Level 61-100)" x="39522" xscale="2.63333" z="27380" zscale="2.63333"/>
+	<Playfield id="6303" name="SBC-Xpm Site Alpha-Romeo (Level 101-150)" x="39522" xscale="2.63333" z="27380" zscale="2.63333"/>
+	<Playfield id="6304" name="SBC-Xpm Site Alpha-Romeo (Level 151-200)" x="39522" xscale="2.63333" z="27380" zscale="2.63333"/>
+	<Playfield id="6305" name="SBC-Xpm Site Alpha-Romeo (Level 201-214)" x="39522" xscale="2.63333" z="27380" zscale="2.63333"/>
+	<Playfield id="6306" name="SBC-Xpm Site Alpha-Romeo (Level 215-220)" x="39522" xscale="2.63333" z="27380" zscale="2.63333"/>
+</root>

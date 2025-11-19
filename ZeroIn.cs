@@ -69,6 +69,23 @@ namespace ZeroIn
                 Chat.WriteLine("[ZeroIn] Registering commands...", ChatColor.White);
                 Chat.RegisterCommand("zeroin", (string command, string[] param, ChatWindow chatWindow) =>
                 {
+                    if (param.Length > 0 && param[0].ToLower() == "help")
+                    {
+                        Chat.WriteLine("=== ZeroIn Commands ===", ChatColor.Yellow);
+                        Chat.WriteLine("/zeroin - Open ZeroIn UI window", ChatColor.White);
+                        Chat.WriteLine("/zeroin help - Show this help menu", ChatColor.White);
+                        Chat.WriteLine("/status - Show current ZeroIn status and settings", ChatColor.White);
+                        Chat.WriteLine("/scan - List all detected players", ChatColor.White);
+                        Chat.WriteLine("/radar - Toggle all radar visuals on/off", ChatColor.White);
+                        Chat.WriteLine("/radar radius - Toggle detection radius circle", ChatColor.White);
+                        Chat.WriteLine("/radar players - Toggle player markers", ChatColor.White);
+                        Chat.WriteLine("/radar afk - Toggle AFK player paths", ChatColor.White);
+                        Chat.WriteLine("/radar active - Toggle active player paths", ChatColor.White);
+                        Chat.WriteLine("/radar tags - Toggle tag-only mode", ChatColor.White);
+                        Chat.WriteLine("/radar help - Show radar command help", ChatColor.White);
+                        Chat.WriteLine("/debug - Toggle verbose debug logging", ChatColor.White);
+                        return;
+                    }
                     Chat.WriteLine("[ZeroIn] Command received: /zeroin", ChatColor.Green);
                     OpenMainWindow();
                 });
@@ -96,8 +113,63 @@ namespace ZeroIn
                 // Add command to toggle visual radar
                 Chat.RegisterCommand("radar", (string command, string[] param, ChatWindow chatWindow) =>
                 {
-                    Chat.WriteLine("[ZeroIn] Command received: /radar", ChatColor.Green);
-                    Radar.Toggle();
+                    if (param.Length == 0)
+                    {
+                        // No parameters - toggle entire radar
+                        Radar.Toggle();
+                        return;
+                    }
+
+                    string subCommand = param[0].ToLower();
+                    switch (subCommand)
+                    {
+                        case "radius":
+                            Config.ShowDetectionRadius = !Config.ShowDetectionRadius;
+                            Chat.WriteLine($"[ZeroIn] Detection radius: {(Config.ShowDetectionRadius ? "ON" : "OFF")}",
+                                Config.ShowDetectionRadius ? ChatColor.Green : ChatColor.Red);
+                            break;
+
+                        case "players":
+                        case "markers":
+                            Config.ShowPlayerMarkers = !Config.ShowPlayerMarkers;
+                            Chat.WriteLine($"[ZeroIn] Player markers: {(Config.ShowPlayerMarkers ? "ON" : "OFF")}",
+                                Config.ShowPlayerMarkers ? ChatColor.Green : ChatColor.Red);
+                            break;
+
+                        case "tags":
+                        case "tagonly":
+                            Config.TagOnlyMode = !Config.TagOnlyMode;
+                            Chat.WriteLine($"[ZeroIn] Tag-only mode: {(Config.TagOnlyMode ? "ON (names only)" : "OFF (shapes visible)")}",
+                                Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
+                            break;
+
+                        case "afk":
+                            Config.ShowAFKPaths = !Config.ShowAFKPaths;
+                            Chat.WriteLine($"[ZeroIn] AFK paths: {(Config.ShowAFKPaths ? "ON" : "OFF")}",
+                                Config.ShowAFKPaths ? ChatColor.Green : ChatColor.Red);
+                            break;
+
+                        case "active":
+                            Config.ShowActivePlayerPaths = !Config.ShowActivePlayerPaths;
+                            Chat.WriteLine($"[ZeroIn] Active player paths: {(Config.ShowActivePlayerPaths ? "ON" : "OFF")}",
+                                Config.ShowActivePlayerPaths ? ChatColor.Green : ChatColor.Red);
+                            break;
+
+                        case "help":
+                            Chat.WriteLine("=== ZeroIn Radar Commands ===", ChatColor.Yellow);
+                            Chat.WriteLine("/radar - Toggle all radar visuals", ChatColor.White);
+                            Chat.WriteLine("/radar radius - Toggle detection radius circle", ChatColor.White);
+                            Chat.WriteLine("/radar players - Toggle player markers", ChatColor.White);
+                            Chat.WriteLine("/radar afk - Toggle AFK player paths", ChatColor.White);
+                            Chat.WriteLine("/radar active - Toggle active (non-AFK) player paths", ChatColor.White);
+                            Chat.WriteLine("/radar tags - Toggle tag-only mode (names only, no shapes)", ChatColor.White);
+                            break;
+
+                        default:
+                            Chat.WriteLine($"[ZeroIn] Unknown radar option: {subCommand}", ChatColor.Red);
+                            Chat.WriteLine("[ZeroIn] Use /radar help for available options", ChatColor.Yellow);
+                            break;
+                    }
                 });
 
                 // Add diagnostic command to debug XML file loading
@@ -159,7 +231,36 @@ namespace ZeroIn
                     }
                 });
 
-                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /debugxml", ChatColor.Green);
+                // Add command to toggle verbose debug
+                Chat.RegisterCommand("debug", (string command, string[] param, ChatWindow chatWindow) =>
+                {
+                    Config.VerboseDebug = !Config.VerboseDebug;
+                    Chat.WriteLine($"[ZeroIn] Verbose debug: {(Config.VerboseDebug ? "ENABLED" : "DISABLED")}",
+                        Config.VerboseDebug ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine("[ZeroIn] This enables detailed logging for scanning, targeting, and grid generation.", ChatColor.White);
+                });
+
+                // Add status command to show current settings
+                Chat.RegisterCommand("status", (string command, string[] param, ChatWindow chatWindow) =>
+                {
+                    Chat.WriteLine("=== ZeroIn Status ===", ChatColor.Yellow);
+                    Chat.WriteLine($"Radar: {(Radar.Enabled ? "ON" : "OFF")}", Radar.Enabled ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"  Detection radius: {(Config.ShowDetectionRadius ? "ON" : "OFF")}", Config.ShowDetectionRadius ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"  Player markers: {(Config.ShowPlayerMarkers ? "ON" : "OFF")}", Config.ShowPlayerMarkers ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"  AFK paths: {(Config.ShowAFKPaths ? "ON" : "OFF")}", Config.ShowAFKPaths ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"  Active player paths: {(Config.ShowActivePlayerPaths ? "ON" : "OFF")}", Config.ShowActivePlayerPaths ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"  Tag-only mode: {(Config.TagOnlyMode ? "ON" : "OFF")}", Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"Continuous scanning: {(Config.ContinuousScanning ? "ON" : "OFF")}", Config.ContinuousScanning ? ChatColor.Green : ChatColor.Red);
+
+                    var detected = Scanner.GetDetectedCharacters();
+                    int afkCount = detected.Count(p => p.IsLikelyAFK());
+                    Chat.WriteLine($"Detected players: {detected.Count} ({afkCount} AFK)", ChatColor.LightBlue);
+
+                    Chat.WriteLine($"Combat enabled: {(Config.EnableCombat ? "ON" : "OFF")}", Config.EnableCombat ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"Verbose debug: {(Config.VerboseDebug ? "ON" : "OFF")}", Config.VerboseDebug ? ChatColor.Green : ChatColor.Red);
+                });
+
+                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /status, /debug, /debugxml", ChatColor.Green);
 
                 Chat.WriteLine("[ZeroIn] Initializing state machine...", ChatColor.White);
                 StateMachine = new RoamStateMachine(new MobTargeting(Config), Scanner, Map, Config.CoreConfig.OnInjectEnable);
@@ -277,10 +378,48 @@ namespace ZeroIn
             {
                 // Draw visual radar overlay
                 Radar?.Draw();
+
+                // Continuous scanning (ONLY when state machine is NOT running)
+                // If state machine is running, RoamState.Tick() handles scanning
+                if (Config.ContinuousScanning && Scanner != null && StateMachine != null && !StateMachine.IsEnabled)
+                {
+                    Scanner.Scan(); // Purge stale entries
+
+                    var localPlayer = DynelManager.LocalPlayer;
+                    if (localPlayer != null && localPlayer.IsValid)
+                    {
+                        var localPos = localPlayer.Position;
+
+                        // Scan all nearby players within detection range
+                        foreach (var player in DynelManager.Players)
+                        {
+                            if (player == null || !player.IsValid) continue;
+                            if (player.Identity == localPlayer.Identity) continue; // Skip self
+
+                            float distance = AOSharp.Common.GameData.Vector3.Distance(localPos, player.Position);
+
+                            // Only scan players within detection range
+                            if (distance <= Config.PlayerDetectionRange)
+                            {
+                                Scanner.OnCharacterSeen(
+                                    (int)player.Identity.Instance,
+                                    player.Name,
+                                    player.Position.X,
+                                    player.Position.Y,
+                                    player.Position.Z,
+                                    player.Health,
+                                    distance,
+                                    Playfield.ModelIdentity.Instance,
+                                    Playfield.Name
+                                );
+                            }
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
-                // Silently catch to avoid spam - radar is non-critical
+                // Silently catch to avoid spam
                 Log?.Warning($"OnUpdate error: {ex.Message}");
             }
         }
