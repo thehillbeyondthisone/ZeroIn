@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using AOSharp.Core;
+using AOSharp.Core.UI;
 using AOSharp.Common.GameData;
 using Newtonsoft.Json;
 using ZeroIn.Scanner;
