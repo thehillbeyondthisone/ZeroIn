@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ZeroIn Command v5.2</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        /* --- THEME & LAYOUT --- */
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', monospace; background: #0a0a0a; color: #ccc; display: flex; height: 100vh; overflow: hidden; }
+        #sidebar { width: 340px; background: #111; border-right: 1px solid #333; display: flex; flex-direction: column; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
+        #sidebar-header { padding: 15px; background: #1a1a1a; border-bottom: 1px solid #333; }
+        #sidebar-header h2 { margin: 0; font-size: 18px; color: #4caf50; text-transform: uppercase; letter-spacing: 2px; }
+        #status-bar { font-size: 11px; color: #666; margin-top: 5px; display: flex; justify-content: space-between; }
+        .controls-container { padding: 10px; border-bottom: 1px solid #333; background: #151515; }
+        
+        /* Filters */
+        #filters { display: flex; gap: 5px; margin-bottom: 10px; }
+        .filter-btn { flex: 1; background: #222; border: 1px solid #444; color: #888; padding: 6px 0; cursor: pointer; font-size: 10px; text-align: center; border-radius: 3px; font-weight: bold; text-transform: uppercase; }
+        .filter-btn:hover { background: #333; }
+        .filter-btn.active { color: #fff; border-color: transparent; }
+        .btn-clan.active { background: #d32f2f; }
+        .btn-omni.active { background: #0288d1; }
+        .btn-neut.active { background: #757575; }
+        .btn-afk.active { background: #f57c00; }
+
+        /* Controls */
+        .control-row { margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #aaa; }
+        input[type=range] { width: 60%; accent-color: #4caf50; cursor: pointer; }
+        select { background: #222; color: #eee; border: 1px solid #444; padding: 4px; width: 100%; font-family: monospace; font-size: 11px; }
+        .val-display { font-family: monospace; color: #4caf50; width: 40px; text-align: right; }
+        
+        /* Checkboxes */
+        .checkbox-row { display:flex; gap:10px; margin-bottom:10px; font-size:11px; color:#aaa; }
+        .checkbox-row label { display:flex; align-items:center; gap:5px; cursor:pointer; }
+        input[type=checkbox] { accent-color: #4caf50; }
+
+        /* Buttons */
+        .btn-row { display: flex; gap: 5px; margin-top: 5px; }
+        .action-btn { flex: 1; padding: 8px; background: #333; border: 1px solid #555; color: #eee; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .action-btn:hover { background: #444; }
+        .btn-primary { background: #00695c; border-color: #004d40; }
+        .btn-primary:hover { background: #00897b; }
+        .debug-active { background: #ffb300 !important; color: #000 !important; border-color: #ff6f00 !important; }
+
+        /* Player List */
+        #player-list { flex: 1; overflow-y: auto; padding: 0; list-style: none; margin: 0; }
+        .player-row { padding: 8px 15px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; color: #ccc; font-size: 12px; }
+        .player-row:hover { background: #1f1f1f; }
+
+        /* Map */
+        #map-container { flex: 1; position: relative; background: #050505; }
+        #map { height: 100%; width: 100%; }
+        .leaflet-image-layer { image-rendering: pixelated; }
+
+        /* Markers */
+        .custom-marker { width: 10px; height: 10px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 4px #000; transition: transform 0.2s; }
+        .mk-Clan { background-color: #d32f2f; box-shadow: 0 0 6px #d32f2f; }
+        .mk-Omni { background-color: #0288d1; box-shadow: 0 0 6px #0288d1; }
+        .mk-Neutral { background-color: #9e9e9e; }
+        .mk-AFK { border-color: #f57c00; background: repeating-linear-gradient(45deg, #333, #333 2px, #f57c00 2px, #f57c00 4px); }
+
+        /* Calibration Handles */
+        .player-calibrator { 
+            width: 20px; height: 20px; 
+            border: 2px solid #ffeb3b; border-radius: 50%; 
+            background: rgba(255, 235, 59, 0.3);
+            cursor: move; box-shadow: 0 0 10px #ffeb3b; 
+        }
+        .player-calibrator::after {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            width: 4px; height: 4px; background: #ffeb3b;
+            transform: translate(-50%, -50%); border-radius: 50%;
+        }
+        .drag-handle { width: 12px; height: 12px; background: #fff; border: 2px solid #000; border-radius: 50%; cursor: nwse-resize; box-shadow: 0 0 5px #000; }
+        .move-handle { width: 14px; height: 14px; background: #0277bd; border: 2px solid #fff; cursor: move; box-shadow: 0 0 8px #000; }
+        
+        .leaflet-popup-content-wrapper { background: rgba(15, 15, 15, 0.95); border: 1px solid #444; border-radius: 0; color: #eee; font-size: 12px; }
+        .leaflet-popup-tip { background: #333; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <div id="sidebar-header">
+        <h2>ZeroIn Command</h2>
+        <div id="status-bar">
+            <span>ZONE: <strong id="zone-name" style="color:#4caf50">--</strong></span>
+            <span id="conn-status" style="color:#666">Connecting...</span>
+        </div>
+    </div>
+    
+    <div class="controls-container">
+        <div id="filters">
+            <div class="filter-btn btn-clan active" onclick="toggleFilter('Clan')" data-f="Clan">Clan</div>
+            <div class="filter-btn btn-omni active" onclick="toggleFilter('Omni')" data-f="Omni">Omni</div>
+            <div class="filter-btn btn-neut active" onclick="toggleFilter('Neutral')" data-f="Neutral">Neut</div>
+            <div class="filter-btn btn-afk active" onclick="toggleFilter('AFK')" data-f="AFK">AFK</div>
+        </div>
+
+        <div id="local-controls" style="display:none; border-top:1px solid #333; margin-top:10px; padding-top:10px;">
+            <div style="color:#4bf; font-size:11px; font-weight:bold; margin-bottom:5px;">LOCAL MAP SETTINGS</div>
+            
+            <div class="control-row">
+                <select id="layer-selector" onchange="changeActiveLayer(this.value)"></select>
+            </div>
+
+            <div class="checkbox-row">
+                <label><input type="checkbox" id="chk-flip-x" onchange="toggleFlip('x', this.checked)"> Flip X (Mirrored)</label>
+                <label><input type="checkbox" id="chk-flip-z" onchange="toggleFlip('z', this.checked)"> Flip Y</label>
+            </div>
+
+            <div class="control-row">
+                <span>OPACITY:</span>
+                <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="1" oninput="updateLocalOpacity(this.value)">
+                <span id="opacity-val" class="val-display">1.0</span>
+            </div>
+            <button class="action-btn" style="width:100%; margin-bottom:5px;" onclick="snapLocalToPlayer()">Snap To Player</button>
+        </div>
+        
+        <div class="btn-row">
+            <button id="btn-cal-global" class="action-btn btn-primary" onclick="toggleGlobalCal()">Drag Radar</button>
+            <button id="btn-cal-local" class="action-btn btn-secondary" onclick="toggleLocalCal()">Drag Minimap</button>
+        </div>
+        <div class="btn-row">
+            <button class="action-btn" onclick="exportConfig()">Save JSON</button>
+            <button class="action-btn" style="color:#f55; border-color:#522" onclick="resetCalibration()">Reset</button>
+        </div>
+    </div>
+    
+    <div style="padding:8px 15px; font-size:10px; color:#666; background:#111; border-bottom:1px solid #222; display:flex; justify-content:space-between;">
+        <span>DETECTED SIGNALS</span>
+        <span id="p-count" style="color:#eee">0</span>
+    </div>
+    <ul id="player-list"></ul>
+</div>
+
+<div id="map-container">
+    <div id="map"></div>
+</div>
+
+<script>
+    const PLUGIN_URL = "http://localhost:8080"; 
+    const REFRESH_RATE = 500;
+    const LOCAL_MAP_FILE = "ICC_Map.jpg"; 
+
+    // --- CONFIG DEFAULTS ---
+    const defaultMapConfig = {
+        minX: 55, minZ: 0, maxX: 945, maxZ: 1145, 
+        imgWidth: 1024, imgHeight: 1536,
+        divisor: 50.0,
+        invertX: false, invertZ: false
+    };
+
+    const defaultZoneData = {
+        152: { name: "The Grid", x: -33000000, z: -251000000 },
+        540: { name: "Old Athen", x: 39521, z: 40670 },
+        640: { name: "Tir", x: 47921, z: 39716 },
+        655: { name: "Andromeda", x: 37179, z: 31331 },
+        700: { name: "Omni-1 HQ", x: 43187, z: 27102 },
+        "default": { name: "Unknown", x: 40000, z: 40000 }
+    };
+
+    // --- STATE ---
+    let mapConfig = JSON.parse(JSON.stringify(defaultMapConfig));
+    let zoneData = JSON.parse(JSON.stringify(defaultZoneData));
+    
+    // NOTE: Local Map Bounds are [SouthWest, NorthEast] in simple pixel coords
+    let localMaps = {
+        "ICC": { file: LOCAL_MAP_FILE, bounds: [[1000, 650], [1100, 750]], minZoom: 2, opacity: 1.0, aspectRatio: 1.0 }
+    };
+
+    let players = {}; 
+    let markers = {};
+    let filters = { Clan: true, Omni: true, Neutral: true, AFK: true };
+    let currentZoneId = 0;
+    let currentZoneOffset = zoneData["default"];
+    let localPlayerMarker = null;
+    
+    // Calibration / UI State
+    let debugLayer = L.layerGroup();
+    let mode = "normal"; 
+    let selectedLayerKey = "ICC"; // Default
+    let myLocalPos = { x: 0, z: 0 }; 
+
+    // --- LOAD CONFIG (LocalStorage) ---
+    if(localStorage.getItem('ao-radar-config-v5')) {
+        try {
+            const saved = JSON.parse(localStorage.getItem('ao-radar-config-v5'));
+            zoneData = saved.zones || zoneData;
+            mapConfig.divisor = saved.divisor || mapConfig.divisor;
+            mapConfig.invertX = saved.invertX || false;
+            mapConfig.invertZ = saved.invertZ || false;
+            
+            if(saved.localMaps) {
+                Object.keys(saved.localMaps).forEach(k => {
+                    if(!localMaps[k]) localMaps[k] = saved.localMaps[k];
+                    else {
+                        localMaps[k].bounds = saved.localMaps[k].bounds;
+                        localMaps[k].opacity = saved.localMaps[k].opacity;
+                    }
+                });
+            }
+            document.getElementById('chk-flip-x').checked = mapConfig.invertX;
+            document.getElementById('chk-flip-z').checked = mapConfig.invertZ;
+        } catch(e) { console.error("Config load error", e); }
+    }
+
+    // --- MAP INITIALIZATION ---
+    const map = L.map('map', {
+        crs: L.CRS.Simple, minZoom: -2, maxZoom: 6, 
+        zoomControl: false, attributionControl: false
+    });
+    L.control.zoom({ position: 'topright' }).addTo(map);
+
+    const bounds = [[0, 0], [mapConfig.imgHeight, mapConfig.imgWidth]];
+    L.imageOverlay('FullMap_Fixed.png', bounds).addTo(map);
+    map.fitBounds(bounds);
+
+    // Initialize Local Map Layers & Selector
+    const layerSelector = document.getElementById('layer-selector');
+    Object.keys(localMaps).forEach((key, index) => {
+        const lm = localMaps[key];
+        
+        const img = new Image();
+        img.onload = function() { lm.aspectRatio = this.width / this.height; }
+        img.src = lm.file;
+
+        lm.layer = L.imageOverlay(lm.file, lm.bounds, { opacity: lm.opacity || 1, zIndex: 2 });
+        lm.layer.addTo(map);
+
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.innerText = key;
+        if(index === 0) selectedLayerKey = key;
+        layerSelector.appendChild(opt);
+    });
+
+    map.on('zoomend', () => {
+        const z = map.getZoom();
+        Object.values(localMaps).forEach(lm => {
+            if(z >= lm.minZoom) {
+                if(!map.hasLayer(lm.layer)) map.addLayer(lm.layer);
+            } else {
+                if(map.hasLayer(lm.layer)) map.removeLayer(lm.layer);
+            }
+        });
+    });
+
+    const localIcon = L.divIcon({ className: 'custom-marker', html: '<div style="background:#0f0; width:100%; height:100%; border-radius:50%; box-shadow:0 0 15px #0f0;"></div>', iconSize: [12, 12], iconAnchor: [6, 6] });
+
+    // --- CALIBRATION LOGIC ---
+
+    function resetModes() {
+        mode = "normal";
+        document.getElementById('btn-cal-global').classList.remove('debug-active');
+        document.getElementById('btn-cal-local').classList.remove('debug-active');
+        document.getElementById('btn-cal-global').innerText = "Drag Radar";
+        document.getElementById('btn-cal-local').innerText = "Drag Minimap";
+        document.getElementById('local-controls').style.display = "none";
+        map.removeLayer(debugLayer);
+        debugLayer.clearLayers();
+        
+        if(localPlayerMarker && localPlayerMarker.dragging) localPlayerMarker.dragging.disable();
+        updateRadar(true); 
+    }
+
+    // 1. GLOBAL CALIBRATION
+    function toggleGlobalCal() {
+        if(mode === "global_cal") { resetModes(); return; }
+        resetModes();
+        mode = "global_cal";
+        
+        const btn = document.getElementById('btn-cal-global');
+        btn.classList.add('debug-active');
+        btn.innerText = "Save Radar Pos";
+        
+        if(localPlayerMarker) {
+            localPlayerMarker.setIcon(L.divIcon({ className: 'player-calibrator', iconSize:[20,20], iconAnchor:[10,10] }));
+            localPlayerMarker.dragging.enable();
+            
+            localPlayerMarker.on('dragend', (e) => {
+                const newPixel = e.target.getLatLng();
+                
+                // Convert Pixel -> Percent
+                let pctX = newPixel.lng / mapConfig.imgWidth;
+                let pctY = (mapConfig.imgHeight - newPixel.lat) / mapConfig.imgHeight;
+
+                // Un-flip if needed for calibration math
+                if (mapConfig.invertX) pctX = 1.0 - pctX;
+                if (mapConfig.invertZ) pctY = 1.0 - pctY;
+                
+                const mapX = (pctX * (mapConfig.maxX - mapConfig.minX)) + mapConfig.minX;
+                const mapZ = (pctY * (mapConfig.maxZ - mapConfig.minZ)) + mapConfig.minZ;
+
+                const globalX = mapX * mapConfig.divisor;
+                const globalZ = mapZ * mapConfig.divisor;
+
+                const newOriginX = Math.round(globalX - myLocalPos.x);
+                const newOriginZ = Math.round(globalZ - myLocalPos.z);
+
+                currentZoneOffset.x = newOriginX;
+                currentZoneOffset.z = newOriginZ;
+                
+                if(zoneData[currentZoneId]) {
+                    zoneData[currentZoneId].x = newOriginX;
+                    zoneData[currentZoneId].z = newOriginZ;
+                }
+                saveConfig();
+                updateRadar(true); 
+            });
+        } else {
+            alert("Player marker not found! Wait for connection.");
+            resetModes();
+        }
+    }
+
+    // 2. LOCAL MAP CALIBRATION
+    function changeActiveLayer(val) {
+        selectedLayerKey = val;
+        if(mode === "local_cal") { resetModes(); toggleLocalCal(); }
+    }
+
+    function toggleLocalCal() {
+        if(mode === "local_cal") { resetModes(); return; }
+        resetModes();
+        mode = "local_cal";
+
+        const btn = document.getElementById('btn-cal-local');
+        btn.classList.add('debug-active');
+        btn.innerText = "Save Minimap";
+        document.getElementById('local-controls').style.display = "block";
+        
+        debugLayer.addTo(map);
+
+        const lm = localMaps[selectedLayerKey];
+        if(!map.hasLayer(lm.layer)) map.addLayer(lm.layer);
+        
+        document.getElementById('opacity-slider').value = lm.opacity || 1;
+        document.getElementById('opacity-val').innerText = lm.opacity || 1;
+        document.getElementById('layer-selector').value = selectedLayerKey;
+
+        const b = lm.layer.getBounds();
+        const moveHandle = L.marker(b.getCenter(), { draggable: true, icon: L.divIcon({ className: 'move-handle', iconSize:[14,14], iconAnchor:[7,7] }) });
+        const resizeHandle = L.marker(b.getSouthEast(), { draggable: true, icon: L.divIcon({ className: 'drag-handle', iconSize:[12,12], iconAnchor:[6,6] }) });
+
+        moveHandle.on('drag', (e) => {
+            const newCenter = e.target.getLatLng();
+            const currentB = lm.layer.getBounds();
+            const w = currentB.getEast() - currentB.getWest();
+            const h = currentB.getNorth() - currentB.getSouth();
+            
+            const newB = L.latLngBounds([
+                [newCenter.lat - h/2, newCenter.lng - w/2],
+                [newCenter.lat + h/2, newCenter.lng + w/2]
+            ]);
+            lm.layer.setBounds(newB);
+            resizeHandle.setLatLng(newB.getSouthEast());
+        });
+        moveHandle.on('dragend', () => saveLocalState(selectedLayerKey, lm.layer.getBounds()));
+
+        // CENTER-BASED RESIZE
+        resizeHandle.on('drag', (e) => {
+            const mousePos = e.target.getLatLng();
+            const center = lm.layer.getBounds().getCenter();
+            const halfWidth = Math.abs(mousePos.lng - center.lng);
+            const halfHeight = halfWidth / (lm.aspectRatio || 1.0);
+            
+            const newB = L.latLngBounds([
+                [center.lat - halfHeight, center.lng - halfWidth],
+                [center.lat + halfHeight, center.lng + halfWidth]
+            ]);
+            
+            lm.layer.setBounds(newB);
+            resizeHandle.setLatLng(newB.getSouthEast());
+            moveHandle.setLatLng(newB.getCenter());
+        });
+        resizeHandle.on('dragend', () => saveLocalState(selectedLayerKey, lm.layer.getBounds()));
+
+        moveHandle.addTo(debugLayer);
+        resizeHandle.addTo(debugLayer);
+    }
+    
+    function saveLocalState(key, bounds) {
+        localMaps[key].bounds = [[bounds.getSouth(), bounds.getWest()], [bounds.getNorth(), bounds.getEast()]];
+        saveConfig();
+    }
+
+    function updateLocalOpacity(val) {
+        const lm = localMaps[selectedLayerKey];
+        lm.opacity = val;
+        lm.layer.setOpacity(val);
+        document.getElementById('opacity-val').innerText = val;
+        saveConfig();
+    }
+
+    function toggleFlip(axis, val) {
+        if(axis === 'x') mapConfig.invertX = val;
+        if(axis === 'z') mapConfig.invertZ = val;
+        saveConfig();
+        updateRadar(true);
+    }
+
+    function snapLocalToPlayer() {
+        if(!localPlayerMarker) { alert("Player missing"); return; }
+        const pPos = localPlayerMarker.getLatLng();
+        const lm = localMaps[selectedLayerKey];
+        
+        const b = lm.layer.getBounds();
+        const w = b.getEast() - b.getWest();
+        const h = b.getNorth() - b.getSouth();
+        
+        const newB = L.latLngBounds([[pPos.lat - h/2, pPos.lng - w/2],[pPos.lat + h/2, pPos.lng + w/2]]);
+        lm.layer.setBounds(newB);
+        saveLocalState(selectedLayerKey, newB);
+        if(mode === "local_cal") { debugLayer.clearLayers(); toggleLocalCal(); toggleLocalCal(); }
+    }
+
+    // --- PERSISTENCE ---
+    function saveConfig() {
+        const payload = { zones: zoneData, divisor: mapConfig.divisor, localMaps: localMaps, invertX: mapConfig.invertX, invertZ: mapConfig.invertZ };
+        localStorage.setItem('ao-radar-config-v5', JSON.stringify(payload));
+    }
+
+    function exportConfig() {
+        const payload = { zones: zoneData, divisor: mapConfig.divisor, localMaps: localMaps, invertX: mapConfig.invertX, invertZ: mapConfig.invertZ };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 4));
+        const a = document.createElement('a'); a.href = dataStr; a.download = "radar-config.json";
+        document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    function resetCalibration() {
+        if(confirm("Reset ALL calibration?")) {
+            localStorage.removeItem('ao-radar-config-v5');
+            location.reload();
+        }
+    }
+
+    // --- MATH & NETWORK ---
+    function gameToPixel(x, z, isRawGlobal = false) {
+        let globalX = x; let globalZ = z;
+        if (!isRawGlobal) { globalX = currentZoneOffset.x + x; globalZ = currentZoneOffset.z + z; }
+        
+        const mapX = globalX / mapConfig.divisor;
+        const mapZ = globalZ / mapConfig.divisor;
+        
+        let pctX = (mapX - mapConfig.minX) / (mapConfig.maxX - mapConfig.minX);
+        let pctZ = (mapZ - mapConfig.minZ) / (mapConfig.maxZ - mapConfig.minZ);
+        
+        if (mapConfig.invertX) pctX = 1.0 - pctX;
+        if (mapConfig.invertZ) pctZ = 1.0 - pctZ;
+
+        const pixelX = pctX * mapConfig.imgWidth;
+        const pixelY = mapConfig.imgHeight - (pctZ * mapConfig.imgHeight);
+        return [pixelY, pixelX];
+    }
+
+    async function fetchMapInfo() {
+        try {
+            const res = await fetch(`${PLUGIN_URL}/api/mapinfo`);
+            const data = await res.json();
+            if(data.playfieldId && data.playfieldId !== currentZoneId) {
+                currentZoneId = data.playfieldId;
+                if (!zoneData[currentZoneId]) {
+                    zoneData[currentZoneId] = { name: data.playfieldName || "Unknown", x: data.referenceX || 40000, z: data.referenceZ || 40000 };
+                }
+                currentZoneOffset = zoneData[currentZoneId];
+                document.getElementById('zone-name').innerText = currentZoneOffset.name;
+            }
+        } catch(e) {}
+    }
+
+    async function updateRadar(force = false) {
+        const statusEl = document.getElementById('conn-status');
+        try {
+            let me, detected;
+            if(!force) {
+                const [posRes, playersRes] = await Promise.all([ fetch(`${PLUGIN_URL}/api/position`), fetch(`${PLUGIN_URL}/api/players`) ]);
+                me = await posRes.json(); detected = await playersRes.json();
+            } else return; 
+
+            statusEl.innerText = "ACTIVE"; statusEl.style.color = "#4caf50";
+
+            if(!me.error) {
+                myLocalPos = { x: me.x, z: me.z }; 
+                const myPixel = gameToPixel(me.x, me.z);
+                
+                if(!localPlayerMarker) {
+                    localPlayerMarker = L.marker(myPixel, {icon: localIcon, zIndexOffset: 1000, draggable: false}).addTo(map);
+                    map.panTo(myPixel);
+                } else {
+                    if(mode !== "global_cal" || !localPlayerMarker.dragging.enabled()) {
+                        localPlayerMarker.setLatLng(myPixel);
+                    }
+                }
+            }
+
+            const currentIds = new Set();
+            let pCount = 0;
+            detected.forEach(p => {
+                currentIds.add(p.id);
+                if(!p.side) p.side = "Neutral"; 
+                players[p.id] = p;
+                updateMarker(p);
+                if (filters[p.side] && (!p.isAfk || filters.AFK)) pCount++;
+            });
+            document.getElementById('p-count').innerText = pCount;
+
+            Object.keys(markers).forEach(id => { if(!currentIds.has(parseInt(id))) { if(markers[id]) map.removeLayer(markers[id]); delete markers[id]; delete players[id]; } });
+            updateSidebar();
+        } catch(e) { if(!force) { statusEl.innerText = "DISCONNECTED"; statusEl.style.color = "#f55"; } }
+    }
+
+    function updateMarker(p) {
+        if (!filters[p.side] || (p.isAfk && !filters.AFK)) { if(markers[p.id]) map.removeLayer(markers[p.id]); delete markers[p.id]; return; }
+        const pixel = gameToPixel(p.x, p.z);
+        const cssClass = `custom-marker mk-${p.side} ${p.isAfk ? 'mk-AFK' : ''}`;
+        if (!markers[p.id]) {
+            markers[p.id] = L.marker(pixel, {icon: L.divIcon({ className: cssClass, iconSize: [10,10] }) }).addTo(map);
+            markers[p.id].bindPopup(getPopupHtml(p));
+        } else {
+            markers[p.id].setLatLng(pixel);
+            markers[p.id].setPopupContent(getPopupHtml(p));
+            const el = markers[p.id].getElement();
+            if(el) el.className = `leaflet-marker-icon ${cssClass} leaflet-zoom-animated leaflet-interactive`;
+        }
+    }
+
+    function getPopupHtml(p) {
+        return `<div style="font-weight:bold;border-bottom:1px solid #555;margin-bottom:4px;color:${getColor(p.side)}">${p.name}</div>
+                <div style="color:#aaa">Dist: <span style="color:#fff">${p.distance.toFixed(0)}m</span></div>
+                <div style="color:#aaa">Zone: <span style="color:#fff">${p.playfieldName}</span></div>`;
+    }
+
+    function updateSidebar() {
+        const list = document.getElementById('player-list');
+        list.innerHTML = '';
+        const pArr = Object.values(players).sort((a, b) => a.distance - b.distance);
+        pArr.forEach(p => {
+            if (!filters[p.side] || (p.isAfk && !filters.AFK)) return;
+            const li = document.createElement('li');
+            li.className = 'player-row';
+            li.innerHTML = `<div><strong style="color:${getColor(p.side)}">${p.name}</strong><br><span style="font-size:10px;color:#666">${p.playfieldName || 'Unknown'}</span></div><div style="text-align:right; font-family:monospace;">${p.distance.toFixed(0)}m</div>`;
+            li.onclick = () => { if(markers[p.id]) { map.flyTo(markers[p.id].getLatLng(), 5); markers[p.id].openPopup(); }};
+            list.appendChild(li);
+        });
+    }
+
+    function toggleFilter(f) {
+        filters[f] = !filters[f];
+        const btn = document.querySelector(`.filter-btn[data-f="${f}"]`);
+        filters[f] ? btn.classList.add('active') : btn.classList.remove('active');
+        Object.values(players).forEach(p => updateMarker(p));
+        updateSidebar();
+    }
+
+    function getColor(side) { if(side === "Clan") return "#ef5350"; if(side === "Omni") return "#29b6f6"; return "#bdbdbd"; }
+
+    fetchMapInfo(); 
+    setInterval(fetchMapInfo, 5000); 
+    setInterval(() => updateRadar(false), REFRESH_RATE); 
+</script>
+</body>
+</html>
