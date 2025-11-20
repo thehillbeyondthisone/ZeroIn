@@ -22,6 +22,7 @@
         .btn-omni.active { background: #0288d1; }
         .btn-neut.active { background: #757575; }
         .btn-afk.active { background: #f57c00; }
+        .btn-active.active { background: #4caf50; }
 
         /* Controls */
         .control-row { margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #aaa; }
@@ -162,6 +163,7 @@
             <div class="filter-btn btn-omni active" onclick="toggleFilter('Omni')" data-f="Omni">Omni</div>
             <div class="filter-btn btn-neut active" onclick="toggleFilter('Neutral')" data-f="Neutral">Neut</div>
             <div class="filter-btn btn-afk active" onclick="toggleFilter('AFK')" data-f="AFK">AFK</div>
+            <div class="filter-btn btn-active active" onclick="toggleFilter('Active')" data-f="Active">Active</div>
         </div>
 
         <div id="local-controls" style="display:none; border-top:1px solid #333; margin-top:10px; padding-top:10px;">
@@ -338,9 +340,9 @@
         "FullMap": { file: "FullMap_Fixed.png", bounds: [[0, 0], [1536, 1024]], minZoom: -2, opacity: 0.5, aspectRatio: 1.5, flipX: false, flipZ: false }
     };
 
-    let players = {}; 
+    let players = {};
     let markers = {};
-    let filters = { Clan: true, Omni: true, Neutral: true, AFK: true };
+    let filters = { Clan: true, Omni: true, Neutral: true, AFK: true, Active: true };
     let currentZoneId = 0;
     let currentZoneOffset = zoneData["default"];
     let localPlayerMarker = null;
@@ -921,7 +923,8 @@
         }
 
         // Show/hide based on filters (but don't delete)
-        const shouldShow = filters[p.side] && (!p.isAfk || filters.AFK);
+        const afkMatch = p.isAfk ? filters.AFK : filters.Active;
+        const shouldShow = filters[p.side] && afkMatch;
         if (shouldShow) {
             if (!map.hasLayer(markers[p.id])) {
                 markers[p.id].addTo(map);
