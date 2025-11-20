@@ -9,20 +9,23 @@ namespace ZeroIn
     {
         private TextInputView _scanSpacing;
         private TextInputView _detectionRange;
-        private Checkbox _onlyAFK;
         private TextInputView _afkCheckTime;
-        private Checkbox _saveToJson;
-        private Checkbox _saveToCsv;
-        private Checkbox _logToConsole;
-        private Checkbox _continuousScanning;
+
+        // All toggle buttons
+        private Button _toggleOnlyAFK;
+        private Button _toggleContinuousScanning;
+        private Button _toggleSaveJson;
+        private Button _toggleSaveCsv;
+        private Button _toggleLogConsole;
         private Button _toggleDetectionRadius;
         private Button _togglePlayerMarkers;
         private Button _toggleAFKPaths;
         private Button _toggleActivePlayerPaths;
         private Button _toggleTagOnly;
-        private Checkbox _enableCombat;
-        private Checkbox _enableLooting;
-        private Checkbox _enableHealthCheck;
+        private Button _toggleCombat;
+        private Button _toggleLooting;
+        private Button _toggleHealthCheck;
+        private Button _openWebUI;
 
         // Public properties for access from other classes
         public float ScanSpacing
@@ -41,22 +44,26 @@ namespace ZeroIn
             {
                 if (Root != null)
                 {
+                    // Text inputs
                     Root.FindChild("ScanSpacingValue", out _scanSpacing);
                     Root.FindChild("DetectionRangeValue", out _detectionRange);
-                    Root.FindChild("OnlyAFK", out _onlyAFK);
                     Root.FindChild("AFKCheckTimeValue", out _afkCheckTime);
-                    Root.FindChild("SaveToJson", out _saveToJson);
-                    Root.FindChild("SaveToCsv", out _saveToCsv);
-                    Root.FindChild("LogToConsole", out _logToConsole);
-                    Root.FindChild("ContinuousScanning", out _continuousScanning);
+
+                    // All buttons
+                    Root.FindChild("ToggleOnlyAFK", out _toggleOnlyAFK);
+                    Root.FindChild("ToggleContinuousScanning", out _toggleContinuousScanning);
+                    Root.FindChild("ToggleSaveJson", out _toggleSaveJson);
+                    Root.FindChild("ToggleSaveCsv", out _toggleSaveCsv);
+                    Root.FindChild("ToggleLogConsole", out _toggleLogConsole);
                     Root.FindChild("ToggleDetectionRadius", out _toggleDetectionRadius);
                     Root.FindChild("TogglePlayerMarkers", out _togglePlayerMarkers);
                     Root.FindChild("ToggleAFKPaths", out _toggleAFKPaths);
                     Root.FindChild("ToggleActivePlayerPaths", out _toggleActivePlayerPaths);
                     Root.FindChild("ToggleTagOnly", out _toggleTagOnly);
-                    Root.FindChild("EnableCombat", out _enableCombat);
-                    Root.FindChild("EnableLooting", out _enableLooting);
-                    Root.FindChild("EnableHealthCheck", out _enableHealthCheck);
+                    Root.FindChild("ToggleCombat", out _toggleCombat);
+                    Root.FindChild("ToggleLooting", out _toggleLooting);
+                    Root.FindChild("ToggleHealthCheck", out _toggleHealthCheck);
+                    Root.FindChild("OpenWebUI", out _openWebUI);
 
                     // Wire up button click handlers with instant feedback
                     if (_toggleDetectionRadius != null)
@@ -108,6 +115,108 @@ namespace ZeroIn
                                 ZeroIn.Config.ShowMarkerLines ? ChatColor.Green : ChatColor.Red);
                         };
                     }
+
+                    // Scanner control buttons
+                    if (_toggleOnlyAFK != null)
+                    {
+                        _toggleOnlyAFK.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.OnlyAFK = !ZeroIn.Config.OnlyAFK;
+                            Chat.WriteLine($"[ZeroIn] Only AFK Players: {(ZeroIn.Config.OnlyAFK ? "ON" : "OFF")}",
+                                ZeroIn.Config.OnlyAFK ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    if (_toggleContinuousScanning != null)
+                    {
+                        _toggleContinuousScanning.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.ContinuousScanning = !ZeroIn.Config.ContinuousScanning;
+                            Chat.WriteLine($"[ZeroIn] Continuous Scanning: {(ZeroIn.Config.ContinuousScanning ? "ON" : "OFF")}",
+                                ZeroIn.Config.ContinuousScanning ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    // Output format buttons
+                    if (_toggleSaveJson != null)
+                    {
+                        _toggleSaveJson.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.SaveToJson = !ZeroIn.Config.SaveToJson;
+                            Chat.WriteLine($"[ZeroIn] Save to JSON: {(ZeroIn.Config.SaveToJson ? "ON" : "OFF")}",
+                                ZeroIn.Config.SaveToJson ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    if (_toggleSaveCsv != null)
+                    {
+                        _toggleSaveCsv.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.SaveToCsv = !ZeroIn.Config.SaveToCsv;
+                            Chat.WriteLine($"[ZeroIn] Save to CSV: {(ZeroIn.Config.SaveToCsv ? "ON" : "OFF")}",
+                                ZeroIn.Config.SaveToCsv ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    if (_toggleLogConsole != null)
+                    {
+                        _toggleLogConsole.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.LogToConsole = !ZeroIn.Config.LogToConsole;
+                            Chat.WriteLine($"[ZeroIn] Log to Console: {(ZeroIn.Config.LogToConsole ? "ON" : "OFF")}",
+                                ZeroIn.Config.LogToConsole ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    // Combat buttons
+                    if (_toggleCombat != null)
+                    {
+                        _toggleCombat.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.EnableCombat = !ZeroIn.Config.EnableCombat;
+                            Chat.WriteLine($"[ZeroIn] Combat (Mob Targeting): {(ZeroIn.Config.EnableCombat ? "ON" : "OFF")}",
+                                ZeroIn.Config.EnableCombat ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    if (_toggleLooting != null)
+                    {
+                        _toggleLooting.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.EnableLooting = !ZeroIn.Config.EnableLooting;
+                            Chat.WriteLine($"[ZeroIn] Looting: {(ZeroIn.Config.EnableLooting ? "ON" : "OFF")}",
+                                ZeroIn.Config.EnableLooting ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    if (_toggleHealthCheck != null)
+                    {
+                        _toggleHealthCheck.Clicked = (s, e) =>
+                        {
+                            ZeroIn.Config.EnableHealthCheck = !ZeroIn.Config.EnableHealthCheck;
+                            Chat.WriteLine($"[ZeroIn] Auto-Retreat: {(ZeroIn.Config.EnableHealthCheck ? "ON" : "OFF")}",
+                                ZeroIn.Config.EnableHealthCheck ? ChatColor.Green : ChatColor.Red);
+                        };
+                    }
+
+                    // Web UI button
+                    if (_openWebUI != null)
+                    {
+                        _openWebUI.Clicked = (s, e) =>
+                        {
+                            Chat.WriteLine("[ZeroIn] Opening live map in browser...", ChatColor.Yellow);
+                            try
+                            {
+                                System.Diagnostics.Process.Start("http://localhost:8080");
+                                Chat.WriteLine("[ZeroIn] Live map opened at: http://localhost:8080", ChatColor.Green);
+                            }
+                            catch (System.Exception ex)
+                            {
+                                Chat.WriteLine($"[ZeroIn] Could not auto-open browser: {ex.Message}", ChatColor.Red);
+                                Chat.WriteLine("[ZeroIn] Please open manually: http://localhost:8080", ChatColor.Yellow);
+                            }
+                        };
+                    }
                 }
             }
             catch (System.Exception ex)
@@ -128,34 +237,10 @@ namespace ZeroIn
                 if (_detectionRange != null)
                     _detectionRange.Text = config.PlayerDetectionRange.ToString();
 
-                if (_onlyAFK != null)
-                    _onlyAFK.SetValue(config.OnlyAFK);
-
                 if (_afkCheckTime != null)
                     _afkCheckTime.Text = config.AFKCheckTimeSeconds.ToString();
 
-                if (_saveToJson != null)
-                    _saveToJson.SetValue(config.SaveToJson);
-
-                if (_saveToCsv != null)
-                    _saveToCsv.SetValue(config.SaveToCsv);
-
-                if (_logToConsole != null)
-                    _logToConsole.SetValue(config.LogToConsole);
-
-                if (_continuousScanning != null)
-                    _continuousScanning.SetValue(config.ContinuousScanning);
-
-                // Button labels are static in XML - toggles provide chat feedback only
-
-                if (_enableCombat != null)
-                    _enableCombat.SetValue(config.EnableCombat);
-
-                if (_enableLooting != null)
-                    _enableLooting.SetValue(config.EnableLooting);
-
-                if (_enableHealthCheck != null)
-                    _enableHealthCheck.SetValue(config.EnableHealthCheck);
+                // All settings are now buttons that toggle directly - no need to set initial state
             }
             catch (System.Exception ex)
             {
@@ -175,35 +260,10 @@ namespace ZeroIn
                 if (_detectionRange != null && float.TryParse(_detectionRange.Text, out float range))
                     config.PlayerDetectionRange = range;
 
-                if (_onlyAFK != null)
-                    config.OnlyAFK = _onlyAFK.IsChecked;
-
                 if (_afkCheckTime != null && int.TryParse(_afkCheckTime.Text, out int afkTime))
                     config.AFKCheckTimeSeconds = afkTime;
 
-                if (_saveToJson != null)
-                    config.SaveToJson = _saveToJson.IsChecked;
-
-                if (_saveToCsv != null)
-                    config.SaveToCsv = _saveToCsv.IsChecked;
-
-                if (_logToConsole != null)
-                    config.LogToConsole = _logToConsole.IsChecked;
-
-                if (_continuousScanning != null)
-                    config.ContinuousScanning = _continuousScanning.IsChecked;
-
-                // Visual settings are managed by button clicks, no need to update from buttons here
-                // They update config directly when clicked
-
-                if (_enableCombat != null)
-                    config.EnableCombat = _enableCombat.IsChecked;
-
-                if (_enableLooting != null)
-                    config.EnableLooting = _enableLooting.IsChecked;
-
-                if (_enableHealthCheck != null)
-                    config.EnableHealthCheck = _enableHealthCheck.IsChecked;
+                // All other settings are buttons that update config directly when clicked
             }
             catch (System.Exception ex)
             {
