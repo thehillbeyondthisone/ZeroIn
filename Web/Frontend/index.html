@@ -36,11 +36,17 @@
 
         /* Buttons */
         .btn-row { display: flex; gap: 5px; margin-top: 5px; }
-        .action-btn { flex: 1; padding: 8px; background: #333; border: 1px solid #555; color: #eee; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .action-btn { flex: 1; padding: 8px; background: #333; border: 1px solid #555; color: #eee; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; border-radius: 3px; transition: all 0.2s; }
         .action-btn:hover { background: #444; }
         .btn-primary { background: #00695c; border-color: #004d40; }
         .btn-primary:hover { background: #00897b; }
         .debug-active { background: #ffb300 !important; color: #000 !important; border-color: #ff6f00 !important; }
+
+        /* Toggle Buttons */
+        .toggle-btn { padding: 6px 12px; background: #222; border: 1px solid #444; color: #888; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; border-radius: 3px; transition: all 0.2s; }
+        .toggle-btn:hover { background: #333; }
+        .toggle-btn.active { background: #00695c; border-color: #004d40; color: #fff; }
+        .toggle-row { display: flex; gap: 5px; margin-bottom: 10px; }
 
         /* Player List */
         #player-list { flex: 1; overflow-y: auto; padding: 0; list-style: none; margin: 0; }
@@ -142,6 +148,12 @@
     </div>
     
     <div class="controls-container">
+        <div style="margin-bottom:10px;">
+            <button id="btn-continuous-scan" class="action-btn" style="width:100%;" onclick="toggleContinuousScan()">
+                <span id="scan-status">Continuous Scan: OFF</span>
+            </button>
+        </div>
+
         <div id="filters">
             <div class="filter-btn btn-clan active" onclick="toggleFilter('Clan')" data-f="Clan">Clan</div>
             <div class="filter-btn btn-omni active" onclick="toggleFilter('Omni')" data-f="Omni">Omni</div>
@@ -151,14 +163,14 @@
 
         <div id="local-controls" style="display:none; border-top:1px solid #333; margin-top:10px; padding-top:10px;">
             <div style="color:#4bf; font-size:11px; font-weight:bold; margin-bottom:5px;">LOCAL MAP SETTINGS</div>
-            
+
             <div class="control-row">
                 <select id="layer-selector" onchange="changeActiveLayer(this.value)"></select>
             </div>
 
-            <div class="checkbox-row">
-                <label><input type="checkbox" id="chk-flip-x" onchange="toggleFlip('x', this.checked)"> Flip X (Mirrored)</label>
-                <label><input type="checkbox" id="chk-flip-z" onchange="toggleFlip('z', this.checked)"> Flip Y</label>
+            <div class="toggle-row">
+                <button id="btn-flip-x" class="toggle-btn" style="flex:1" onclick="toggleFlipX()">Flip X</button>
+                <button id="btn-flip-z" class="toggle-btn" style="flex:1" onclick="toggleFlipZ()">Flip Y</button>
             </div>
 
             <div class="control-row">
@@ -300,8 +312,13 @@
                     }
                 });
             }
-            document.getElementById('chk-flip-x').checked = mapConfig.invertX;
-            document.getElementById('chk-flip-z').checked = mapConfig.invertZ;
+            // Update button states after DOM is loaded
+            setTimeout(() => {
+                const btnFlipX = document.getElementById('btn-flip-x');
+                const btnFlipZ = document.getElementById('btn-flip-z');
+                if (btnFlipX && mapConfig.invertX) btnFlipX.classList.add('active');
+                if (btnFlipZ && mapConfig.invertZ) btnFlipZ.classList.add('active');
+            }, 100);
         } catch(e) { console.error("Config load error", e); }
     }
 
@@ -493,9 +510,26 @@
         saveConfig();
     }
 
-    function toggleFlip(axis, val) {
-        if(axis === 'x') mapConfig.invertX = val;
-        if(axis === 'z') mapConfig.invertZ = val;
+    function toggleFlipX() {
+        mapConfig.invertX = !mapConfig.invertX;
+        const btn = document.getElementById('btn-flip-x');
+        if (mapConfig.invertX) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+        saveConfig();
+        updateRadar(true);
+    }
+
+    function toggleFlipZ() {
+        mapConfig.invertZ = !mapConfig.invertZ;
+        const btn = document.getElementById('btn-flip-z');
+        if (mapConfig.invertZ) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
         saveConfig();
         updateRadar(true);
     }
@@ -667,6 +701,43 @@
 
     function getColor(side) { if(side === "Clan") return "#ef5350"; if(side === "Omni") return "#29b6f6"; return "#bdbdbd"; }
 
+    // Continuous Scanning Toggle
+    let continuousScanEnabled = false;
+
+    async function toggleContinuousScan() {
+        try {
+            const response = await fetch(`${PLUGIN_URL}/api/scan/toggle`, { method: 'POST' });
+            const data = await response.json();
+            continuousScanEnabled = data.enabled;
+            updateScanButton();
+        } catch (e) {
+            console.error('Failed to toggle continuous scan:', e);
+        }
+    }
+
+    async function fetchScanStatus() {
+        try {
+            const response = await fetch(`${PLUGIN_URL}/api/scan/status`);
+            const data = await response.json();
+            continuousScanEnabled = data.enabled;
+            updateScanButton();
+        } catch (e) {
+            console.error('Failed to fetch scan status:', e);
+        }
+    }
+
+    function updateScanButton() {
+        const btn = document.getElementById('btn-continuous-scan');
+        const status = document.getElementById('scan-status');
+        if (continuousScanEnabled) {
+            btn.classList.add('btn-primary');
+            status.innerText = 'Continuous Scan: ON';
+        } else {
+            btn.classList.remove('btn-primary');
+            status.innerText = 'Continuous Scan: OFF';
+        }
+    }
+
     // Help Modal Functions
     function showHelp() {
         document.getElementById('help-modal').style.display = 'block';
@@ -736,7 +807,9 @@
     }
 
     fetchMapInfo();
+    fetchScanStatus(); // Initial scan status
     setInterval(fetchMapInfo, 5000);
+    setInterval(fetchScanStatus, 5000); // Poll scan status
     setInterval(() => updateRadar(false), REFRESH_RATE);
     updateStatistics(); // Initial stats update
 </script>

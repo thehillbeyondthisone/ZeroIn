@@ -128,6 +128,12 @@ namespace ZeroIn.Web
                     case "/api/mapinfo":
                         ServeMapInfo(response);
                         break;
+                    case "/api/scan/status":
+                        ServeScanStatus(response);
+                        break;
+                    case "/api/scan/toggle":
+                        ToggleScan(response);
+                        break;
                     default:
                         // Try to serve map image
                         if (path.StartsWith("/maps/"))
@@ -438,6 +444,47 @@ namespace ZeroIn.Web
                 ZeroIn.Log?.Warning($"Error serving static file {filename}: {ex.Message}");
                 response.StatusCode = 500;
                 SendJson(response, new { error = "Failed to load file" });
+            }
+        }
+
+        private void ServeScanStatus(HttpListenerResponse response)
+        {
+            var data = new
+            {
+                enabled = ZeroIn.Config?.ContinuousScanning ?? false,
+                scannerActive = ZeroIn.Scanner != null,
+                detectionRange = ZeroIn.Config?.PlayerDetectionRange ?? 50f
+            };
+            SendJson(response, data);
+        }
+
+        private void ToggleScan(HttpListenerResponse response)
+        {
+            if (ZeroIn.Config != null)
+            {
+                ZeroIn.Config.ContinuousScanning = !ZeroIn.Config.ContinuousScanning;
+
+                var data = new
+                {
+                    enabled = ZeroIn.Config.ContinuousScanning,
+                    message = ZeroIn.Config.ContinuousScanning ? "Continuous scanning enabled" : "Continuous scanning disabled"
+                };
+                SendJson(response, data);
+
+                // Log to game chat
+                if (ZeroIn.Config.ContinuousScanning)
+                {
+                    Chat.WriteLine("[ZeroIn] Continuous scanning enabled via web interface", ChatColor.Green);
+                }
+                else
+                {
+                    Chat.WriteLine("[ZeroIn] Continuous scanning disabled via web interface", ChatColor.Yellow);
+                }
+            }
+            else
+            {
+                response.StatusCode = 500;
+                SendJson(response, new { error = "Config not available" });
             }
         }
 
