@@ -134,9 +134,17 @@ namespace ZeroIn.Web
                     case "/api/scan/toggle":
                         ToggleScan(response);
                         break;
+                    case "/api/settings":
+                        ServeSettings(response);
+                        break;
                     default:
+                        // Check for POST with query parameters for settings
+                        if (request.HttpMethod == "POST" && path.StartsWith("/api/settings/"))
+                        {
+                            HandleSettingsPost(request, response, path);
+                        }
                         // Try to serve map image
-                        if (path.StartsWith("/maps/"))
+                        else if (path.StartsWith("/maps/"))
                         {
                             ServeMapImage(response, path);
                         }
@@ -485,6 +493,117 @@ namespace ZeroIn.Web
             {
                 response.StatusCode = 500;
                 SendJson(response, new { error = "Config not available" });
+            }
+        }
+
+        private void ServeSettings(HttpListenerResponse response)
+        {
+            if (ZeroIn.Config != null && ZeroIn.Radar != null)
+            {
+                var data = new
+                {
+                    radarEnabled = ZeroIn.Radar.Enabled,
+                    showDetectionRadius = ZeroIn.Config.ShowDetectionRadius,
+                    showPlayerMarkers = ZeroIn.Config.ShowPlayerMarkers,
+                    showAFKPaths = ZeroIn.Config.ShowAFKPaths,
+                    showActivePlayerPaths = ZeroIn.Config.ShowActivePlayerPaths,
+                    showMarkerLines = ZeroIn.Config.ShowMarkerLines,
+                    enableCombat = ZeroIn.Config.EnableCombat,
+                    playerDetectionRange = ZeroIn.Config.PlayerDetectionRange,
+                    continuousScanning = ZeroIn.Config.ContinuousScanning
+                };
+                SendJson(response, data);
+            }
+            else
+            {
+                response.StatusCode = 500;
+                SendJson(response, new { error = "Config not available" });
+            }
+        }
+
+        private void HandleSettingsPost(HttpListenerRequest request, HttpListenerResponse response, string path)
+        {
+            try
+            {
+                var query = request.Url.Query;
+                var queryParams = System.Web.HttpUtility.ParseQueryString(query);
+
+                if (path == "/api/settings/toggle")
+                {
+                    var setting = queryParams["setting"];
+                    if (string.IsNullOrEmpty(setting) || ZeroIn.Config == null)
+                    {
+                        response.StatusCode = 400;
+                        SendJson(response, new { error = "Invalid setting parameter" });
+                        return;
+                    }
+
+                    bool newValue = false;
+                    switch (setting)
+                    {
+                        case "radarEnabled":
+                            if (ZeroIn.Radar != null)
+                            {
+                                ZeroIn.Radar.Enabled = !ZeroIn.Radar.Enabled;
+                                newValue = ZeroIn.Radar.Enabled;
+                                Chat.WriteLine($"[ZeroIn] Radar {(newValue ? "enabled" : "disabled")} via web interface", newValue ? ChatColor.Green : ChatColor.Yellow);
+                            }
+                            break;
+                        case "showRadius":
+                            ZeroIn.Config.ShowDetectionRadius = !ZeroIn.Config.ShowDetectionRadius;
+                            newValue = ZeroIn.Config.ShowDetectionRadius;
+                            break;
+                        case "showMarkers":
+                            ZeroIn.Config.ShowPlayerMarkers = !ZeroIn.Config.ShowPlayerMarkers;
+                            newValue = ZeroIn.Config.ShowPlayerMarkers;
+                            break;
+                        case "showAfkPaths":
+                            ZeroIn.Config.ShowAFKPaths = !ZeroIn.Config.ShowAFKPaths;
+                            newValue = ZeroIn.Config.ShowAFKPaths;
+                            break;
+                        case "showActivePaths":
+                            ZeroIn.Config.ShowActivePlayerPaths = !ZeroIn.Config.ShowActivePlayerPaths;
+                            newValue = ZeroIn.Config.ShowActivePlayerPaths;
+                            break;
+                        case "enableCombat":
+                            ZeroIn.Config.EnableCombat = !ZeroIn.Config.EnableCombat;
+                            newValue = ZeroIn.Config.EnableCombat;
+                            Chat.WriteLine($"[ZeroIn] Combat {(newValue ? "enabled" : "disabled")} via web interface", newValue ? ChatColor.Green : ChatColor.Yellow);
+                            break;
+                        default:
+                            response.StatusCode = 400;
+                            SendJson(response, new { error = "Unknown setting" });
+                            return;
+                    }
+
+                    SendJson(response, new { enabled = newValue, setting = setting });
+                }
+                else if (path == "/api/settings/detection-range")
+                {
+                    var valueStr = queryParams["value"];
+                    if (float.TryParse(valueStr, out float value) && ZeroIn.Config != null)
+                    {
+                        ZeroIn.Config.PlayerDetectionRange = value;
+                        Chat.WriteLine($"[ZeroIn] Detection range set to {value}m via web interface", ChatColor.Green);
+                        SendJson(response, new { value = value });
+                    }
+                    else
+                    {
+                        response.StatusCode = 400;
+                        SendJson(response, new { error = "Invalid value" });
+                    }
+                }
+                else
+                {
+                    response.StatusCode = 404;
+                    SendJson(response, new { error = "Not found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                ZeroIn.Log?.Warning($"HandleSettingsPost error: {ex.Message}");
+                response.StatusCode = 500;
+                SendJson(response, new { error = ex.Message });
             }
         }
 

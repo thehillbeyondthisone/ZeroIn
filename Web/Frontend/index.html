@@ -43,6 +43,14 @@
         .toggle-btn.active { background: #00695c; border-color: #004d40; color: #fff; }
         .toggle-row { display: flex; gap: 5px; margin-bottom: 10px; }
 
+        /* Collapsible Panel */
+        .collapsible-header { padding: 10px; background: #1a1a1a; border-top: 1px solid #333; border-bottom: 1px solid #333; cursor: pointer; font-size: 11px; font-weight: bold; color: #4caf50; display: flex; justify-content: space-between; align-items: center; }
+        .collapsible-header:hover { background: #222; }
+        .collapsible-arrow { transition: transform 0.2s; }
+        .collapsible-arrow.open { transform: rotate(90deg); }
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .collapsible-content.open { max-height: 1000px; transition: max-height 0.5s ease-in; }
+
         /* Player List */
         #player-list { flex: 1; overflow-y: auto; padding: 0; list-style: none; margin: 0; }
         .player-row { padding: 8px 15px; border-bottom: 1px solid #222; cursor: pointer; display: flex; justify-content: space-between; color: #ccc; font-size: 12px; }
@@ -157,10 +165,15 @@
         </div>
 
         <div id="local-controls" style="display:none; border-top:1px solid #333; margin-top:10px; padding-top:10px;">
-            <div style="color:#4bf; font-size:11px; font-weight:bold; margin-bottom:5px;">LOCAL MAP SETTINGS</div>
+            <div style="color:#4bf; font-size:11px; font-weight:bold; margin-bottom:5px;">MINIMAP LAYER SETTINGS</div>
 
             <div class="control-row">
                 <select id="layer-selector" onchange="changeActiveLayer(this.value)"></select>
+            </div>
+
+            <div class="toggle-row">
+                <button id="btn-layer-flipx" class="toggle-btn" style="flex:1" onclick="toggleLayerFlipX()">Flip X</button>
+                <button id="btn-layer-flipz" class="toggle-btn" style="flex:1" onclick="toggleLayerFlipZ()">Flip Y</button>
             </div>
 
             <div class="control-row">
@@ -171,17 +184,53 @@
             <button class="action-btn" style="width:100%; margin-bottom:5px;" onclick="snapLocalToPlayer()">Snap To Player</button>
         </div>
 
+        <!-- Plugin Settings Panel -->
+        <div class="collapsible-header" onclick="toggleCollapsible('settings-panel')">
+            <span>⚙️ PLUGIN SETTINGS</span>
+            <span class="collapsible-arrow" id="settings-arrow">►</span>
+        </div>
+        <div id="settings-panel" class="collapsible-content">
+            <div style="padding:10px; background:#151515;">
+                <div class="toggle-row">
+                    <button id="btn-radar-enabled" class="toggle-btn" style="flex:1" onclick="toggleSetting('radarEnabled')">Radar</button>
+                    <button id="btn-show-radius" class="toggle-btn" style="flex:1" onclick="toggleSetting('showRadius')">Radius</button>
+                </div>
+                <div class="toggle-row">
+                    <button id="btn-show-markers" class="toggle-btn" style="flex:1" onclick="toggleSetting('showMarkers')">Markers</button>
+                    <button id="btn-show-afk-paths" class="toggle-btn" style="flex:1" onclick="toggleSetting('showAfkPaths')">AFK Paths</button>
+                </div>
+                <div class="toggle-row">
+                    <button id="btn-show-active-paths" class="toggle-btn" style="flex:1" onclick="toggleSetting('showActivePaths')">Active Paths</button>
+                    <button id="btn-enable-combat" class="toggle-btn" style="flex:1" onclick="toggleSetting('enableCombat')">Combat</button>
+                </div>
+                <div class="control-row" style="margin-top:10px;">
+                    <span style="font-size:10px;">Detection Range:</span>
+                    <input type="range" id="detection-range" min="10" max="200" value="50" oninput="updateDetectionRange(this.value)">
+                    <span id="detection-val" class="val-display">50m</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Debug Panel -->
         <div id="debug-panel" style="display:none; border-top:1px solid #333; margin-top:10px; padding-top:10px;">
             <div style="color:#ff0; font-size:11px; font-weight:bold; margin-bottom:5px;">DEBUG INFO</div>
-            <div style="font-size:10px; font-family:monospace; color:#888; line-height:1.4;">
+            <div style="font-size:9px; font-family:monospace; color:#888; line-height:1.5; max-height:200px; overflow-y:auto;">
+                <div style="color:#4caf50; font-weight:bold; margin-top:5px;">Global:</div>
                 <div>Player Pos: <span id="dbg-player-pos">--</span></div>
                 <div>Zone ID: <span id="dbg-zone-id">--</span></div>
                 <div>Zone Offset: <span id="dbg-zone-offset">--</span></div>
                 <div>Divisor: <span id="dbg-divisor">--</span></div>
                 <div>InvertX: <span id="dbg-invertx">--</span></div>
                 <div>InvertZ: <span id="dbg-invertz">--</span></div>
-                <div>Local Map: <span id="dbg-localmap">--</span></div>
+
+                <div style="color:#4bf; font-weight:bold; margin-top:5px;">Active Minimap Layer:</div>
+                <div>Layer: <span id="dbg-localmap">--</span></div>
+                <div>FlipX: <span id="dbg-layer-flipx">--</span></div>
+                <div>FlipZ: <span id="dbg-layer-flipz">--</span></div>
+                <div>Opacity: <span id="dbg-layer-opacity">--</span></div>
+                <div>Bounds: <span id="dbg-layer-bounds">--</span></div>
+                <div>Size: <span id="dbg-layer-size">--</span></div>
+                <div>Center: <span id="dbg-layer-center">--</span></div>
             </div>
             <button class="action-btn" style="width:100%; margin-top:5px;" onclick="toggleDebugPanel()">Hide Debug</button>
         </div>
@@ -283,8 +332,10 @@
     let zoneData = JSON.parse(JSON.stringify(defaultZoneData));
     
     // NOTE: Local Map Bounds are [SouthWest, NorthEast] in simple pixel coords
+    // Each layer can have its own flip settings
     let localMaps = {
-        "ICC": { file: LOCAL_MAP_FILE, bounds: [[1000, 650], [1100, 750]], minZoom: 2, opacity: 1.0, aspectRatio: 1.0 }
+        "ICC": { file: LOCAL_MAP_FILE, bounds: [[1000, 650], [1100, 750]], minZoom: 2, opacity: 1.0, aspectRatio: 1.0, flipX: false, flipZ: false },
+        "FullMap": { file: "FullMap_Fixed.png", bounds: [[0, 0], [1536, 1024]], minZoom: -2, opacity: 0.5, aspectRatio: 1.5, flipX: false, flipZ: false }
     };
 
     let players = {}; 
@@ -315,6 +366,8 @@
                     else {
                         localMaps[k].bounds = saved.localMaps[k].bounds;
                         localMaps[k].opacity = saved.localMaps[k].opacity;
+                        localMaps[k].flipX = saved.localMaps[k].flipX || false;
+                        localMaps[k].flipZ = saved.localMaps[k].flipZ || false;
                     }
                 });
             }
@@ -433,6 +486,31 @@
     // 2. LOCAL MAP CALIBRATION
     function changeActiveLayer(val) {
         selectedLayerKey = val;
+
+        // Update flip button states for the selected layer
+        const layer = localMaps[selectedLayerKey];
+        if (layer) {
+            const btnFlipX = document.getElementById('btn-layer-flipx');
+            const btnFlipZ = document.getElementById('btn-layer-flipz');
+
+            if (btnFlipX) {
+                if (layer.flipX) btnFlipX.classList.add('active');
+                else btnFlipX.classList.remove('active');
+            }
+            if (btnFlipZ) {
+                if (layer.flipZ) btnFlipZ.classList.add('active');
+                else btnFlipZ.classList.remove('active');
+            }
+
+            // Update opacity slider
+            const opacitySlider = document.getElementById('opacity-slider');
+            const opacityVal = document.getElementById('opacity-val');
+            if (opacitySlider && layer.opacity !== undefined) {
+                opacitySlider.value = layer.opacity;
+                opacityVal.innerText = layer.opacity;
+            }
+        }
+
         if(mode === "local_cal") { resetModes(); toggleLocalCal(); }
     }
 
@@ -521,13 +599,180 @@
     }
 
     function updateDebugInfo() {
+        // Global info
         document.getElementById('dbg-player-pos').innerText = myLocalPos ? `${myLocalPos.x.toFixed(1)}, ${myLocalPos.z.toFixed(1)}` : '--';
         document.getElementById('dbg-zone-id').innerText = currentZoneId || '--';
         document.getElementById('dbg-zone-offset').innerText = currentZoneOffset ? `${currentZoneOffset.x}, ${currentZoneOffset.z}` : '--';
         document.getElementById('dbg-divisor').innerText = mapConfig.divisor;
         document.getElementById('dbg-invertx').innerText = mapConfig.invertX;
         document.getElementById('dbg-invertz').innerText = mapConfig.invertZ;
+
+        // Minimap layer info
         document.getElementById('dbg-localmap').innerText = selectedLayerKey;
+        const layer = localMaps[selectedLayerKey];
+        if (layer) {
+            document.getElementById('dbg-layer-flipx').innerText = layer.flipX || false;
+            document.getElementById('dbg-layer-flipz').innerText = layer.flipZ || false;
+            document.getElementById('dbg-layer-opacity').innerText = layer.opacity || 1.0;
+
+            if (layer.layer && layer.layer.getBounds) {
+                const b = layer.layer.getBounds();
+                const sw = b.getSouthWest();
+                const ne = b.getNorthEast();
+                document.getElementById('dbg-layer-bounds').innerText = `SW:[${sw.lat.toFixed(0)},${sw.lng.toFixed(0)}] NE:[${ne.lat.toFixed(0)},${ne.lng.toFixed(0)}]`;
+
+                const width = ne.lng - sw.lng;
+                const height = ne.lat - sw.lat;
+                document.getElementById('dbg-layer-size').innerText = `${width.toFixed(0)} × ${height.toFixed(0)}`;
+                document.getElementById('dbg-layer-center').innerText = `[${b.getCenter().lat.toFixed(0)}, ${b.getCenter().lng.toFixed(0)}]`;
+            } else {
+                document.getElementById('dbg-layer-bounds').innerText = '--';
+                document.getElementById('dbg-layer-size').innerText = '--';
+                document.getElementById('dbg-layer-center').innerText = '--';
+            }
+        }
+    }
+
+    // Layer Flip Controls (only affect the minimap layer, not global radar)
+    function toggleLayerFlipX() {
+        const layer = localMaps[selectedLayerKey];
+        if (!layer) return;
+
+        layer.flipX = !layer.flipX;
+        const btn = document.getElementById('btn-layer-flipx');
+        if (layer.flipX) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+
+        // Re-render the layer with flip applied
+        updateLayerTransform();
+        saveConfig();
+        updateDebugInfo();
+    }
+
+    function toggleLayerFlipZ() {
+        const layer = localMaps[selectedLayerKey];
+        if (!layer) return;
+
+        layer.flipZ = !layer.flipZ;
+        const btn = document.getElementById('btn-layer-flipz');
+        if (layer.flipZ) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+
+        // Re-render the layer with flip applied
+        updateLayerTransform();
+        saveConfig();
+        updateDebugInfo();
+    }
+
+    function updateLayerTransform() {
+        const layer = localMaps[selectedLayerKey];
+        if (!layer || !layer.layer) return;
+
+        // Apply CSS transform to flip the image layer
+        const imgElement = layer.layer.getElement();
+        if (imgElement) {
+            let transform = '';
+            if (layer.flipX) transform += 'scaleX(-1) ';
+            if (layer.flipZ) transform += 'scaleY(-1) ';
+            imgElement.style.transform = transform.trim();
+        }
+    }
+
+    // Collapsible Panel
+    function toggleCollapsible(panelId) {
+        const panel = document.getElementById(panelId);
+        const arrow = document.getElementById(panelId.replace('-panel', '-arrow'));
+
+        if (panel.classList.contains('open')) {
+            panel.classList.remove('open');
+            arrow.classList.remove('open');
+        } else {
+            panel.classList.add('open');
+            arrow.classList.add('open');
+        }
+    }
+
+    // Plugin Settings
+    let pluginSettings = {
+        radarEnabled: true,
+        showRadius: true,
+        showMarkers: true,
+        showAfkPaths: true,
+        showActivePaths: true,
+        enableCombat: false
+    };
+
+    async function toggleSetting(setting) {
+        try {
+            const response = await fetch(`${PLUGIN_URL}/api/settings/toggle?setting=${setting}`, { method: 'POST' });
+            const data = await response.json();
+            pluginSettings[setting] = data.enabled;
+            updateSettingButton(setting);
+        } catch (e) {
+            console.error('Failed to toggle setting:', e);
+        }
+    }
+
+    function updateSettingButton(setting) {
+        const btnMap = {
+            'radarEnabled': 'btn-radar-enabled',
+            'showRadius': 'btn-show-radius',
+            'showMarkers': 'btn-show-markers',
+            'showAfkPaths': 'btn-show-afk-paths',
+            'showActivePaths': 'btn-show-active-paths',
+            'enableCombat': 'btn-enable-combat'
+        };
+
+        const btnId = btnMap[setting];
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            if (pluginSettings[setting]) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+    }
+
+    async function fetchPluginSettings() {
+        try {
+            const response = await fetch(`${PLUGIN_URL}/api/settings`);
+            const data = await response.json();
+            pluginSettings = {
+                radarEnabled: data.radarEnabled,
+                showRadius: data.showDetectionRadius,
+                showMarkers: data.showPlayerMarkers,
+                showAfkPaths: data.showAFKPaths,
+                showActivePaths: data.showActivePlayerPaths,
+                enableCombat: data.enableCombat
+            };
+
+            // Update all buttons
+            Object.keys(pluginSettings).forEach(s => updateSettingButton(s));
+
+            // Update detection range slider
+            if (data.playerDetectionRange) {
+                document.getElementById('detection-range').value = data.playerDetectionRange;
+                document.getElementById('detection-val').innerText = data.playerDetectionRange + 'm';
+            }
+        } catch (e) {
+            console.error('Failed to fetch plugin settings:', e);
+        }
+    }
+
+    async function updateDetectionRange(value) {
+        document.getElementById('detection-val').innerText = value + 'm';
+        try {
+            await fetch(`${PLUGIN_URL}/api/settings/detection-range?value=${value}`, { method: 'POST' });
+        } catch (e) {
+            console.error('Failed to update detection range:', e);
+        }
     }
 
     function snapLocalToPlayer() {
@@ -825,8 +1070,10 @@
 
     fetchMapInfo();
     fetchScanStatus(); // Initial scan status
+    fetchPluginSettings(); // Initial plugin settings
     setInterval(fetchMapInfo, 5000);
     setInterval(fetchScanStatus, 5000); // Poll scan status
+    setInterval(fetchPluginSettings, 5000); // Poll plugin settings
     setInterval(() => updateRadar(false), REFRESH_RATE);
     updateStatistics(); // Initial stats update
 </script>
