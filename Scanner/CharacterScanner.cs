@@ -75,7 +75,7 @@ namespace ZeroIn.Scanner
         /// Adapter call � provide primitive values from AOSharp-aware code.
         /// This method snapshots previous position, increments TimesSpotted, and updates fields.
         /// </summary>
-        public void OnCharacterSeen(int instanceId, string name, float posX, float posY, float posZ, int health = 0, float distance = 0f, int playfieldId = 0, string playfieldName = null)
+        public void OnCharacterSeen(int instanceId, string name, float posX, float posY, float posZ, int health = 0, float distance = 0f, int playfieldId = 0, string playfieldName = null, string side = "Neutral")
         {
             uint id = unchecked((uint)instanceId);
 
@@ -87,6 +87,7 @@ namespace ZeroIn.Scanner
                 // update fields
                 existing.TimesSpotted++;
                 existing.Name = name ?? existing.Name;
+                existing.Side = side ?? existing.Side;
                 existing.PositionX = posX;
                 existing.PositionY = posY;
                 existing.PositionZ = posZ;
@@ -111,6 +112,7 @@ namespace ZeroIn.Scanner
                 {
                     CharId = id,
                     Name = name ?? string.Empty,
+                    Side = side ?? "Neutral",
                     PositionX = posX,
                     PositionY = posY,
                     PositionZ = posZ,
@@ -147,6 +149,7 @@ namespace ZeroIn.Scanner
             {
                 CharId = src.CharId,
                 Name = src.Name,
+                Side = src.Side,
                 TimesSpotted = src.TimesSpotted,
                 PlayfieldId = src.PlayfieldId,
                 PlayfieldName = src.PlayfieldName,

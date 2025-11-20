@@ -22,6 +22,7 @@ namespace ZeroIn.Scanner
 
         // Metadata
         public string Name { get; set; } = string.Empty;
+        public string Side { get; set; } = "Neutral"; // Clan, Omni, or Neutral
         public int TimesSpotted { get; set; } = 0;
         public int PlayfieldId { get; set; } = 0;
         public string PlayfieldName { get; set; } = string.Empty;
@@ -179,7 +180,7 @@ namespace ZeroIn.Scanner
         /// </summary>
         public static string GetCsvHeader()
         {
-            return "CharId,InstanceId,Name,PlayfieldId,PlayfieldName,TimesSpotted,FirstSeen,LastSeen," +
+            return "CharId,InstanceId,Name,Side,PlayfieldId,PlayfieldName,TimesSpotted,FirstSeen,LastSeen," +
                    "PosX,PosY,PosZ,Distance,Health," +
                    "TotalDistanceMoved,StationaryCount,LastMovementTime,IsAFK,AFKConfidence";
         }
@@ -195,6 +196,7 @@ namespace ZeroIn.Scanner
             sb.Append(CharId).Append(',');
             sb.Append(InstanceId).Append(',');
             sb.Append(EscapeCsv(Name)).Append(',');
+            sb.Append(EscapeCsv(Side)).Append(',');
             sb.Append(PlayfieldId).Append(',');
             sb.Append(EscapeCsv(PlayfieldName)).Append(',');
             sb.Append(TimesSpotted).Append(',');

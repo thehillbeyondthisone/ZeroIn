@@ -107,6 +107,7 @@ namespace ZeroIn.Web
                 switch (path)
                 {
                     case "/":
+                    case "/index.html":
                         ServeHtml(response);
                         break;
                     case "/api/status":
@@ -133,6 +134,11 @@ namespace ZeroIn.Web
                         {
                             ServeMapImage(response, path);
                         }
+                        // Try to serve static files (images, etc.)
+                        else if (path.EndsWith(".jpg") || path.EndsWith(".png") || path.EndsWith(".gif") || path.EndsWith(".ico"))
+                        {
+                            ServeStaticFile(response, path);
+                        }
                         else
                         {
                             response.StatusCode = 404;
@@ -155,11 +161,33 @@ namespace ZeroIn.Web
 
         private void ServeHtml(HttpListenerResponse response)
         {
-            var html = GetMapHtml();
-            var bytes = Encoding.UTF8.GetBytes(html);
-            response.ContentType = "text/html";
-            response.ContentLength64 = bytes.Length;
-            response.OutputStream.Write(bytes, 0, bytes.Length);
+            // Try to serve index.html from Web/Frontend directory
+            string indexPath = Path.Combine(ZeroIn.PluginDir, "Web", "Frontend", "index.html");
+
+            if (File.Exists(indexPath))
+            {
+                try
+                {
+                    var html = File.ReadAllText(indexPath);
+                    var bytes = Encoding.UTF8.GetBytes(html);
+                    response.ContentType = "text/html; charset=utf-8";
+                    response.ContentLength64 = bytes.Length;
+                    response.OutputStream.Write(bytes, 0, bytes.Length);
+                    response.Close();
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    ZeroIn.Log?.Warning($"Error loading index.html: {ex.Message}");
+                }
+            }
+
+            // Fallback to embedded HTML
+            var fallbackHtml = GetMapHtml();
+            var fallbackBytes = Encoding.UTF8.GetBytes(fallbackHtml);
+            response.ContentType = "text/html; charset=utf-8";
+            response.ContentLength64 = fallbackBytes.Length;
+            response.OutputStream.Write(fallbackBytes, 0, fallbackBytes.Length);
             response.Close();
         }
 
@@ -184,6 +212,7 @@ namespace ZeroIn.Web
             {
                 id = p.CharId,
                 name = p.Name,
+                side = p.Side,
                 x = p.PositionX,
                 y = p.PositionY,
                 z = p.PositionZ,
@@ -357,6 +386,58 @@ namespace ZeroIn.Web
                 ZeroIn.Log?.Warning($"Error serving map image: {ex.Message}");
                 response.StatusCode = 500;
                 SendJson(response, new { error = "Failed to load map image" });
+            }
+        }
+
+        private void ServeStaticFile(HttpListenerResponse response, string path)
+        {
+            // Remove leading slash
+            var filename = path.TrimStart('/');
+
+            // Try to find the file in Web/Frontend directory
+            var filePath = Path.Combine(ZeroIn.PluginDir, "Web", "Frontend", filename);
+
+            if (!File.Exists(filePath))
+            {
+                response.StatusCode = 404;
+                SendJson(response, new { error = "File not found", requested = filename });
+                return;
+            }
+
+            try
+            {
+                var bytes = File.ReadAllBytes(filePath);
+
+                // Determine content type based on extension
+                var extension = Path.GetExtension(filename).ToLower();
+                string contentType = "application/octet-stream";
+                switch (extension)
+                {
+                    case ".jpg":
+                    case ".jpeg":
+                        contentType = "image/jpeg";
+                        break;
+                    case ".png":
+                        contentType = "image/png";
+                        break;
+                    case ".gif":
+                        contentType = "image/gif";
+                        break;
+                    case ".ico":
+                        contentType = "image/x-icon";
+                        break;
+                }
+
+                response.ContentType = contentType;
+                response.ContentLength64 = bytes.Length;
+                response.OutputStream.Write(bytes, 0, bytes.Length);
+                response.Close();
+            }
+            catch (Exception ex)
+            {
+                ZeroIn.Log?.Warning($"Error serving static file {filename}: {ex.Message}");
+                response.StatusCode = 500;
+                SendJson(response, new { error = "Failed to load file" });
             }
         }
 

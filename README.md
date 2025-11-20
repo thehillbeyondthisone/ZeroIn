@@ -3,7 +3,26 @@ Find AFK players across Anarchy Online zones.
 
 An AOSharp plugin that scans for nearby players while following a roamba path, with robust AFK detection and map overlay export capabilities.
 
+## Quick Start
+
+1. Load the ZeroIn plugin in Anarchy Online
+2. Type `/zeroin` to open the main UI
+3. **NEW:** Open http://localhost:8080 in your browser for the live radar interface
+4. Type `/map` in-game to auto-open the web interface
+
 ## Features
+
+### 🌐 Web-Based Live Radar (NEW!)
+- **Advanced Interactive Map**: Real-time player tracking on a zoomable, pannable map
+- **Faction-Based Detection**: Automatically categorizes players as Clan, Omni, or Neutral
+- **AFK Intelligence**: Smart detection of stationary players with confidence ratings
+- **Dual-Layer Mapping**: Global radar + local map overlays (ICC, etc.)
+- **Calibration Tools**: Precise drag-and-drop alignment for accurate positioning
+- **Statistics Dashboard**: Live metrics showing faction breakdown, AFK count, and more
+- **Keyboard Shortcuts**: Quick access to filters and controls (press `H` for help)
+- **Persistent Configuration**: All calibration data auto-saved to browser
+
+[📖 Full Web Interface Documentation](Web/Frontend/README.md)
 
 - **Path-Based Scanning**: Follows your configured roamba path while scanning for players
 - **Robust AFK Detection**: Multi-factor confidence scoring (0-100%) based on movement tracking
