@@ -7,7 +7,9 @@ using System.Text;
 using System.Threading;
 using AOSharp.Core;
 using AOSharp.Core.UI;
+using AOSharp.Core.Inventory;
 using AOSharp.Common.GameData;
+using AOSharp.Pathfinding;
 using Newtonsoft.Json;
 using ZeroIn.Scanner;
 using ZeroIn.PlanetMap;
@@ -341,9 +343,9 @@ namespace ZeroIn.Web
                 name = player.Name,
                 level = player.Level,
 
-                // Faction & Organization
-                faction = player.Faction.ToString(),
-                factionId = (int)player.Faction,
+                // Faction & Organization (using Stats)
+                faction = GetFactionName((int)player.GetStat(Stat.Side)),
+                factionId = (int)player.GetStat(Stat.Side),
 
                 // Stats
                 health = player.Health,
@@ -379,12 +381,11 @@ namespace ZeroIn.Web
                 },
 
                 // Movement
-                heading = player.Heading,
                 movementState = player.MovementState.ToString(),
                 isMoving = player.IsMoving,
 
                 // Combat
-                isInCombat = player.IsInCombat,
+                isInCombat = player.IsAttacking || DynelManager.Characters.Any(x => x.FightingTarget?.Identity == player.Identity),
                 isFighting = player.FightingTarget != null && player.FightingTarget.IsValid,
                 fightingTargetId = player.FightingTarget != null && player.FightingTarget.IsValid ?
                     (int?)player.FightingTarget.Instance : null,
@@ -396,7 +397,7 @@ namespace ZeroIn.Web
                 // Misc
                 profession = player.Profession.ToString(),
                 breed = player.Breed.ToString(),
-                gender = player.Gender.ToString(),
+                gender = GetGenderName((int)player.GetStat(Stat.Sex)),
 
                 timestamp = DateTime.UtcNow
             };
@@ -418,7 +419,6 @@ namespace ZeroIn.Web
 
             var data = new
             {
-                heading = player.Heading,
                 movementState = player.MovementState.ToString(),
                 isMoving = player.IsMoving,
                 position = new
@@ -426,14 +426,6 @@ namespace ZeroIn.Web
                     x = player.Position.X,
                     y = player.Position.Y,
                     z = player.Position.Z
-                },
-                // Movement direction (normalized)
-                // Heading is in radians, 0 = North, PI/2 = East, PI = South, 3PI/2 = West
-                direction = new
-                {
-                    radians = player.Heading,
-                    degrees = player.Heading * (180.0 / Math.PI),
-                    cardinal = GetCardinalDirection(player.Heading)
                 },
                 isNavigating = SMovementController.IsNavigating(),
                 timestamp = DateTime.UtcNow
@@ -489,8 +481,8 @@ namespace ZeroIn.Web
 
             var data = new
             {
-                faction = player.Faction.ToString(),
-                factionId = (int)player.Faction,
+                faction = GetFactionName((int)player.GetStat(Stat.Side)),
+                factionId = (int)player.GetStat(Stat.Side),
                 profession = player.Profession.ToString(),
                 level = player.Level,
                 timestamp = DateTime.UtcNow
@@ -506,26 +498,28 @@ namespace ZeroIn.Web
         {
             var team = Team.Members;
 
-            var teamData = team.Select(member => new
-            {
-                id = member.Identity.Instance,
-                name = member.Name,
-                health = member.Health,
-                healthMax = member.MaxHealth,
-                healthPercent = member.MaxHealth > 0 ? (member.Health * 100.0 / member.MaxHealth) : 0,
-                nano = member.Nano,
-                nanoMax = member.MaxNano,
-                nanoPercent = member.MaxNano > 0 ? (member.Nano * 100.0 / member.MaxNano) : 0,
-                profession = member.Profession.ToString(),
-                level = member.Level,
-                isValid = member.IsValid,
-                position = new
+            var teamData = team
+                .Where(member => member.Character != null && member.Character.IsValid)
+                .Select(member => new
                 {
-                    x = member.Position.X,
-                    y = member.Position.Y,
-                    z = member.Position.Z
-                }
-            }).ToList();
+                    id = member.Identity.Instance,
+                    name = member.Name,
+                    health = member.Character.Health,
+                    healthMax = member.Character.MaxHealth,
+                    healthPercent = member.Character.MaxHealth > 0 ? (member.Character.Health * 100.0 / member.Character.MaxHealth) : 0,
+                    nano = member.Character.Nano,
+                    nanoMax = member.Character.MaxNano,
+                    nanoPercent = member.Character.MaxNano > 0 ? (member.Character.Nano * 100.0 / member.Character.MaxNano) : 0,
+                    profession = member.Profession.ToString(),
+                    level = member.Level,
+                    isValid = member.Character.IsValid,
+                    position = new
+                    {
+                        x = member.Character.Position.X,
+                        y = member.Character.Position.Y,
+                        z = member.Character.Position.Z
+                    }
+                }).ToList();
 
             var data = new
             {
@@ -563,12 +557,12 @@ namespace ZeroIn.Web
                 name = player.Name,
                 level = player.Level,
                 profession = player.Profession.ToString(),
-                faction = player.Faction.ToString(),
+                faction = GetFactionName((int)player.GetStat(Stat.Side)),
                 breed = player.Breed.ToString(),
-                gender = player.Gender.ToString(),
+                gender = GetGenderName((int)player.GetStat(Stat.Sex)),
 
                 // Combat State
-                isInCombat = player.IsInCombat,
+                isInCombat = player.IsAttacking || DynelManager.Characters.Any(x => x.FightingTarget?.Identity == player.Identity),
                 isFighting = player.FightingTarget != null && player.FightingTarget.IsValid,
 
                 timestamp = DateTime.UtcNow
@@ -640,27 +634,32 @@ namespace ZeroIn.Web
         }
 
         /// <summary>
-        /// Helper to convert radians to cardinal direction
+        /// Helper to convert faction ID to faction name
         /// </summary>
-        private string GetCardinalDirection(float radians)
+        private string GetFactionName(int factionId)
         {
-            // Normalize to 0-2PI
-            while (radians < 0) radians += (float)(2 * Math.PI);
-            while (radians >= 2 * Math.PI) radians -= (float)(2 * Math.PI);
+            switch (factionId)
+            {
+                case 0: return "Neutral";
+                case 1: return "Omni";
+                case 2: return "Clan";
+                case 3: return "Neutral";
+                default: return "Unknown";
+            }
+        }
 
-            // Convert to degrees
-            double degrees = radians * (180.0 / Math.PI);
-
-            // Determine cardinal direction (8-point compass)
-            if (degrees >= 337.5 || degrees < 22.5) return "N";
-            if (degrees >= 22.5 && degrees < 67.5) return "NE";
-            if (degrees >= 67.5 && degrees < 112.5) return "E";
-            if (degrees >= 112.5 && degrees < 157.5) return "SE";
-            if (degrees >= 157.5 && degrees < 202.5) return "S";
-            if (degrees >= 202.5 && degrees < 247.5) return "SW";
-            if (degrees >= 247.5 && degrees < 292.5) return "W";
-            if (degrees >= 292.5 && degrees < 337.5) return "NW";
-            return "N";
+        /// <summary>
+        /// Helper to convert gender ID to gender name
+        /// </summary>
+        private string GetGenderName(int genderId)
+        {
+            switch (genderId)
+            {
+                case 0: return "Male";
+                case 1: return "Female";
+                case 2: return "Neuter";
+                default: return "Unknown";
+            }
         }
 
         private void ServeMapImage(HttpListenerResponse response, string path)
