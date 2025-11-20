@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
-using AOSharp.Core;
-using AOSharp.Core.UI;
 
 namespace ZeroIn.PlanetMap
 {
@@ -28,10 +26,7 @@ namespace ZeroIn.PlanetMap
             try
             {
                 if (!File.Exists(xmlPath))
-                {
-                    Chat.WriteLine($"[MapCoordinateLoader] MapCoordinates.xml not found at: {xmlPath}", ChatColor.Red);
                     return false;
-                }
 
                 var doc = XDocument.Load(xmlPath);
                 int count = 0;
@@ -52,12 +47,10 @@ namespace ZeroIn.PlanetMap
                     count++;
                 }
 
-                Chat.WriteLine($"[MapCoordinateLoader] Loaded {count} playfield coordinate mappings", ChatColor.Green);
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Chat.WriteLine($"[MapCoordinateLoader] Error loading coordinates: {ex.Message}", ChatColor.Red);
                 return false;
             }
         }
