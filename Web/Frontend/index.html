@@ -28,11 +28,6 @@
         input[type=range] { width: 60%; accent-color: #4caf50; cursor: pointer; }
         select { background: #222; color: #eee; border: 1px solid #444; padding: 4px; width: 100%; font-family: monospace; font-size: 11px; }
         .val-display { font-family: monospace; color: #4caf50; width: 40px; text-align: right; }
-        
-        /* Checkboxes */
-        .checkbox-row { display:flex; gap:10px; margin-bottom:10px; font-size:11px; color:#aaa; }
-        .checkbox-row label { display:flex; align-items:center; gap:5px; cursor:pointer; }
-        input[type=checkbox] { accent-color: #4caf50; }
 
         /* Buttons */
         .btn-row { display: flex; gap: 5px; margin-top: 5px; }
@@ -168,17 +163,27 @@
                 <select id="layer-selector" onchange="changeActiveLayer(this.value)"></select>
             </div>
 
-            <div class="toggle-row">
-                <button id="btn-flip-x" class="toggle-btn" style="flex:1" onclick="toggleFlipX()">Flip X</button>
-                <button id="btn-flip-z" class="toggle-btn" style="flex:1" onclick="toggleFlipZ()">Flip Y</button>
-            </div>
-
             <div class="control-row">
                 <span>OPACITY:</span>
                 <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="1" oninput="updateLocalOpacity(this.value)">
                 <span id="opacity-val" class="val-display">1.0</span>
             </div>
             <button class="action-btn" style="width:100%; margin-bottom:5px;" onclick="snapLocalToPlayer()">Snap To Player</button>
+        </div>
+
+        <!-- Debug Panel -->
+        <div id="debug-panel" style="display:none; border-top:1px solid #333; margin-top:10px; padding-top:10px;">
+            <div style="color:#ff0; font-size:11px; font-weight:bold; margin-bottom:5px;">DEBUG INFO</div>
+            <div style="font-size:10px; font-family:monospace; color:#888; line-height:1.4;">
+                <div>Player Pos: <span id="dbg-player-pos">--</span></div>
+                <div>Zone ID: <span id="dbg-zone-id">--</span></div>
+                <div>Zone Offset: <span id="dbg-zone-offset">--</span></div>
+                <div>Divisor: <span id="dbg-divisor">--</span></div>
+                <div>InvertX: <span id="dbg-invertx">--</span></div>
+                <div>InvertZ: <span id="dbg-invertz">--</span></div>
+                <div>Local Map: <span id="dbg-localmap">--</span></div>
+            </div>
+            <button class="action-btn" style="width:100%; margin-top:5px;" onclick="toggleDebugPanel()">Hide Debug</button>
         </div>
         
         <div class="btn-row">
@@ -187,6 +192,7 @@
         </div>
         <div class="btn-row">
             <button class="action-btn" onclick="exportConfig()">Save JSON</button>
+            <button class="action-btn" onclick="toggleDebugPanel()">Debug</button>
             <button class="action-btn" style="color:#f55; border-color:#522" onclick="resetCalibration()">Reset</button>
         </div>
     </div>
@@ -312,13 +318,6 @@
                     }
                 });
             }
-            // Update button states after DOM is loaded
-            setTimeout(() => {
-                const btnFlipX = document.getElementById('btn-flip-x');
-                const btnFlipZ = document.getElementById('btn-flip-z');
-                if (btnFlipX && mapConfig.invertX) btnFlipX.classList.add('active');
-                if (btnFlipZ && mapConfig.invertZ) btnFlipZ.classList.add('active');
-            }, 100);
         } catch(e) { console.error("Config load error", e); }
     }
 
@@ -510,28 +509,25 @@
         saveConfig();
     }
 
-    function toggleFlipX() {
-        mapConfig.invertX = !mapConfig.invertX;
-        const btn = document.getElementById('btn-flip-x');
-        if (mapConfig.invertX) {
-            btn.classList.add('active');
+    // Debug Panel
+    function toggleDebugPanel() {
+        const panel = document.getElementById('debug-panel');
+        if (panel.style.display === 'none') {
+            panel.style.display = 'block';
+            updateDebugInfo();
         } else {
-            btn.classList.remove('active');
+            panel.style.display = 'none';
         }
-        saveConfig();
-        updateRadar(true);
     }
 
-    function toggleFlipZ() {
-        mapConfig.invertZ = !mapConfig.invertZ;
-        const btn = document.getElementById('btn-flip-z');
-        if (mapConfig.invertZ) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-        saveConfig();
-        updateRadar(true);
+    function updateDebugInfo() {
+        document.getElementById('dbg-player-pos').innerText = myLocalPos ? `${myLocalPos.x.toFixed(1)}, ${myLocalPos.z.toFixed(1)}` : '--';
+        document.getElementById('dbg-zone-id').innerText = currentZoneId || '--';
+        document.getElementById('dbg-zone-offset').innerText = currentZoneOffset ? `${currentZoneOffset.x}, ${currentZoneOffset.z}` : '--';
+        document.getElementById('dbg-divisor').innerText = mapConfig.divisor;
+        document.getElementById('dbg-invertx').innerText = mapConfig.invertX;
+        document.getElementById('dbg-invertz').innerText = mapConfig.invertZ;
+        document.getElementById('dbg-localmap').innerText = selectedLayerKey;
     }
 
     function snapLocalToPlayer() {
@@ -643,6 +639,12 @@
             updateSidebar();
             updateStatistics();
 
+            // Update debug panel if visible
+            const debugPanel = document.getElementById('debug-panel');
+            if (debugPanel && debugPanel.style.display !== 'none') {
+                updateDebugInfo();
+            }
+
             // Update connection indicator
             const indicator = document.getElementById('conn-indicator');
             indicator.className = 'conn-indicator online';
@@ -657,17 +659,32 @@
     }
 
     function updateMarker(p) {
-        if (!filters[p.side] || (p.isAfk && !filters.AFK)) { if(markers[p.id]) map.removeLayer(markers[p.id]); delete markers[p.id]; return; }
         const pixel = gameToPixel(p.x, p.z);
         const cssClass = `custom-marker mk-${p.side} ${p.isAfk ? 'mk-AFK' : ''}`;
+
+        // Create or update marker
         if (!markers[p.id]) {
-            markers[p.id] = L.marker(pixel, {icon: L.divIcon({ className: cssClass, iconSize: [10,10] }) }).addTo(map);
+            markers[p.id] = L.marker(pixel, {icon: L.divIcon({ className: cssClass, iconSize: [10,10] }) });
             markers[p.id].bindPopup(getPopupHtml(p));
+            markers[p.id].addTo(map);
         } else {
+            // Update position and appearance
             markers[p.id].setLatLng(pixel);
             markers[p.id].setPopupContent(getPopupHtml(p));
             const el = markers[p.id].getElement();
             if(el) el.className = `leaflet-marker-icon ${cssClass} leaflet-zoom-animated leaflet-interactive`;
+        }
+
+        // Show/hide based on filters (but don't delete)
+        const shouldShow = filters[p.side] && (!p.isAfk || filters.AFK);
+        if (shouldShow) {
+            if (!map.hasLayer(markers[p.id])) {
+                markers[p.id].addTo(map);
+            }
+        } else {
+            if (map.hasLayer(markers[p.id])) {
+                map.removeLayer(markers[p.id]);
+            }
         }
     }
 
