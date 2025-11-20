@@ -7,11 +7,14 @@ using System.IO;
 using System.Linq;
 using AOSharp.Common.GameData;
 using ZeroIn.Scanner;
+using ZeroIn.Web;
+using ZeroIn.PlanetMap;
 
 namespace ZeroIn
 {
     public class ZeroIn : AOPluginEntry
     {
+        public static string PluginDir; // Make plugin directory accessible
         public static ZeroInConfig Config;
         public static RoamPath RoamPath;
         public static Logger Log;
@@ -21,11 +24,14 @@ namespace ZeroIn
         public static CharacterScanner Scanner;
         public static ScanMap Map;
         public static VisualRadar Radar;
+        public static HttpMapServer MapServer;
+        public static MapCoordinateLoader MapCoords;
 
         public override void Run()
         {
             try
             {
+                PluginDir = PluginDirectory; // Store for access by other classes
                 Chat.WriteLine("[ZeroIn] Plugin starting...", ChatColor.Green);
                 Logger.Information("Loaded!");
 
@@ -49,6 +55,12 @@ namespace ZeroIn
 
                 Chat.WriteLine("[ZeroIn] Loading roam path...", ChatColor.White);
                 RoamPath = RoamPath.Load(Config.RoamPath);  // RoamPath config which contains SPath and Targeting Rules
+
+                Chat.WriteLine("[ZeroIn] Loading map coordinates...", ChatColor.White);
+                MapCoords = new MapCoordinateLoader(CommonParameters.PluginDataPath);
+                string mapCoordsPath = System.IO.Path.Combine(PluginDir, "PlanetMap", "MapCoordinates.xml");
+                MapCoords.LoadCoordinates(mapCoordsPath);
+                Chat.WriteLine("[ZeroIn] Map coordinates loaded successfully", ChatColor.Green);
 
                 // Initialize Scanner for player detection
                 Chat.WriteLine("[ZeroIn] Initializing player scanner...", ChatColor.White);
@@ -81,8 +93,11 @@ namespace ZeroIn
                         Chat.WriteLine("/radar players - Toggle player markers", ChatColor.White);
                         Chat.WriteLine("/radar afk - Toggle AFK player paths", ChatColor.White);
                         Chat.WriteLine("/radar active - Toggle active player paths", ChatColor.White);
-                        Chat.WriteLine("/radar tags - Toggle tag-only mode", ChatColor.White);
+                        Chat.WriteLine("/radar lines - Toggle line mode (shapes vs waypoints)", ChatColor.White);
+                        Chat.WriteLine("/radar debug - Toggle radar debug mode", ChatColor.White);
+                        Chat.WriteLine("/radar stats - Show radar statistics", ChatColor.White);
                         Chat.WriteLine("/radar help - Show radar command help", ChatColor.White);
+                        Chat.WriteLine("/map - Open live web map in browser", ChatColor.White);
                         Chat.WriteLine("/debug - Toggle verbose debug logging", ChatColor.White);
                         return;
                     }
@@ -136,11 +151,11 @@ namespace ZeroIn
                                 Config.ShowPlayerMarkers ? ChatColor.Green : ChatColor.Red);
                             break;
 
-                        case "tags":
-                        case "tagonly":
-                            Config.TagOnlyMode = !Config.TagOnlyMode;
-                            Chat.WriteLine($"[ZeroIn] Tag-only mode: {(Config.TagOnlyMode ? "ON (names only)" : "OFF (shapes visible)")}",
-                                Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
+                        case "lines":
+                        case "shapes":
+                            Config.ShowMarkerLines = !Config.ShowMarkerLines;
+                            Chat.WriteLine($"[ZeroIn] Line mode: {(Config.ShowMarkerLines ? "ON (shapes)" : "OFF (minimal waypoints)")}",
+                                Config.ShowMarkerLines ? ChatColor.Green : ChatColor.Red);
                             break;
 
                         case "afk":
@@ -155,6 +170,14 @@ namespace ZeroIn
                                 Config.ShowActivePlayerPaths ? ChatColor.Green : ChatColor.Red);
                             break;
 
+                        case "debug":
+                            Radar.DebugMode = !Radar.DebugMode;
+                            break;
+
+                        case "stats":
+                            Radar.PrintStats();
+                            break;
+
                         case "help":
                             Chat.WriteLine("=== ZeroIn Radar Commands ===", ChatColor.Yellow);
                             Chat.WriteLine("/radar - Toggle all radar visuals", ChatColor.White);
@@ -162,7 +185,9 @@ namespace ZeroIn
                             Chat.WriteLine("/radar players - Toggle player markers", ChatColor.White);
                             Chat.WriteLine("/radar afk - Toggle AFK player paths", ChatColor.White);
                             Chat.WriteLine("/radar active - Toggle active (non-AFK) player paths", ChatColor.White);
-                            Chat.WriteLine("/radar tags - Toggle tag-only mode (names only, no shapes)", ChatColor.White);
+                            Chat.WriteLine("/radar lines - Toggle line mode (ON=shapes, OFF=minimal waypoints)", ChatColor.White);
+                            Chat.WriteLine("/radar debug - Toggle detailed debug logging", ChatColor.White);
+                            Chat.WriteLine("/radar stats - Show radar statistics and error counts", ChatColor.White);
                             break;
 
                         default:
@@ -249,7 +274,7 @@ namespace ZeroIn
                     Chat.WriteLine($"  Player markers: {(Config.ShowPlayerMarkers ? "ON" : "OFF")}", Config.ShowPlayerMarkers ? ChatColor.Green : ChatColor.Red);
                     Chat.WriteLine($"  AFK paths: {(Config.ShowAFKPaths ? "ON" : "OFF")}", Config.ShowAFKPaths ? ChatColor.Green : ChatColor.Red);
                     Chat.WriteLine($"  Active player paths: {(Config.ShowActivePlayerPaths ? "ON" : "OFF")}", Config.ShowActivePlayerPaths ? ChatColor.Green : ChatColor.Red);
-                    Chat.WriteLine($"  Tag-only mode: {(Config.TagOnlyMode ? "ON" : "OFF")}", Config.TagOnlyMode ? ChatColor.Green : ChatColor.Red);
+                    Chat.WriteLine($"  Line mode: {(Config.ShowMarkerLines ? "ON (shapes)" : "OFF (waypoints)")}", Config.ShowMarkerLines ? ChatColor.Green : ChatColor.Red);
                     Chat.WriteLine($"Continuous scanning: {(Config.ContinuousScanning ? "ON" : "OFF")}", Config.ContinuousScanning ? ChatColor.Green : ChatColor.Red);
 
                     var detected = Scanner.GetDetectedCharacters();
@@ -260,7 +285,22 @@ namespace ZeroIn
                     Chat.WriteLine($"Verbose debug: {(Config.VerboseDebug ? "ON" : "OFF")}", Config.VerboseDebug ? ChatColor.Green : ChatColor.Red);
                 });
 
-                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /status, /debug, /debugxml", ChatColor.Green);
+                // Add /map command to open browser
+                Chat.RegisterCommand("map", (string command, string[] param, ChatWindow chatWindow) =>
+                {
+                    Chat.WriteLine("[ZeroIn] Live map available at: http://localhost:8080", ChatColor.Yellow);
+                    Chat.WriteLine("[ZeroIn] Open this URL in your web browser to view the live map", ChatColor.White);
+                    try
+                    {
+                        System.Diagnostics.Process.Start("http://localhost:8080");
+                    }
+                    catch
+                    {
+                        Chat.WriteLine("[ZeroIn] Could not auto-open browser. Please open manually.", ChatColor.Yellow);
+                    }
+                });
+
+                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /status, /debug, /map, /debugxml", ChatColor.Green);
 
                 Chat.WriteLine("[ZeroIn] Initializing state machine...", ChatColor.White);
                 StateMachine = new RoamStateMachine(new MobTargeting(Config), Scanner, Map, Config.CoreConfig.OnInjectEnable);
@@ -268,8 +308,14 @@ namespace ZeroIn
                 Chat.WriteLine("[ZeroIn] Initializing IPC...", ChatColor.White);
                 Ipc = new IPC((byte)Config.CoreConfig.ChannelId);
 
+                Chat.WriteLine("[ZeroIn] Starting HTTP map server on port 8080...", ChatColor.White);
+                MapServer = new HttpMapServer(8080, CommonParameters.PluginDataPath, MapCoords);
+                MapServer.Start();
+                Chat.WriteLine("[ZeroIn] Live map available at: http://localhost:8080", ChatColor.Yellow);
+
                 Chat.WriteLine("[ZeroIn] *** PLUGIN LOADED SUCCESSFULLY ***", ChatColor.Green);
                 Chat.WriteLine("[ZeroIn] Type /zeroin to open the UI", ChatColor.Yellow);
+                Chat.WriteLine("[ZeroIn] Live map: http://localhost:8080", ChatColor.Yellow);
             }
             catch (Exception e)
             {
@@ -421,6 +467,32 @@ namespace ZeroIn
             {
                 // Silently catch to avoid spam
                 Log?.Warning($"OnUpdate error: {ex.Message}");
+            }
+        }
+
+        public override void Teardown()
+        {
+            try
+            {
+                Chat.WriteLine("[ZeroIn] Shutting down...", ChatColor.Yellow);
+
+                // Stop HTTP server
+                MapServer?.Stop();
+
+                // Clean up visual radar
+                if (Radar != null)
+                {
+                    Radar.Enabled = false;
+                }
+
+                // Unregister Game.OnUpdate
+                Game.OnUpdate -= OnUpdate;
+
+                Chat.WriteLine("[ZeroIn] Shutdown complete", ChatColor.Green);
+            }
+            catch (Exception ex)
+            {
+                Log?.Warning($"Teardown error: {ex}");
             }
         }
     }
