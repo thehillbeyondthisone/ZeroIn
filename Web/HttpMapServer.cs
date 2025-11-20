@@ -388,7 +388,7 @@ namespace ZeroIn.Web
                 isInCombat = player.IsAttacking || DynelManager.Characters.Any(x => x.FightingTarget?.Identity == player.Identity),
                 isFighting = player.FightingTarget != null && player.FightingTarget.IsValid,
                 fightingTargetId = player.FightingTarget != null && player.FightingTarget.IsValid ?
-                    (int?)player.FightingTarget.Instance : null,
+                    (int?)player.FightingTarget.Identity.Instance : null,
 
                 // Playfield
                 playfieldId = playfieldId,
@@ -588,12 +588,10 @@ namespace ZeroIn.Web
                 var inventory = Inventory.Items;
                 var items = inventory.Select(item => new
                 {
-                    id = item.Identity.Instance,
+                    id = item.Id,
                     name = item.Name,
                     slot = item.Slot.ToString(),
-                    ql = item.QualityLevel,
-                    icon = item.IconId,
-                    isValid = item.IsValid
+                    ql = item.QualityLevel
                 }).ToList();
 
                 var data = new
@@ -671,7 +669,7 @@ namespace ZeroIn.Web
             string mapPath = null;
 
             // First try the Maps folder in data path
-            var dataMapPath = Path.Combine(_dataPath, "Maps", filename);
+            var dataMapPath = System.IO.Path.Combine(_dataPath, "Maps", filename);
             if (File.Exists(dataMapPath))
             {
                 mapPath = dataMapPath;
@@ -679,7 +677,7 @@ namespace ZeroIn.Web
             // Then try the PlanetMap folder in plugin directory
             else
             {
-                var pluginMapPath = Path.Combine(ZeroIn.PluginDir, "PlanetMap", filename);
+                var pluginMapPath = System.IO.Path.Combine(ZeroIn.PluginDir, "PlanetMap", filename);
                 if (File.Exists(pluginMapPath))
                 {
                     mapPath = pluginMapPath;
@@ -687,7 +685,7 @@ namespace ZeroIn.Web
                 // Try with .bin extension (the map files are PNG but named .bin)
                 else
                 {
-                    var binPath = Path.Combine(ZeroIn.PluginDir, "PlanetMap", Path.ChangeExtension(filename, ".bin"));
+                    var binPath = System.IO.Path.Combine(ZeroIn.PluginDir, "PlanetMap", System.IO.Path.ChangeExtension(filename, ".bin"));
                     if (File.Exists(binPath))
                     {
                         mapPath = binPath;
@@ -696,7 +694,7 @@ namespace ZeroIn.Web
                     else
                     {
                         // Try normal/PlanetMapGfxNormal.bin
-                        binPath = Path.Combine(ZeroIn.PluginDir, "PlanetMap", "normal", "PlanetMapGfxNormal.bin");
+                        binPath = System.IO.Path.Combine(ZeroIn.PluginDir, "PlanetMap", "normal", "PlanetMapGfxNormal.bin");
                         if (File.Exists(binPath) && (filename.Contains("normal") || filename.Contains("planet")))
                         {
                             mapPath = binPath;
