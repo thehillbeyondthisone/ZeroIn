@@ -112,11 +112,29 @@ namespace ZeroIn.Web
                     case "/api/status":
                         ServeStatus(response);
                         break;
+                    case "/api/player":
+                        ServePlayer(response);
+                        break;
                     case "/api/players":
                         ServePlayers(response);
                         break;
                     case "/api/position":
                         ServePosition(response);
+                        break;
+                    case "/api/movement":
+                        ServeMovement(response);
+                        break;
+                    case "/api/zone":
+                        ServeZone(response);
+                        break;
+                    case "/api/faction":
+                        ServeFaction(response);
+                        break;
+                    case "/api/team":
+                        ServeTeam(response);
+                        break;
+                    case "/api/stats":
+                        ServeStats(response);
                         break;
                     case "/api/path":
                         ServePath(response);
@@ -126,6 +144,12 @@ namespace ZeroIn.Web
                         break;
                     case "/api/mapinfo":
                         ServeMapInfo(response);
+                        break;
+                    case "/api/inventory":
+                        ServeInventory(response);
+                        break;
+                    case "/api/skills":
+                        ServeSkills(response);
                         break;
                     default:
                         // Try to serve map image
@@ -290,6 +314,353 @@ namespace ZeroIn.Web
             };
 
             SendJson(response, data);
+        }
+
+        /// <summary>
+        /// Comprehensive player data including stats, faction, location
+        /// </summary>
+        private void ServePlayer(HttpListenerResponse response)
+        {
+            var player = DynelManager.LocalPlayer;
+            if (player == null || !player.IsValid)
+            {
+                SendJson(response, new { error = "Player not available" });
+                return;
+            }
+
+            var pos = player.Position;
+            var playfieldId = Playfield.ModelIdentity.Instance;
+
+            // Transform to map coordinates
+            var mapPos = _mapCoords?.GameToMap((uint)playfieldId, pos.X, pos.Z);
+
+            var data = new
+            {
+                // Identity
+                id = player.Identity.Instance,
+                name = player.Name,
+                level = player.Level,
+
+                // Faction & Organization
+                faction = player.Faction.ToString(),
+                factionId = (int)player.Faction,
+
+                // Stats
+                health = player.Health,
+                healthMax = player.MaxHealth,
+                healthPercent = player.MaxHealth > 0 ? (player.Health * 100.0 / player.MaxHealth) : 0,
+                nano = player.Nano,
+                nanoMax = player.MaxNano,
+                nanoPercent = player.MaxNano > 0 ? (player.Nano * 100.0 / player.MaxNano) : 0,
+
+                // Position (Game Coordinates)
+                position = new
+                {
+                    x = pos.X,
+                    y = pos.Y,
+                    z = pos.Z
+                },
+
+                // Position (Map Coordinates)
+                mapPosition = mapPos != null && mapPos.Valid ? new
+                {
+                    valid = true,
+                    mapX = mapPos.MapX,
+                    mapZ = mapPos.MapZ,
+                    playfieldId = mapPos.PlayfieldId,
+                    playfieldName = mapPos.PlayfieldName
+                } : new
+                {
+                    valid = false,
+                    mapX = 0f,
+                    mapZ = 0f,
+                    playfieldId = (uint)playfieldId,
+                    playfieldName = Playfield.Name
+                },
+
+                // Movement
+                heading = player.Heading,
+                movementState = player.MovementState.ToString(),
+                isMoving = player.IsMoving,
+
+                // Combat
+                isInCombat = player.IsInCombat,
+                isFighting = player.FightingTarget != null && player.FightingTarget.IsValid,
+                fightingTargetId = player.FightingTarget != null && player.FightingTarget.IsValid ?
+                    (int?)player.FightingTarget.Instance : null,
+
+                // Playfield
+                playfieldId = playfieldId,
+                playfieldName = Playfield.Name,
+
+                // Misc
+                profession = player.Profession.ToString(),
+                breed = player.Breed.ToString(),
+                gender = player.Gender.ToString(),
+
+                timestamp = DateTime.UtcNow
+            };
+
+            SendJson(response, data);
+        }
+
+        /// <summary>
+        /// Movement data: speed, direction, heading, velocity
+        /// </summary>
+        private void ServeMovement(HttpListenerResponse response)
+        {
+            var player = DynelManager.LocalPlayer;
+            if (player == null || !player.IsValid)
+            {
+                SendJson(response, new { error = "Player not available" });
+                return;
+            }
+
+            var data = new
+            {
+                heading = player.Heading,
+                movementState = player.MovementState.ToString(),
+                isMoving = player.IsMoving,
+                position = new
+                {
+                    x = player.Position.X,
+                    y = player.Position.Y,
+                    z = player.Position.Z
+                },
+                // Movement direction (normalized)
+                // Heading is in radians, 0 = North, PI/2 = East, PI = South, 3PI/2 = West
+                direction = new
+                {
+                    radians = player.Heading,
+                    degrees = player.Heading * (180.0 / Math.PI),
+                    cardinal = GetCardinalDirection(player.Heading)
+                },
+                isNavigating = SMovementController.IsNavigating(),
+                timestamp = DateTime.UtcNow
+            };
+
+            SendJson(response, data);
+        }
+
+        /// <summary>
+        /// Zone/Playfield information with map coordinate support
+        /// </summary>
+        private void ServeZone(HttpListenerResponse response)
+        {
+            var player = DynelManager.LocalPlayer;
+            var playfieldId = Playfield.ModelIdentity.Instance;
+            var mapInfo = _mapCoords?.GetPlayfieldInfo((uint)playfieldId);
+
+            var data = new
+            {
+                playfieldId = playfieldId,
+                playfieldName = Playfield.Name,
+                hasMapData = mapInfo != null,
+                mapCoordinates = mapInfo != null ? new
+                {
+                    referenceX = mapInfo.X,
+                    referenceZ = mapInfo.Z,
+                    xScale = mapInfo.XScale,
+                    zScale = mapInfo.ZScale
+                } : null,
+                playerPosition = player != null && player.IsValid ? new
+                {
+                    x = player.Position.X,
+                    y = player.Position.Y,
+                    z = player.Position.Z
+                } : null,
+                timestamp = DateTime.UtcNow
+            };
+
+            SendJson(response, data);
+        }
+
+        /// <summary>
+        /// Faction and organization data
+        /// </summary>
+        private void ServeFaction(HttpListenerResponse response)
+        {
+            var player = DynelManager.LocalPlayer;
+            if (player == null || !player.IsValid)
+            {
+                SendJson(response, new { error = "Player not available" });
+                return;
+            }
+
+            var data = new
+            {
+                faction = player.Faction.ToString(),
+                factionId = (int)player.Faction,
+                profession = player.Profession.ToString(),
+                level = player.Level,
+                timestamp = DateTime.UtcNow
+            };
+
+            SendJson(response, data);
+        }
+
+        /// <summary>
+        /// Team information (all team members)
+        /// </summary>
+        private void ServeTeam(HttpListenerResponse response)
+        {
+            var team = Team.Members;
+
+            var teamData = team.Select(member => new
+            {
+                id = member.Identity.Instance,
+                name = member.Name,
+                health = member.Health,
+                healthMax = member.MaxHealth,
+                healthPercent = member.MaxHealth > 0 ? (member.Health * 100.0 / member.MaxHealth) : 0,
+                nano = member.Nano,
+                nanoMax = member.MaxNano,
+                nanoPercent = member.MaxNano > 0 ? (member.Nano * 100.0 / member.MaxNano) : 0,
+                profession = member.Profession.ToString(),
+                level = member.Level,
+                isValid = member.IsValid,
+                position = new
+                {
+                    x = member.Position.X,
+                    y = member.Position.Y,
+                    z = member.Position.Z
+                }
+            }).ToList();
+
+            var data = new
+            {
+                teamSize = teamData.Count,
+                members = teamData,
+                timestamp = DateTime.UtcNow
+            };
+
+            SendJson(response, data);
+        }
+
+        /// <summary>
+        /// Character stats
+        /// </summary>
+        private void ServeStats(HttpListenerResponse response)
+        {
+            var player = DynelManager.LocalPlayer;
+            if (player == null || !player.IsValid)
+            {
+                SendJson(response, new { error = "Player not available" });
+                return;
+            }
+
+            var data = new
+            {
+                // Core Stats
+                health = player.Health,
+                healthMax = player.MaxHealth,
+                healthPercent = player.MaxHealth > 0 ? (player.Health * 100.0 / player.MaxHealth) : 0,
+                nano = player.Nano,
+                nanoMax = player.MaxNano,
+                nanoPercent = player.MaxNano > 0 ? (player.Nano * 100.0 / player.MaxNano) : 0,
+
+                // Character Info
+                name = player.Name,
+                level = player.Level,
+                profession = player.Profession.ToString(),
+                faction = player.Faction.ToString(),
+                breed = player.Breed.ToString(),
+                gender = player.Gender.ToString(),
+
+                // Combat State
+                isInCombat = player.IsInCombat,
+                isFighting = player.FightingTarget != null && player.FightingTarget.IsValid,
+
+                timestamp = DateTime.UtcNow
+            };
+
+            SendJson(response, data);
+        }
+
+        /// <summary>
+        /// Inventory summary
+        /// </summary>
+        private void ServeInventory(HttpListenerResponse response)
+        {
+            var player = DynelManager.LocalPlayer;
+            if (player == null || !player.IsValid)
+            {
+                SendJson(response, new { error = "Player not available" });
+                return;
+            }
+
+            try
+            {
+                var inventory = Inventory.Items;
+                var items = inventory.Select(item => new
+                {
+                    id = item.Identity.Instance,
+                    name = item.Name,
+                    slot = item.Slot.ToString(),
+                    ql = item.QualityLevel,
+                    icon = item.IconId,
+                    isValid = item.IsValid
+                }).ToList();
+
+                var data = new
+                {
+                    itemCount = items.Count,
+                    items = items,
+                    timestamp = DateTime.UtcNow
+                };
+
+                SendJson(response, data);
+            }
+            catch (Exception ex)
+            {
+                SendJson(response, new { error = $"Inventory error: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Skills/Abilities data
+        /// </summary>
+        private void ServeSkills(HttpListenerResponse response)
+        {
+            var player = DynelManager.LocalPlayer;
+            if (player == null || !player.IsValid)
+            {
+                SendJson(response, new { error = "Player not available" });
+                return;
+            }
+
+            var data = new
+            {
+                profession = player.Profession.ToString(),
+                level = player.Level,
+                timestamp = DateTime.UtcNow
+            };
+
+            SendJson(response, data);
+        }
+
+        /// <summary>
+        /// Helper to convert radians to cardinal direction
+        /// </summary>
+        private string GetCardinalDirection(float radians)
+        {
+            // Normalize to 0-2PI
+            while (radians < 0) radians += (float)(2 * Math.PI);
+            while (radians >= 2 * Math.PI) radians -= (float)(2 * Math.PI);
+
+            // Convert to degrees
+            double degrees = radians * (180.0 / Math.PI);
+
+            // Determine cardinal direction (8-point compass)
+            if (degrees >= 337.5 || degrees < 22.5) return "N";
+            if (degrees >= 22.5 && degrees < 67.5) return "NE";
+            if (degrees >= 67.5 && degrees < 112.5) return "E";
+            if (degrees >= 112.5 && degrees < 157.5) return "SE";
+            if (degrees >= 157.5 && degrees < 202.5) return "S";
+            if (degrees >= 202.5 && degrees < 247.5) return "SW";
+            if (degrees >= 247.5 && degrees < 292.5) return "W";
+            if (degrees >= 292.5 && degrees < 337.5) return "NW";
+            return "N";
         }
 
         private void ServeMapImage(HttpListenerResponse response, string path)

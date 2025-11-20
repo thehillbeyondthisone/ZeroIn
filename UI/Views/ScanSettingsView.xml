@@ -15,20 +15,21 @@
 		</HLayoutGroup>
 
 		<!-- Filter Settings -->
-		<Checkbox h_alignment="LEFT" label="Only AFK Players" name="OnlyAFK" layout_borders="Rect(0,0,0,4)"/>
 		<HLayoutGroup text_alignment="LEFT" name="AFKCheckTime" layout_borders="Rect(0,0,0,8)">
 			<TextView text_style="Bold" min_size="Point(120,-1)" label="AFK Time (sec)" view_layout="vertical"/>
 			<Text_Field name="AFKCheckTimeValue" text_alignment="LEFT" caption="" value="30" text_style="normal" max_length="3" min_size="Point(40,-1)"/>
 		</HLayoutGroup>
 
+		<!-- Scanner Settings -->
+		<TextView h_alignment="LEFT" label="Scanner Controls" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
+		<Button name="ToggleOnlyAFK" label="Toggle Only AFK Players" layout_borders="Rect(0,0,0,2)"/>
+		<Button name="ToggleContinuousScanning" label="Toggle Continuous Scanning" layout_borders="Rect(0,0,0,8)"/>
+
 		<!-- Output Settings -->
 		<TextView h_alignment="LEFT" label="Output Formats" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
-		<Checkbox h_alignment="LEFT" label="Save to JSON" name="SaveToJson" layout_borders="Rect(0,0,0,2)"/>
-		<Checkbox h_alignment="LEFT" label="Save to CSV" name="SaveToCsv" layout_borders="Rect(0,0,0,2)"/>
-		<Checkbox h_alignment="LEFT" label="Log to Console" name="LogToConsole" layout_borders="Rect(0,0,0,8)"/>
-
-		<!-- Continuous Scan -->
-		<Checkbox h_alignment="LEFT" label="Continuous Scanning" name="ContinuousScanning" layout_borders="Rect(0,0,0,8)"/>
+		<Button name="ToggleSaveJson" label="Toggle Save to JSON" layout_borders="Rect(0,0,0,2)"/>
+		<Button name="ToggleSaveCsv" label="Toggle Save to CSV" layout_borders="Rect(0,0,0,2)"/>
+		<Button name="ToggleLogConsole" label="Toggle Log to Console" layout_borders="Rect(0,0,0,8)"/>
 
 		<!-- Visual Settings -->
 		<TextView h_alignment="LEFT" label="Visual Toggles (Click = Toggle + Chat)" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
@@ -40,8 +41,12 @@
 
 		<!-- Combat Settings -->
 		<TextView h_alignment="LEFT" label="Combat Settings" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
-		<Checkbox h_alignment="LEFT" label="Enable Combat (Mob Targeting)" name="EnableCombat" layout_borders="Rect(0,0,0,2)"/>
-		<Checkbox h_alignment="LEFT" label="Enable Looting" name="EnableLooting" layout_borders="Rect(0,0,0,2)"/>
-		<Checkbox h_alignment="LEFT" label="Auto-Retreat (Low Health/Nano)" name="EnableHealthCheck" layout_borders="Rect(0,0,0,4)"/>
+		<Button name="ToggleCombat" label="Toggle Combat (Mob Targeting)" layout_borders="Rect(0,0,0,2)"/>
+		<Button name="ToggleLooting" label="Toggle Looting" layout_borders="Rect(0,0,0,2)"/>
+		<Button name="ToggleHealthCheck" label="Toggle Auto-Retreat" layout_borders="Rect(0,0,0,8)"/>
+
+		<!-- Web Interface -->
+		<TextView h_alignment="LEFT" label="Web Interface" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
+		<Button name="OpenWebUI" label="Open Live Map in Browser" layout_borders="Rect(0,0,0,2)"/>
 	</View>
 </root>
