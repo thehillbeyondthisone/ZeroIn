@@ -216,10 +216,11 @@
         <!-- Debug Panel -->
         <div id="debug-panel" style="display:none; border-top:1px solid #333; margin-top:10px; padding-top:10px;">
             <div style="color:#ff0; font-size:11px; font-weight:bold; margin-bottom:5px;">DEBUG INFO</div>
-            <div style="font-size:9px; font-family:monospace; color:#888; line-height:1.5; max-height:200px; overflow-y:auto;">
+            <div style="font-size:9px; font-family:monospace; color:#888; line-height:1.5; max-height:250px; overflow-y:auto;">
                 <div style="color:#4caf50; font-weight:bold; margin-top:5px;">Global:</div>
                 <div>Player Pos: <span id="dbg-player-pos">--</span></div>
                 <div>Zone ID: <span id="dbg-zone-id">--</span></div>
+                <div>Zone Name: <span id="dbg-zone-name">--</span></div>
                 <div>Zone Offset: <span id="dbg-zone-offset">--</span></div>
                 <div>Divisor: <span id="dbg-divisor">--</span></div>
                 <div>InvertX: <span id="dbg-invertx">--</span></div>
@@ -234,6 +235,19 @@
                 <div>Size: <span id="dbg-layer-size">--</span></div>
                 <div>Center: <span id="dbg-layer-center">--</span></div>
             </div>
+
+            <!-- Two-Point Calibration -->
+            <div style="border-top:1px solid #444; margin-top:8px; padding-top:8px;">
+                <div style="color:#f90; font-size:10px; font-weight:bold; margin-bottom:4px;">2-POINT CALIBRATION</div>
+                <div style="font-size:9px; color:#666; margin-bottom:6px;">Stand at 2 locations, click buttons to auto-calculate scale</div>
+                <div class="btn-row">
+                    <button id="btn-cal-pt1" class="action-btn" style="flex:1; font-size:9px;" onclick="captureCalPoint(1)">Mark Point 1</button>
+                    <button id="btn-cal-pt2" class="action-btn" style="flex:1; font-size:9px;" onclick="captureCalPoint(2)">Mark Point 2</button>
+                </div>
+                <div id="cal-status" style="font-size:9px; color:#888; margin-top:4px; min-height:20px;"></div>
+                <button id="btn-apply-cal" class="action-btn btn-primary" style="width:100%; margin-top:4px; display:none;" onclick="applyTwoPointCal()">Apply Calibration</button>
+            </div>
+
             <button class="action-btn" style="width:100%; margin-top:5px;" onclick="toggleDebugPanel()">Hide Debug</button>
         </div>
         
@@ -353,9 +367,13 @@
     
     // Calibration / UI State
     let debugLayer = L.layerGroup();
-    let mode = "normal"; 
+    let mode = "normal";
     let selectedLayerKey = "ICC"; // Default
-    let myLocalPos = { x: 0, z: 0 }; 
+    let myLocalPos = { x: 0, z: 0 };
+
+    // Two-point calibration storage
+    let calPoint1 = null; // { gameX, gameZ, pixelLat, pixelLng }
+    let calPoint2 = null; 
 
     // --- LOAD CONFIG (LocalStorage) ---
     if(localStorage.getItem('ao-radar-config-v5')) {
@@ -625,6 +643,7 @@
         // Global info
         document.getElementById('dbg-player-pos').innerText = myLocalPos ? `${myLocalPos.x.toFixed(1)}, ${myLocalPos.z.toFixed(1)}` : '--';
         document.getElementById('dbg-zone-id').innerText = currentZoneId || '--';
+        document.getElementById('dbg-zone-name').innerText = currentZoneOffset?.name || zoneData[currentZoneId]?.name || '--';
         document.getElementById('dbg-zone-offset').innerText = currentZoneOffset ? `${currentZoneOffset.x}, ${currentZoneOffset.z}` : '--';
         document.getElementById('dbg-divisor').innerText = mapConfig.divisor;
         document.getElementById('dbg-invertx').innerText = mapConfig.invertX;
@@ -705,6 +724,93 @@
             if (layer.flipZ) transform += 'scaleY(-1) ';
             imgElement.style.transform = transform.trim();
         }
+    }
+
+    // Two-Point Calibration System
+    function captureCalPoint(pointNum) {
+        if (!myLocalPos || !localPlayerMarker) {
+            document.getElementById('cal-status').innerHTML = '<span style="color:#f55;">⚠ No player position available</span>';
+            return;
+        }
+
+        const playerPixel = localPlayerMarker.getLatLng();
+        const point = {
+            gameX: myLocalPos.x,
+            gameZ: myLocalPos.z,
+            pixelLat: playerPixel.lat,
+            pixelLng: playerPixel.lng
+        };
+
+        if (pointNum === 1) {
+            calPoint1 = point;
+            document.getElementById('btn-cal-pt1').classList.add('active');
+            document.getElementById('cal-status').innerHTML = `<span style="color:#4caf50;">✓ Point 1: (${point.gameX.toFixed(1)}, ${point.gameZ.toFixed(1)})</span>`;
+        } else {
+            calPoint2 = point;
+            document.getElementById('btn-cal-pt2').classList.add('active');
+            document.getElementById('cal-status').innerHTML = `<span style="color:#4caf50;">✓ Point 2: (${point.gameX.toFixed(1)}, ${point.gameZ.toFixed(1)})</span>`;
+        }
+
+        // Show apply button when both points are captured
+        if (calPoint1 && calPoint2) {
+            document.getElementById('btn-apply-cal').style.display = 'block';
+            const distance = Math.sqrt(
+                Math.pow(calPoint2.gameX - calPoint1.gameX, 2) +
+                Math.pow(calPoint2.gameZ - calPoint1.gameZ, 2)
+            );
+            document.getElementById('cal-status').innerHTML = `<span style="color:#4caf50;">✓ Both points captured! Distance: ${distance.toFixed(1)}m<br>Ready to calculate calibration</span>`;
+        }
+    }
+
+    function applyTwoPointCal() {
+        if (!calPoint1 || !calPoint2) {
+            document.getElementById('cal-status').innerHTML = '<span style="color:#f55;">⚠ Need both points</span>';
+            return;
+        }
+
+        // Calculate the distance in game coordinates
+        const gameDX = calPoint2.gameX - calPoint1.gameX;
+        const gameDZ = calPoint2.gameZ - calPoint1.gameZ;
+        const gameDistance = Math.sqrt(gameDX * gameDX + gameDZ * gameDZ);
+
+        // Calculate the distance in pixel coordinates
+        const pixelDLat = calPoint2.pixelLat - calPoint1.pixelLat;
+        const pixelDLng = calPoint2.pixelLng - calPoint1.pixelLng;
+        const pixelDistance = Math.sqrt(pixelDLat * pixelDLat + pixelDLng * pixelDLng);
+
+        // Calculate the new divisor (how many game units per pixel)
+        const newDivisor = gameDistance / pixelDistance;
+
+        // Calculate the zone offset using point 1
+        // Reverse the gameToPixel calculation to find what offset makes point1 land at its pixel position
+        // We need: (offset.x + point1.gameX) / divisor = point1.pixelLng (after normalization)
+        // For simplicity, we'll use the current zone offset and just update divisor
+        // A full recalculation would require knowing the map bounds
+
+        mapConfig.divisor = newDivisor;
+
+        // Store per-zone if we want
+        if (currentZoneId && currentZoneOffset) {
+            if (!zoneData[currentZoneId]) {
+                zoneData[currentZoneId] = { name: currentZoneOffset.name, x: currentZoneOffset.x, z: currentZoneOffset.z };
+            }
+            zoneData[currentZoneId].divisor = newDivisor;
+        }
+
+        saveConfig();
+        updateRadar(true);
+
+        document.getElementById('cal-status').innerHTML = `<span style="color:#0f0;">✓ Applied! New divisor: ${newDivisor.toFixed(2)}</span>`;
+
+        // Reset calibration points
+        setTimeout(() => {
+            calPoint1 = null;
+            calPoint2 = null;
+            document.getElementById('btn-cal-pt1').classList.remove('active');
+            document.getElementById('btn-cal-pt2').classList.remove('active');
+            document.getElementById('btn-apply-cal').style.display = 'none';
+            document.getElementById('cal-status').innerHTML = '';
+        }, 3000);
     }
 
     // Collapsible Panel
@@ -863,6 +969,12 @@
                 }
                 currentZoneOffset = zoneData[currentZoneId];
                 document.getElementById('zone-name').innerText = currentZoneOffset.name;
+
+                // Load zone-specific divisor if available
+                if (currentZoneOffset.divisor !== undefined) {
+                    mapConfig.divisor = currentZoneOffset.divisor;
+                    console.log(`[Zone ${currentZoneId}] Loaded zone-specific divisor: ${mapConfig.divisor}`);
+                }
             }
         } catch(e) {}
     }
