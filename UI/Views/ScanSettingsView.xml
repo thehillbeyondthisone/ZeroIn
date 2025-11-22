@@ -42,6 +42,19 @@
 		<TextView h_alignment="LEFT" label="Combat Settings" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
 		<Checkbox h_alignment="LEFT" label="Enable Combat (Mob Targeting)" name="EnableCombat" layout_borders="Rect(0,0,0,2)"/>
 		<Checkbox h_alignment="LEFT" label="Enable Looting" name="EnableLooting" layout_borders="Rect(0,0,0,2)"/>
-		<Checkbox h_alignment="LEFT" label="Auto-Retreat (Low Health/Nano)" name="EnableHealthCheck" layout_borders="Rect(0,0,0,4)"/>
+		<Checkbox h_alignment="LEFT" label="Auto-Retreat (Low Health/Nano)" name="EnableHealthCheck" layout_borders="Rect(0,0,0,8)"/>
+
+		<!-- Sensor Network Settings -->
+		<TextView h_alignment="LEFT" label="Multi-Character Sensor Network" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
+		<Checkbox h_alignment="LEFT" label="Enable Sensor Network" name="EnableSensorNetwork" layout_borders="Rect(0,0,0,2)"/>
+		<Checkbox h_alignment="LEFT" label="Act as Controller (receive data)" name="IsController" layout_borders="Rect(0,0,0,4)"/>
+		<HLayoutGroup text_alignment="LEFT" name="ControllerUrl" layout_borders="Rect(0,0,0,4)">
+			<TextView text_style="Bold" min_size="Point(120,-1)" label="Controller URL" view_layout="vertical"/>
+			<Text_Field name="ControllerUrlValue" text_alignment="LEFT" caption="" value="http://localhost:8080" text_style="normal" max_length="50" min_size="Point(150,-1)"/>
+		</HLayoutGroup>
+		<HLayoutGroup text_alignment="LEFT" name="SensorUploadInterval" layout_borders="Rect(0,0,0,4)">
+			<TextView text_style="Bold" min_size="Point(120,-1)" label="Upload Interval (sec)" view_layout="vertical"/>
+			<Text_Field name="SensorUploadIntervalValue" text_alignment="LEFT" caption="" value="5" text_style="normal" max_length="2" min_size="Point(40,-1)"/>
+		</HLayoutGroup>
 	</View>
 </root>

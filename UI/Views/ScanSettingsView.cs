@@ -23,6 +23,10 @@ namespace ZeroIn
         private Checkbox _enableCombat;
         private Checkbox _enableLooting;
         private Checkbox _enableHealthCheck;
+        private Checkbox _enableSensorNetwork;
+        private Checkbox _isController;
+        private TextInputView _controllerUrl;
+        private TextInputView _sensorUploadInterval;
 
         // Public properties for access from other classes
         public float ScanSpacing
@@ -57,6 +61,10 @@ namespace ZeroIn
                     Root.FindChild("EnableCombat", out _enableCombat);
                     Root.FindChild("EnableLooting", out _enableLooting);
                     Root.FindChild("EnableHealthCheck", out _enableHealthCheck);
+                    Root.FindChild("EnableSensorNetwork", out _enableSensorNetwork);
+                    Root.FindChild("IsController", out _isController);
+                    Root.FindChild("ControllerUrlValue", out _controllerUrl);
+                    Root.FindChild("SensorUploadIntervalValue", out _sensorUploadInterval);
 
                     // Wire up button click handlers with instant feedback
                     if (_toggleDetectionRadius != null)
@@ -156,6 +164,18 @@ namespace ZeroIn
 
                 if (_enableHealthCheck != null)
                     _enableHealthCheck.SetValue(config.EnableHealthCheck);
+
+                if (_enableSensorNetwork != null)
+                    _enableSensorNetwork.SetValue(config.EnableSensorNetwork);
+
+                if (_isController != null)
+                    _isController.SetValue(config.IsController);
+
+                if (_controllerUrl != null)
+                    _controllerUrl.Text = config.ControllerUrl;
+
+                if (_sensorUploadInterval != null)
+                    _sensorUploadInterval.Text = config.SensorUploadInterval.ToString();
             }
             catch (System.Exception ex)
             {
@@ -204,6 +224,18 @@ namespace ZeroIn
 
                 if (_enableHealthCheck != null)
                     config.EnableHealthCheck = _enableHealthCheck.IsChecked;
+
+                if (_enableSensorNetwork != null)
+                    config.EnableSensorNetwork = _enableSensorNetwork.IsChecked;
+
+                if (_isController != null)
+                    config.IsController = _isController.IsChecked;
+
+                if (_controllerUrl != null && !string.IsNullOrEmpty(_controllerUrl.Text))
+                    config.ControllerUrl = _controllerUrl.Text;
+
+                if (_sensorUploadInterval != null && int.TryParse(_sensorUploadInterval.Text, out int interval))
+                    config.SensorUploadInterval = interval;
             }
             catch (System.Exception ex)
             {

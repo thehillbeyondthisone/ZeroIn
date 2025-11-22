@@ -1070,9 +1070,23 @@
     }
 
     function getPopupHtml(p) {
-        return `<div style="font-weight:bold;border-bottom:1px solid #555;margin-bottom:4px;color:${getColor(p.side)}">${p.name}</div>
+        let html = `<div style="font-weight:bold;border-bottom:1px solid #555;margin-bottom:4px;color:${getColor(p.side)}">${p.name}</div>
                 <div style="color:#aaa">Dist: <span style="color:#fff">${p.distance.toFixed(0)}m</span></div>
                 <div style="color:#aaa">Zone: <span style="color:#fff">${p.playfieldName}</span></div>`;
+
+        // Add AFK info
+        if (p.isAfk && p.afkDuration > 0) {
+            const mins = Math.floor(p.afkDuration / 60);
+            const secs = Math.floor(p.afkDuration % 60);
+            html += `<div style="color:#f90">AFK: <span style="color:#fff">${mins}m ${secs}s</span></div>`;
+        }
+
+        // Add sensor info
+        if (p.detectedBy) {
+            html += `<div style="color:#888;font-size:10px;margin-top:4px;border-top:1px solid #444;padding-top:4px;">📡 ${p.detectedBy}</div>`;
+        }
+
+        return html;
     }
 
     function updateSidebar() {
@@ -1083,7 +1097,22 @@
             if (!filters[p.side] || (p.isAfk && !filters.AFK)) return;
             const li = document.createElement('li');
             li.className = 'player-row';
-            li.innerHTML = `<div><strong style="color:${getColor(p.side)}">${p.name}</strong><br><span style="font-size:10px;color:#666">${p.playfieldName || 'Unknown'}</span></div><div style="text-align:right; font-family:monospace;">${p.distance.toFixed(0)}m</div>`;
+
+            // Format AFK duration
+            let afkInfo = '';
+            if (p.isAfk && p.afkDuration > 0) {
+                const mins = Math.floor(p.afkDuration / 60);
+                const secs = Math.floor(p.afkDuration % 60);
+                afkInfo = ` | AFK ${mins}m ${secs}s`;
+            }
+
+            // Format sensor info
+            let sensorInfo = '';
+            if (p.detectedBy) {
+                sensorInfo = `<br><span style="font-size:9px;color:#888">📡 ${p.detectedBy}</span>`;
+            }
+
+            li.innerHTML = `<div><strong style="color:${getColor(p.side)}">${p.name}</strong><br><span style="font-size:10px;color:#666">${p.playfieldName || 'Unknown'}${afkInfo}</span>${sensorInfo}</div><div style="text-align:right; font-family:monospace;">${p.distance.toFixed(0)}m</div>`;
             li.onclick = () => { if(markers[p.id]) { map.flyTo(markers[p.id].getLatLng(), 5); markers[p.id].openPopup(); }};
             list.appendChild(li);
         });
