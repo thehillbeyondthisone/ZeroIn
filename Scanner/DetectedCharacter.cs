@@ -50,6 +50,23 @@ namespace ZeroIn.Scanner
         public int StationaryCount { get; set; } = 0; // How many times we've seen them without movement
         public DateTime LastMovementTime { get; set; } = DateTime.MinValue;
 
+        // Sensor Network tracking
+        public string DetectedBy { get; set; } = string.Empty; // Which sensor detected this player
+        public DateTime LastScanned { get; set; } = DateTime.MinValue; // Last time any sensor saw them
+
+        /// <summary>
+        /// How long this character has been AFK (if they are AFK)
+        /// </summary>
+        public TimeSpan AfkDuration
+        {
+            get
+            {
+                if (!IsLikelyAFK()) return TimeSpan.Zero;
+                if (LastMovementTime == DateTime.MinValue) return TimeSpan.Zero;
+                return DateTime.UtcNow - LastMovementTime;
+            }
+        }
+
         // Utility: update "previous" snapshot (call before updating positions)
         public void SnapshotPreviousPosition()
         {
@@ -182,7 +199,7 @@ namespace ZeroIn.Scanner
         {
             return "CharId,InstanceId,Name,Side,PlayfieldId,PlayfieldName,TimesSpotted,FirstSeen,LastSeen," +
                    "PosX,PosY,PosZ,Distance,Health," +
-                   "TotalDistanceMoved,StationaryCount,LastMovementTime,IsAFK,AFKConfidence";
+                   "TotalDistanceMoved,StationaryCount,LastMovementTime,IsAFK,AFKConfidence,DetectedBy,LastScanned";
         }
 
         /// <summary>
@@ -211,7 +228,9 @@ namespace ZeroIn.Scanner
             sb.Append(StationaryCount).Append(',');
             sb.Append(LastMovementTime == DateTime.MinValue ? "" : LastMovementTime.ToString("o")).Append(',');
             sb.Append(IsLikelyAFK()).Append(',');
-            sb.Append(GetAFKConfidence());
+            sb.Append(GetAFKConfidence()).Append(',');
+            sb.Append(EscapeCsv(DetectedBy)).Append(',');
+            sb.Append(LastScanned == DateTime.MinValue ? "" : LastScanned.ToString("o"));
             return sb.ToString();
         }
 

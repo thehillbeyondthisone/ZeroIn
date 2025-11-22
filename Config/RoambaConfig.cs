@@ -53,6 +53,12 @@ namespace ZeroIn
         // Debug settings
         public bool VerboseDebug = false; // Enable verbose debug output to console
 
+        // Sensor Network Settings
+        public bool IsController = false; // Is this instance acting as the central controller?
+        public string ControllerUrl = "http://localhost:8080"; // URL of controller (sensors POST here)
+        public int SensorUploadInterval = 5; // How often sensors upload data (seconds)
+        public bool EnableSensorNetwork = false; // Enable multi-character sensor network
+
         // Combat targeting settings (simple version for ZeroIn)
         public bool HostileMobsOnly = true; // Only target hostile/aggressive mobs
         public int MinMobLevel = 1;

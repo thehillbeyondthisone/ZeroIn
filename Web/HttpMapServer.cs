@@ -15,6 +15,17 @@ using ZeroIn.PlanetMap;
 namespace ZeroIn.Web
 {
     /// <summary>
+    /// Payload sent from sensors to controller
+    /// </summary>
+    public class SensorUploadPayload
+    {
+        public string SensorName { get; set; }
+        public List<DetectedCharacter> Players { get; set; }
+        public int PlayfieldId { get; set; }
+        public DateTime Timestamp { get; set; }
+    }
+
+    /// <summary>
     /// Simple HTTP server for the live map interface
     /// </summary>
     public class HttpMapServer
@@ -137,6 +148,12 @@ namespace ZeroIn.Web
                     case "/api/settings":
                         ServeSettings(response);
                         break;
+                    case "/api/sensor/upload":
+                        if (request.HttpMethod == "POST")
+                            HandleSensorUpload(request, response);
+                        else
+                            response.StatusCode = 405; // Method not allowed
+                        break;
                     default:
                         // Check for POST with query parameters for settings
                         if (request.HttpMethod == "POST" && path.StartsWith("/api/settings/"))
@@ -233,8 +250,11 @@ namespace ZeroIn.Web
                 distance = p.Distance,
                 isAfk = p.IsLikelyAFK(),
                 afkConfidence = p.GetAFKConfidence(),
+                afkDuration = p.AfkDuration.TotalSeconds,
                 timesSpotted = p.TimesSpotted,
                 lastSeen = p.LastSeen,
+                lastScanned = p.LastScanned,
+                detectedBy = p.DetectedBy,
                 playfieldId = p.PlayfieldId,
                 playfieldName = p.PlayfieldName
             }).ToList();
@@ -602,6 +622,68 @@ namespace ZeroIn.Web
             catch (Exception ex)
             {
                 ZeroIn.Log?.Warning($"HandleSettingsPost error: {ex.Message}");
+                response.StatusCode = 500;
+                SendJson(response, new { error = ex.Message });
+            }
+        }
+
+        private void HandleSensorUpload(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            try
+            {
+                // Read the JSON body
+                string json;
+                using (var reader = new System.IO.StreamReader(request.InputStream, request.ContentEncoding))
+                {
+                    json = reader.ReadToEnd();
+                }
+
+                if (string.IsNullOrEmpty(json))
+                {
+                    response.StatusCode = 400;
+                    SendJson(response, new { error = "Empty request body" });
+                    return;
+                }
+
+                // Parse the incoming sensor data
+                var uploadData = JsonConvert.DeserializeObject<SensorUploadPayload>(json);
+                if (uploadData == null || uploadData.Players == null)
+                {
+                    response.StatusCode = 400;
+                    SendJson(response, new { error = "Invalid JSON format" });
+                    return;
+                }
+
+                // Merge the sensor data into our local scanner
+                int merged = 0;
+                int updated = 0;
+                foreach (var player in uploadData.Players)
+                {
+                    // Tag with sensor name
+                    player.DetectedBy = uploadData.SensorName;
+                    player.LastScanned = DateTime.UtcNow;
+
+                    // Merge into scanner's player list
+                    if (_scanner != null)
+                    {
+                        _scanner.MergeDetectedPlayer(player);
+                        updated++;
+                    }
+                    merged++;
+                }
+
+                ZeroIn.Log?.Info($"[Controller] Received {merged} players from sensor '{uploadData.SensorName}' ({updated} merged)");
+
+                SendJson(response, new {
+                    success = true,
+                    received = merged,
+                    merged = updated,
+                    sensorName = uploadData.SensorName
+                });
+            }
+            catch (Exception ex)
+            {
+                ZeroIn.Log?.Warning($"HandleSensorUpload error: {ex.Message}");
                 response.StatusCode = 500;
                 SendJson(response, new { error = ex.Message });
             }

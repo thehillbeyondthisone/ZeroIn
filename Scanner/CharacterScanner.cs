@@ -134,6 +134,56 @@ namespace ZeroIn.Scanner
 
         public bool Remove(int instanceId) => _tracked.Remove(unchecked((uint)instanceId));
 
+        /// <summary>
+        /// Merge a DetectedCharacter from a remote sensor.
+        /// Used by controllers to aggregate data from multiple sensors.
+        /// </summary>
+        public void MergeDetectedPlayer(DetectedCharacter player)
+        {
+            if (player == null) return;
+
+            uint id = player.CharId;
+
+            if (_tracked.TryGetValue(id, out var existing))
+            {
+                // Update if incoming data is newer
+                if (player.LastSeen > existing.LastSeen)
+                {
+                    existing.SnapshotPreviousPosition();
+                    existing.Name = player.Name;
+                    existing.Side = player.Side;
+                    existing.PositionX = player.PositionX;
+                    existing.PositionY = player.PositionY;
+                    existing.PositionZ = player.PositionZ;
+                    existing.Distance = player.Distance;
+                    existing.Health = player.Health;
+                    existing.LastSeen = player.LastSeen;
+                    existing.PlayfieldId = player.PlayfieldId;
+                    existing.PlayfieldName = player.PlayfieldName;
+                    existing.DetectedBy = player.DetectedBy;
+                    existing.LastScanned = player.LastScanned;
+
+                    // Merge movement tracking data
+                    if (player.LastMovementTime > existing.LastMovementTime)
+                        existing.LastMovementTime = player.LastMovementTime;
+
+                    existing.TotalDistanceMoved = Math.Max(existing.TotalDistanceMoved, player.TotalDistanceMoved);
+                    existing.UpdateMovementTracking();
+                }
+                else
+                {
+                    // Still update sensor metadata even if data is older
+                    existing.DetectedBy = player.DetectedBy;
+                    existing.LastScanned = player.LastScanned;
+                }
+            }
+            else
+            {
+                // New player from sensor - add directly
+                _tracked.Add(id, player);
+            }
+        }
+
         private void PurgeStale()
         {
             var now = DateTime.UtcNow;

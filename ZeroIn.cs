@@ -26,6 +26,7 @@ namespace ZeroIn
         public static VisualRadar Radar;
         public static HttpMapServer MapServer;
         public static MapCoordinateLoader MapCoords;
+        public static SensorUploader SensorUploader;
 
         public override void Run()
         {
@@ -312,6 +313,19 @@ namespace ZeroIn
                 MapServer = new HttpMapServer(8080, CommonParameters.PluginDataPath, MapCoords);
                 MapServer.Start();
                 Chat.WriteLine("[ZeroIn] Live map available at: http://localhost:8080", ChatColor.Yellow);
+
+                // Initialize sensor uploader for multi-character network
+                if (Config.EnableSensorNetwork && !Config.IsController)
+                {
+                    Chat.WriteLine("[ZeroIn] Starting sensor uploader...", ChatColor.White);
+                    SensorUploader = new SensorUploader(Config, Scanner);
+                    SensorUploader.Start();
+                    Chat.WriteLine($"[ZeroIn] Sensor uploader active - reporting to {Config.ControllerUrl}", ChatColor.Yellow);
+                }
+                else if (Config.IsController)
+                {
+                    Chat.WriteLine("[ZeroIn] Running as CONTROLLER - accepting sensor data", ChatColor.Cyan);
+                }
 
                 Chat.WriteLine("[ZeroIn] *** PLUGIN LOADED SUCCESSFULLY ***", ChatColor.Green);
                 Chat.WriteLine("[ZeroIn] Type /zeroin to open the UI", ChatColor.Yellow);
