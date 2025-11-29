@@ -81,6 +81,9 @@
     <Compile Include="Scanner\DetectedCharacter.cs" />
     <Compile Include="Scanner\GridGenerator.cs" />
     <Compile Include="Scanner\ScanMap.cs" />
+    <Compile Include="Scanner\IPlayerDetector.cs" />
+    <Compile Include="Scanner\OmegaRadarDetector.cs" />
+    <Compile Include="Scanner\RoambaPathDetector.cs" />
     <Compile Include="PlanetMap\MapCoordinateLoader.cs" />
     <Compile Include="Web\HttpMapServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

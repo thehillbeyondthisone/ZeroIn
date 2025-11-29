@@ -193,7 +193,8 @@ namespace ZeroIn.Web
                 timesSpotted = p.TimesSpotted,
                 lastSeen = p.LastSeen,
                 playfieldId = p.PlayfieldId,
-                playfieldName = p.PlayfieldName
+                playfieldName = p.PlayfieldName,
+                detectorSource = p.DetectorSource ?? "Unknown"
             }).ToList();
 
             SendJson(response, data);

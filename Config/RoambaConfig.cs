@@ -40,6 +40,12 @@ namespace ZeroIn
         public bool EnableLooting = false;
         public bool EnableHealthCheck = false;
 
+        // Detector settings (Roamba path vs Omega radar)
+        public bool EnableRoambaDetector = true; // Path-based scanning (original ZeroIn method)
+        public bool EnableOmegaDetector = false; // Omega-style proximity radar (OFF by default)
+        public float OmegaDetectionRange = 50f; // Omega radar detection range in meters
+        public float OmegaScanFrequency = 5f; // Omega radar scan frequency in Hz (5 scans per second)
+
         // Visual radar settings
         public float AFKMarkerSize = 5f; // AFK players get larger markers
         public float ActiveMarkerSize = 2f; // Active players get smaller markers

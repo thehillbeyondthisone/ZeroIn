@@ -26,6 +26,8 @@ namespace ZeroIn
         public static VisualRadar Radar;
         public static HttpMapServer MapServer;
         public static MapCoordinateLoader MapCoords;
+        public static RoambaPathDetector RoambaDetector;
+        public static OmegaRadarDetector OmegaDetector;
 
         public override void Run()
         {
@@ -66,6 +68,26 @@ namespace ZeroIn
                 Chat.WriteLine("[ZeroIn] Initializing player scanner...", ChatColor.White);
                 Scanner = new CharacterScanner(Config);
                 Map = new ScanMap(CommonParameters.PluginDataPath);
+
+                // Initialize detection systems
+                Chat.WriteLine("[ZeroIn] Initializing detection systems...", ChatColor.White);
+
+                // Roamba path-based detector
+                RoambaDetector = new RoambaPathDetector(Config);
+                RoambaDetector.IsEnabled = Config.EnableRoambaDetector;
+                Scanner.AddDetector(RoambaDetector);
+                Chat.WriteLine($"[ZeroIn] Roamba path detector: {(RoambaDetector.IsEnabled ? "ENABLED" : "disabled")}",
+                    RoambaDetector.IsEnabled ? ChatColor.Green : ChatColor.Gray);
+
+                // Omega proximity radar detector
+                OmegaDetector = new OmegaRadarDetector(Config);
+                OmegaDetector.IsEnabled = Config.EnableOmegaDetector;
+                OmegaDetector.DetectionRange = Config.OmegaDetectionRange;
+                OmegaDetector.ScanFrequency = Config.OmegaScanFrequency;
+                Scanner.AddDetector(OmegaDetector);
+                Chat.WriteLine($"[ZeroIn] Omega proximity detector: {(OmegaDetector.IsEnabled ? "ENABLED" : "disabled (default)")}",
+                    OmegaDetector.IsEnabled ? ChatColor.Green : ChatColor.Gray);
+
                 Chat.WriteLine("[ZeroIn] Scanner initialized successfully", ChatColor.Green);
 
                 // Initialize Visual Radar
@@ -178,6 +200,18 @@ namespace ZeroIn
                             Radar.PrintStats();
                             break;
 
+                        case "detector":
+                        case "detectors":
+                            if (param.Length < 2)
+                            {
+                                PrintDetectorStatus();
+                            }
+                            else
+                            {
+                                HandleDetectorCommand(param);
+                            }
+                            break;
+
                         case "help":
                             Chat.WriteLine("=== ZeroIn Radar Commands ===", ChatColor.Yellow);
                             Chat.WriteLine("/radar - Toggle all radar visuals", ChatColor.White);
@@ -188,6 +222,9 @@ namespace ZeroIn
                             Chat.WriteLine("/radar lines - Toggle line mode (ON=shapes, OFF=minimal waypoints)", ChatColor.White);
                             Chat.WriteLine("/radar debug - Toggle detailed debug logging", ChatColor.White);
                             Chat.WriteLine("/radar stats - Show radar statistics and error counts", ChatColor.White);
+                            Chat.WriteLine("/radar detector - Show detection system status", ChatColor.White);
+                            Chat.WriteLine("/radar detector roamba on|off - Toggle Roamba path detection", ChatColor.White);
+                            Chat.WriteLine("/radar detector omega on|off - Toggle Omega proximity detection", ChatColor.White);
                             break;
 
                         default:
@@ -422,51 +459,119 @@ namespace ZeroIn
         {
             try
             {
+                // Update detectors (allows Omega to run periodic scans)
+                OmegaDetector?.Update(deltaTime);
+                RoambaDetector?.Update(deltaTime);
+
                 // Draw visual radar overlay
                 Radar?.Draw();
 
-                // Continuous scanning (ONLY when state machine is NOT running)
-                // If state machine is running, RoamState.Tick() handles scanning
+                // Continuous scanning using the new detector system
+                // This now supports both Roamba and Omega detectors
                 if (Config.ContinuousScanning && Scanner != null && StateMachine != null && !StateMachine.IsEnabled)
                 {
-                    Scanner.Scan(); // Purge stale entries
-
-                    var localPlayer = DynelManager.LocalPlayer;
-                    if (localPlayer != null && localPlayer.IsValid)
-                    {
-                        var localPos = localPlayer.Position;
-
-                        // Scan all nearby players within detection range
-                        foreach (var player in DynelManager.Players)
-                        {
-                            if (player == null || !player.IsValid) continue;
-                            if (player.Identity == localPlayer.Identity) continue; // Skip self
-
-                            float distance = AOSharp.Common.GameData.Vector3.Distance(localPos, player.Position);
-
-                            // Only scan players within detection range
-                            if (distance <= Config.PlayerDetectionRange)
-                            {
-                                Scanner.OnCharacterSeen(
-                                    (int)player.Identity.Instance,
-                                    player.Name,
-                                    player.Position.X,
-                                    player.Position.Y,
-                                    player.Position.Z,
-                                    player.Health,
-                                    distance,
-                                    Playfield.ModelIdentity.Instance,
-                                    Playfield.Name
-                                );
-                            }
-                        }
-                    }
+                    // Scanner.Scan() will call all enabled detectors
+                    Scanner.Scan();
+                }
+                else if (Scanner != null)
+                {
+                    // Even if not continuous, still purge stale entries
+                    // and allow Omega radar to scan if enabled
+                    Scanner.Scan();
                 }
             }
             catch (Exception ex)
             {
                 // Silently catch to avoid spam
                 Log?.Warning($"OnUpdate error: {ex.Message}");
+            }
+        }
+
+        private static void PrintDetectorStatus()
+        {
+            Chat.WriteLine("=== ZeroIn Detection Systems ===", ChatColor.Yellow);
+            Chat.WriteLine($"Roamba Path Detection: {(RoambaDetector?.IsEnabled == true ? "ENABLED" : "disabled")}",
+                RoambaDetector?.IsEnabled == true ? ChatColor.Green : ChatColor.Gray);
+            Chat.WriteLine($"  Range: {Config?.PlayerDetectionRange ?? 0}m", ChatColor.White);
+
+            Chat.WriteLine($"Omega Proximity Detection: {(OmegaDetector?.IsEnabled == true ? "ENABLED" : "disabled (default)")}",
+                OmegaDetector?.IsEnabled == true ? ChatColor.Green : ChatColor.Gray);
+            if (OmegaDetector != null)
+            {
+                Chat.WriteLine($"  Range: {OmegaDetector.DetectionRange}m", ChatColor.White);
+                Chat.WriteLine($"  Scan Frequency: {OmegaDetector.ScanFrequency:F1} Hz", ChatColor.White);
+            }
+
+            var detected = Scanner?.GetDetectedCharacters();
+            if (detected != null)
+            {
+                int roambaCount = 0, omegaCount = 0, unknownCount = 0;
+                foreach (var player in detected)
+                {
+                    if (player.DetectorSource == "Roamba") roambaCount++;
+                    else if (player.DetectorSource == "Omega") omegaCount++;
+                    else unknownCount++;
+                }
+                Chat.WriteLine($"Currently tracking: {detected.Count} players total", ChatColor.LightBlue);
+                Chat.WriteLine($"  Roamba: {roambaCount} | Omega: {omegaCount} | Other: {unknownCount}", ChatColor.White);
+            }
+        }
+
+        private static void HandleDetectorCommand(string[] param)
+        {
+            if (param.Length < 2) return;
+
+            string detector = param[1].ToLower();
+            string action = param.Length >= 3 ? param[2].ToLower() : "";
+
+            switch (detector)
+            {
+                case "roamba":
+                case "path":
+                    if (action == "on")
+                    {
+                        RoambaDetector.IsEnabled = true;
+                        Config.EnableRoambaDetector = true;
+                        Chat.WriteLine("[ZeroIn] Roamba path detection ENABLED", ChatColor.Green);
+                    }
+                    else if (action == "off")
+                    {
+                        RoambaDetector.IsEnabled = false;
+                        Config.EnableRoambaDetector = false;
+                        Chat.WriteLine("[ZeroIn] Roamba path detection disabled", ChatColor.Gray);
+                    }
+                    else
+                    {
+                        Chat.WriteLine($"[ZeroIn] Roamba detector is {(RoambaDetector.IsEnabled ? "ENABLED" : "disabled")}",
+                            RoambaDetector.IsEnabled ? ChatColor.Green : ChatColor.Gray);
+                    }
+                    break;
+
+                case "omega":
+                case "proximity":
+                    if (action == "on")
+                    {
+                        OmegaDetector.IsEnabled = true;
+                        Config.EnableOmegaDetector = true;
+                        Chat.WriteLine("[ZeroIn] Omega proximity detection ENABLED", ChatColor.Green);
+                        Chat.WriteLine($"[ZeroIn] Range: {OmegaDetector.DetectionRange}m, Frequency: {OmegaDetector.ScanFrequency:F1} Hz", ChatColor.White);
+                    }
+                    else if (action == "off")
+                    {
+                        OmegaDetector.IsEnabled = false;
+                        Config.EnableOmegaDetector = false;
+                        Chat.WriteLine("[ZeroIn] Omega proximity detection disabled", ChatColor.Gray);
+                    }
+                    else
+                    {
+                        Chat.WriteLine($"[ZeroIn] Omega detector is {(OmegaDetector.IsEnabled ? "ENABLED" : "disabled")}",
+                            OmegaDetector.IsEnabled ? ChatColor.Green : ChatColor.Gray);
+                    }
+                    break;
+
+                default:
+                    Chat.WriteLine("[ZeroIn] Usage: /radar detector roamba|omega on|off", ChatColor.Yellow);
+                    break;
             }
         }
 

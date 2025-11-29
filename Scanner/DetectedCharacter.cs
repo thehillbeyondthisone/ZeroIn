@@ -25,6 +25,7 @@ namespace ZeroIn.Scanner
         public int TimesSpotted { get; set; } = 0;
         public int PlayfieldId { get; set; } = 0;
         public string PlayfieldName { get; set; } = string.Empty;
+        public string DetectorSource { get; set; } = "Unknown"; // Which detector found this player (Roamba, Omega, etc.)
 
         // Spatial (current)
         public float PositionX { get; set; } = 0f;
@@ -181,7 +182,7 @@ namespace ZeroIn.Scanner
         {
             return "CharId,InstanceId,Name,PlayfieldId,PlayfieldName,TimesSpotted,FirstSeen,LastSeen," +
                    "PosX,PosY,PosZ,Distance,Health," +
-                   "TotalDistanceMoved,StationaryCount,LastMovementTime,IsAFK,AFKConfidence";
+                   "TotalDistanceMoved,StationaryCount,LastMovementTime,IsAFK,AFKConfidence,DetectorSource";
         }
 
         /// <summary>
@@ -209,7 +210,8 @@ namespace ZeroIn.Scanner
             sb.Append(StationaryCount).Append(',');
             sb.Append(LastMovementTime == DateTime.MinValue ? "" : LastMovementTime.ToString("o")).Append(',');
             sb.Append(IsLikelyAFK()).Append(',');
-            sb.Append(GetAFKConfidence());
+            sb.Append(GetAFKConfidence()).Append(',');
+            sb.Append(EscapeCsv(DetectorSource));
             return sb.ToString();
         }
 

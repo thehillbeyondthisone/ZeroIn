@@ -9,11 +9,12 @@ namespace ZeroIn.Scanner
 {
     /// <summary>
     /// CharacterScanner that maintains TimesSpotted and previous position snapshots.
-    /// Remains AOSharp-free � call OnCharacterSeen from AOSharp-aware adapter.
+    /// Supports multiple detection sources (Roamba path, Omega radar, etc.)
     /// </summary>
     public class CharacterScanner
     {
         private readonly Dictionary<uint, DetectedCharacter> _tracked = new Dictionary<uint, DetectedCharacter>();
+        private readonly List<IPlayerDetector> _detectors = new List<IPlayerDetector>();
         private readonly ZeroInConfig _config;
         private TimeSpan _staleAfter;
 
@@ -43,7 +44,70 @@ namespace ZeroIn.Scanner
 
         public void Clear() => _tracked.Clear();
 
-        public void Scan() => PurgeStale();
+        /// <summary>
+        /// Register a detector (Roamba, Omega, etc.)
+        /// </summary>
+        public void AddDetector(IPlayerDetector detector)
+        {
+            if (detector != null && !_detectors.Contains(detector))
+            {
+                _detectors.Add(detector);
+            }
+        }
+
+        /// <summary>
+        /// Remove a detector
+        /// </summary>
+        public void RemoveDetector(IPlayerDetector detector)
+        {
+            _detectors.Remove(detector);
+        }
+
+        /// <summary>
+        /// Get all registered detectors
+        /// </summary>
+        public IEnumerable<IPlayerDetector> GetDetectors()
+        {
+            return new List<IPlayerDetector>(_detectors);
+        }
+
+        /// <summary>
+        /// Scan using all enabled detectors and aggregate results
+        /// </summary>
+        public void Scan()
+        {
+            // Scan with each enabled detector
+            foreach (var detector in _detectors)
+            {
+                if (!detector.IsEnabled) continue;
+
+                try
+                {
+                    var detected = detector.Scan();
+                    foreach (var player in detected)
+                    {
+                        OnCharacterSeen(
+                            player.InstanceId,
+                            player.Name,
+                            player.PositionX,
+                            player.PositionY,
+                            player.PositionZ,
+                            player.Health,
+                            player.Distance,
+                            player.PlayfieldId,
+                            player.PlayfieldName,
+                            player.DetectorSource
+                        );
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ZeroIn.Log?.Warning($"Scanner: Detector '{detector.DetectorName}' scan failed: {ex.Message}");
+                }
+            }
+
+            PurgeStale();
+        }
 
         public List<DetectedCharacter> GetDetectedCharacters()
         {
@@ -75,7 +139,7 @@ namespace ZeroIn.Scanner
         /// Adapter call � provide primitive values from AOSharp-aware code.
         /// This method snapshots previous position, increments TimesSpotted, and updates fields.
         /// </summary>
-        public void OnCharacterSeen(int instanceId, string name, float posX, float posY, float posZ, int health = 0, float distance = 0f, int playfieldId = 0, string playfieldName = null)
+        public void OnCharacterSeen(int instanceId, string name, float posX, float posY, float posZ, int health = 0, float distance = 0f, int playfieldId = 0, string playfieldName = null, string detectorSource = null)
         {
             uint id = unchecked((uint)instanceId);
 
@@ -100,6 +164,10 @@ namespace ZeroIn.Scanner
                 if (!string.IsNullOrEmpty(playfieldName))
                     existing.PlayfieldName = playfieldName;
 
+                // Update detector source (keep track of last source that saw this player)
+                if (!string.IsNullOrEmpty(detectorSource))
+                    existing.DetectorSource = detectorSource;
+
                 // Track movement for AFK detection
                 existing.UpdateMovementTracking();
 
@@ -123,7 +191,8 @@ namespace ZeroIn.Scanner
                     FirstSeen = DateTime.UtcNow,
                     LastSeen = DateTime.UtcNow,
                     PlayfieldId = playfieldId,
-                    PlayfieldName = playfieldName ?? string.Empty
+                    PlayfieldName = playfieldName ?? string.Empty,
+                    DetectorSource = detectorSource ?? "Unknown"
                 };
 
                 _tracked.Add(id, d);
@@ -150,6 +219,7 @@ namespace ZeroIn.Scanner
                 TimesSpotted = src.TimesSpotted,
                 PlayfieldId = src.PlayfieldId,
                 PlayfieldName = src.PlayfieldName,
+                DetectorSource = src.DetectorSource,
                 PositionX = src.PositionX,
                 PositionY = src.PositionY,
                 PositionZ = src.PositionZ,
