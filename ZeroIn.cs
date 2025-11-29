@@ -27,6 +27,7 @@ namespace ZeroIn
         public static HttpMapServer MapServer;
         public static MapCoordinateLoader MapCoords;
         public static SensorUploader SensorUploader;
+        public static ProximityGuard ProximityGuard;
 
         public override void Run()
         {
@@ -301,7 +302,135 @@ namespace ZeroIn
                     }
                 });
 
-                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /status, /debug, /map, /debugxml", ChatColor.Green);
+                // Add /proximity command for ProximityGuard control
+                Chat.RegisterCommand("proximity", (string command, string[] param, ChatWindow chatWindow) =>
+                {
+                    if (param.Length == 0)
+                    {
+                        // Toggle on/off
+                        ProximityGuard.Enabled = !ProximityGuard.Enabled;
+                        Config.EnableProximityGuard = ProximityGuard.Enabled;
+                        Chat.WriteLine($"[ZeroIn Proximity] Guard: {(ProximityGuard.Enabled ? "ENABLED" : "DISABLED")}",
+                            ProximityGuard.Enabled ? ChatColor.Green : ChatColor.Red);
+                        return;
+                    }
+
+                    string subCommand = param[0].ToLower();
+                    switch (subCommand)
+                    {
+                        case "status":
+                            Chat.WriteLine("=== ZeroIn Proximity Guard Status ===", ChatColor.Yellow);
+                            Chat.WriteLine($"Status: {(ProximityGuard.Enabled ? "ENABLED" : "DISABLED")}",
+                                ProximityGuard.Enabled ? ChatColor.Green : ChatColor.Red);
+                            Chat.WriteLine($"Trigger Range: {ProximityGuard.TriggerRangeM}m", ChatColor.White);
+                            Chat.WriteLine($"Clear Time: {ProximityGuard.ClearSeconds}s", ChatColor.White);
+                            Chat.WriteLine($"Scan Rate: {ProximityGuard.ScanHz} Hz", ChatColor.White);
+                            Chat.WriteLine($"Announce Threats: {(ProximityGuard.AnnounceThreats ? "ON" : "OFF")}", ChatColor.White);
+                            Chat.WriteLine($"Whitelist Count: {Config.ProximityWhitelist.Count}", ChatColor.White);
+
+                            var threats = ProximityGuard.GetThreatsSnapshot();
+                            if (threats.Count > 0)
+                            {
+                                Chat.WriteLine($"\nCurrent Threats: {threats.Count}", ChatColor.Red);
+                                foreach (var t in threats.Take(5))
+                                {
+                                    Chat.WriteLine($"  {t.Name} - {t.DistanceM:0.#}m", ChatColor.Yellow);
+                                }
+                            }
+                            else
+                            {
+                                Chat.WriteLine("\nArea Clear - No threats detected", ChatColor.Green);
+                            }
+                            break;
+
+                        case "whitelist":
+                            if (param.Length < 2)
+                            {
+                                Chat.WriteLine("=== Proximity Guard Whitelist ===", ChatColor.Yellow);
+                                Chat.WriteLine("Usage: /proximity whitelist <add|remove|list|clear> [name]", ChatColor.White);
+                                return;
+                            }
+
+                            string whitelistCmd = param[1].ToLower();
+                            switch (whitelistCmd)
+                            {
+                                case "add":
+                                    if (param.Length < 3)
+                                    {
+                                        Chat.WriteLine("[ZeroIn Proximity] Usage: /proximity whitelist add <name>", ChatColor.Red);
+                                        return;
+                                    }
+                                    string addName = string.Join(" ", param.Skip(2).ToArray());
+                                    ProximityGuard.AddWhitelist(addName);
+                                    if (!Config.ProximityWhitelist.Contains(addName))
+                                        Config.ProximityWhitelist.Add(addName);
+                                    Chat.WriteLine($"[ZeroIn Proximity] Added '{addName}' to whitelist", ChatColor.Green);
+                                    break;
+
+                                case "remove":
+                                    if (param.Length < 3)
+                                    {
+                                        Chat.WriteLine("[ZeroIn Proximity] Usage: /proximity whitelist remove <name>", ChatColor.Red);
+                                        return;
+                                    }
+                                    string removeName = string.Join(" ", param.Skip(2).ToArray());
+                                    if (ProximityGuard.RemoveWhitelist(removeName))
+                                    {
+                                        Config.ProximityWhitelist.Remove(removeName);
+                                        Chat.WriteLine($"[ZeroIn Proximity] Removed '{removeName}' from whitelist", ChatColor.Green);
+                                    }
+                                    else
+                                    {
+                                        Chat.WriteLine($"[ZeroIn Proximity] '{removeName}' not found in whitelist", ChatColor.Yellow);
+                                    }
+                                    break;
+
+                                case "list":
+                                    Chat.WriteLine("=== Proximity Guard Whitelist ===", ChatColor.Yellow);
+                                    if (Config.ProximityWhitelist.Count == 0)
+                                    {
+                                        Chat.WriteLine("Whitelist is empty", ChatColor.White);
+                                    }
+                                    else
+                                    {
+                                        foreach (var name in Config.ProximityWhitelist.OrderBy(n => n))
+                                        {
+                                            Chat.WriteLine($"  {name}", ChatColor.White);
+                                        }
+                                    }
+                                    break;
+
+                                case "clear":
+                                    ProximityGuard.ClearWhitelist();
+                                    Config.ProximityWhitelist.Clear();
+                                    Chat.WriteLine("[ZeroIn Proximity] Whitelist cleared", ChatColor.Green);
+                                    break;
+
+                                default:
+                                    Chat.WriteLine($"[ZeroIn Proximity] Unknown whitelist command: {whitelistCmd}", ChatColor.Red);
+                                    Chat.WriteLine("Usage: /proximity whitelist <add|remove|list|clear> [name]", ChatColor.White);
+                                    break;
+                            }
+                            break;
+
+                        case "help":
+                            Chat.WriteLine("=== ZeroIn Proximity Guard Commands ===", ChatColor.Yellow);
+                            Chat.WriteLine("/proximity - Toggle proximity guard on/off", ChatColor.White);
+                            Chat.WriteLine("/proximity status - Show current status and threats", ChatColor.White);
+                            Chat.WriteLine("/proximity whitelist add <name> - Add player to whitelist", ChatColor.White);
+                            Chat.WriteLine("/proximity whitelist remove <name> - Remove player from whitelist", ChatColor.White);
+                            Chat.WriteLine("/proximity whitelist list - Show whitelist", ChatColor.White);
+                            Chat.WriteLine("/proximity whitelist clear - Clear whitelist", ChatColor.White);
+                            break;
+
+                        default:
+                            Chat.WriteLine($"[ZeroIn Proximity] Unknown command: {subCommand}", ChatColor.Red);
+                            Chat.WriteLine("Use /proximity help for available options", ChatColor.Yellow);
+                            break;
+                    }
+                });
+
+                Chat.WriteLine("[ZeroIn] Commands registered: /zeroin, /ZeroIn, /scan, /radar, /status, /debug, /map, /proximity, /debugxml", ChatColor.Green);
 
                 Chat.WriteLine("[ZeroIn] Initializing state machine...", ChatColor.White);
                 StateMachine = new RoamStateMachine(new MobTargeting(Config), Scanner, Map, Config.CoreConfig.OnInjectEnable);
@@ -326,6 +455,28 @@ namespace ZeroIn
                 {
                     Chat.WriteLine("[ZeroIn] Running as CONTROLLER - accepting sensor data", ChatColor.Cyan);
                 }
+
+                // Initialize ProximityGuard for threat detection
+                Chat.WriteLine("[ZeroIn] Initializing proximity guard...", ChatColor.White);
+                ProximityGuard = new ProximityGuard(
+                    pause: () => { if (StateMachine != null) StateMachine.SetStatus(false); },
+                    resume: () => { if (StateMachine != null) StateMachine.SetStatus(true); },
+                    isRunning: () => StateMachine?.IsEnabled ?? false,
+                    isPausedByUser: () => false, // TODO: Add user pause tracking if needed
+                    info: (msg) => Chat.WriteLine(msg, ChatColor.LightBlue),
+                    warn: (msg) => Chat.WriteLine(msg, ChatColor.Yellow),
+                    whoAmI: () => DynelManager.LocalPlayer?.Name ?? "",
+                    initialWhitelist: Config.ProximityWhitelist
+                );
+                ProximityGuard.Enabled = Config.EnableProximityGuard;
+                ProximityGuard.TriggerRangeM = Config.ProximityTriggerRange;
+                ProximityGuard.ClearSeconds = Config.ProximityClearSeconds;
+                ProximityGuard.ScanHz = Config.ProximityScanHz;
+                ProximityGuard.AnnounceThreats = Config.ProximityAnnounceThreats;
+                ProximityGuard.AnnounceIntervalSec = Config.ProximityAnnounceInterval;
+                ProximityGuard.MaxNamesInAnnouncement = Config.ProximityMaxNamesInAnnouncement;
+                Chat.WriteLine($"[ZeroIn] Proximity guard: {(Config.EnableProximityGuard ? "ENABLED" : "disabled")}",
+                    Config.EnableProximityGuard ? ChatColor.Green : ChatColor.Gray);
 
                 Chat.WriteLine("[ZeroIn] *** PLUGIN LOADED SUCCESSFULLY ***", ChatColor.Green);
                 Chat.WriteLine("[ZeroIn] Type /zeroin to open the UI", ChatColor.Yellow);
@@ -436,6 +587,9 @@ namespace ZeroIn
         {
             try
             {
+                // Update proximity guard for threat detection
+                ProximityGuard?.Update(deltaTime);
+
                 // Draw visual radar overlay
                 Radar?.Draw();
 

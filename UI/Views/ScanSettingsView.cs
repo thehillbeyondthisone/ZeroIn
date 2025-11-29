@@ -27,6 +27,10 @@ namespace ZeroIn
         private Checkbox _isController;
         private TextInputView _controllerUrl;
         private TextInputView _sensorUploadInterval;
+        private Checkbox _enableProximityGuard;
+        private TextInputView _proximityTriggerRange;
+        private TextInputView _proximityClearSeconds;
+        private Checkbox _proximityAnnounceThreats;
 
         // Public properties for access from other classes
         public float ScanSpacing
@@ -65,6 +69,10 @@ namespace ZeroIn
                     Root.FindChild("IsController", out _isController);
                     Root.FindChild("ControllerUrlValue", out _controllerUrl);
                     Root.FindChild("SensorUploadIntervalValue", out _sensorUploadInterval);
+                    Root.FindChild("EnableProximityGuard", out _enableProximityGuard);
+                    Root.FindChild("ProximityTriggerRangeValue", out _proximityTriggerRange);
+                    Root.FindChild("ProximityClearSecondsValue", out _proximityClearSeconds);
+                    Root.FindChild("ProximityAnnounceThreats", out _proximityAnnounceThreats);
 
                     // Wire up button click handlers with instant feedback
                     if (_toggleDetectionRadius != null)
@@ -176,6 +184,18 @@ namespace ZeroIn
 
                 if (_sensorUploadInterval != null)
                     _sensorUploadInterval.Text = config.SensorUploadInterval.ToString();
+
+                if (_enableProximityGuard != null)
+                    _enableProximityGuard.SetValue(config.EnableProximityGuard);
+
+                if (_proximityTriggerRange != null)
+                    _proximityTriggerRange.Text = config.ProximityTriggerRange.ToString();
+
+                if (_proximityClearSeconds != null)
+                    _proximityClearSeconds.Text = config.ProximityClearSeconds.ToString();
+
+                if (_proximityAnnounceThreats != null)
+                    _proximityAnnounceThreats.SetValue(config.ProximityAnnounceThreats);
             }
             catch (System.Exception ex)
             {
@@ -236,6 +256,18 @@ namespace ZeroIn
 
                 if (_sensorUploadInterval != null && int.TryParse(_sensorUploadInterval.Text, out int interval))
                     config.SensorUploadInterval = interval;
+
+                if (_enableProximityGuard != null)
+                    config.EnableProximityGuard = _enableProximityGuard.IsChecked;
+
+                if (_proximityTriggerRange != null && float.TryParse(_proximityTriggerRange.Text, out float triggerRange))
+                    config.ProximityTriggerRange = triggerRange;
+
+                if (_proximityClearSeconds != null && float.TryParse(_proximityClearSeconds.Text, out float clearSeconds))
+                    config.ProximityClearSeconds = clearSeconds;
+
+                if (_proximityAnnounceThreats != null)
+                    config.ProximityAnnounceThreats = _proximityAnnounceThreats.IsChecked;
             }
             catch (System.Exception ex)
             {

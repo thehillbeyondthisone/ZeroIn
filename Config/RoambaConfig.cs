@@ -59,6 +59,16 @@ namespace ZeroIn
         public int SensorUploadInterval = 5; // How often sensors upload data (seconds)
         public bool EnableSensorNetwork = false; // Enable multi-character sensor network
 
+        // ProximityGuard Settings (Omega-style threat detection)
+        public bool EnableProximityGuard = false; // Enable threat detection with auto-pause
+        public float ProximityTriggerRange = 50f; // Distance in meters to trigger auto-pause
+        public float ProximityClearSeconds = 8f; // Seconds clear before auto-resume
+        public float ProximityScanHz = 5f; // Scan frequency (scans per second)
+        public bool ProximityAnnounceThreats = true; // Announce threats to chat
+        public float ProximityAnnounceInterval = 5f; // Seconds between announcements
+        public int ProximityMaxNamesInAnnouncement = 3; // Max names to show in one announcement
+        public System.Collections.Generic.List<string> ProximityWhitelist = new System.Collections.Generic.List<string>(); // Players to ignore
+
         // Combat targeting settings (simple version for ZeroIn)
         public bool HostileMobsOnly = true; // Only target hostile/aggressive mobs
         public int MinMobLevel = 1;

@@ -56,5 +56,19 @@
 			<TextView text_style="Bold" min_size="Point(120,-1)" label="Upload Interval (sec)" view_layout="vertical"/>
 			<Text_Field name="SensorUploadIntervalValue" text_alignment="LEFT" caption="" value="5" text_style="normal" max_length="2" min_size="Point(40,-1)"/>
 		</HLayoutGroup>
+
+		<!-- Proximity Guard Settings -->
+		<TextView h_alignment="LEFT" label="Proximity Guard (Threat Detection)" text_style="Bold" layout_borders="Rect(0,8,0,4)"/>
+		<Checkbox h_alignment="LEFT" label="Enable Proximity Guard" name="EnableProximityGuard" layout_borders="Rect(0,0,0,2)"/>
+		<HLayoutGroup text_alignment="LEFT" name="ProximityTriggerRange" layout_borders="Rect(0,0,0,4)">
+			<TextView text_style="Bold" min_size="Point(120,-1)" label="Trigger Range (m)" view_layout="vertical"/>
+			<Text_Field name="ProximityTriggerRangeValue" text_alignment="LEFT" caption="" value="50" text_style="normal" max_length="3" min_size="Point(40,-1)"/>
+		</HLayoutGroup>
+		<HLayoutGroup text_alignment="LEFT" name="ProximityClearSeconds" layout_borders="Rect(0,0,0,4)">
+			<TextView text_style="Bold" min_size="Point(120,-1)" label="Clear Time (sec)" view_layout="vertical"/>
+			<Text_Field name="ProximityClearSecondsValue" text_alignment="LEFT" caption="" value="8" text_style="normal" max_length="2" min_size="Point(40,-1)"/>
+		</HLayoutGroup>
+		<Checkbox h_alignment="LEFT" label="Announce Threats to Chat" name="ProximityAnnounceThreats" layout_borders="Rect(0,0,0,2)"/>
+		<TextView h_alignment="LEFT" label="Use /proximity help for whitelist commands" text_style="normal" layout_borders="Rect(0,0,0,4)"/>
 	</View>
 </root>
